@@ -64,7 +64,7 @@ async def get_character(
     tg_user = _auth_user(x_tg_init_data)
     u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
-    ch = await crud.get_character(db, character_id, u.id)
+    ch = await crud.get_character_for_user(db, character_id, u.id)
     if not ch:
         raise HTTPException(status_code=404, detail="Character not found")
 
@@ -113,7 +113,7 @@ async def add_item(
 ):
     tg_user = _auth_user(x_tg_init_data)
     u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
-    ch = await crud.get_character(db, ch_id, u.id)
+    ch = await crud.get_character_for_user(db, ch_id, u.id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
@@ -134,7 +134,7 @@ async def list_items(
     tg_user = _auth_user(x_tg_init_data)
     u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
-    ch = await crud.get_character(db, ch_id)
+    ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
@@ -164,7 +164,7 @@ async def delete_item(
     tg_user = _auth_user(x_tg_init_data)
     u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
-    ch = await crud.get_character(db, ch_id)
+    ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
