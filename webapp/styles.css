@@ -53,3 +53,8 @@ li { padding:8px; border-bottom: 1px solid #2a2f3a; }
   gap: 8px;
 }
 
+.tabs {
+  position: relative;
+  z-index: 10;
+}
+
