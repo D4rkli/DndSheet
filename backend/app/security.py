@@ -1,38 +1,36 @@
 import hmac
 import hashlib
 from urllib.parse import parse_qsl
+
 from .config import settings
 
+
 def verify_telegram_init_data(init_data: str) -> dict:
-    """
-    Возвращает dict с полями initData (в т.ч. user=JSON),
-    если подпись валидна. Иначе кидает ValueError.
-    """
     if not init_data:
-        raise ValueError("No initData")
+        raise ValueError("Empty initData")
 
     data = dict(parse_qsl(init_data, keep_blank_values=True))
-    hash_received = data.pop("hash", None)
-    if not hash_received:
+
+    if "hash" not in data:
         raise ValueError("No hash")
 
-    # data_check_string: ключи по алфавиту, формат key=value \n
-    pairs = [f"{k}={data[k]}" for k in sorted(data.keys())]
-    data_check_string = "\n".join(pairs)
+    hash_from_telegram = data.pop("hash")
 
-    secret_key = hmac.new(
-        key=b"WebAppData",
-        msg=settings.BOT_TOKEN.encode(),
-        digestmod=hashlib.sha256,
-    ).digest()
+    # секрет = sha256(bot_token)
+    secret = hashlib.sha256(settings.BOT_TOKEN.encode()).digest()
 
-    hash_calc = hmac.new(
-        key=secret_key,
-        msg=data_check_string.encode(),
-        digestmod=hashlib.sha256,
+    # формируем data_check_string
+    data_check_string = "\n".join(
+        f"{k}={v}" for k, v in sorted(data.items())
+    )
+
+    hmac_hash = hmac.new(
+        secret,
+        data_check_string.encode(),
+        hashlib.sha256
     ).hexdigest()
 
-    if not hmac.compare_digest(hash_calc, hash_received):
-        raise ValueError("Bad initData signature")
+    if not hmac.compare_digest(hmac_hash, hash_from_telegram):
+        raise ValueError("Bad Telegram initData")
 
     return data
