@@ -14,7 +14,7 @@ const newName = document.getElementById("newName");
 // =====================
 // INIT DATA (ОБЯЗАТЕЛЬНО)
 // =====================
-const INIT_DATA = tg?.initData || "";
+const INIT_DATA = tg?.initData || tg?.initDataUnsafe || "";
 
 let activeCharacterId = null;
 

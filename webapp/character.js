@@ -5,7 +5,7 @@ const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
 
-const INIT_DATA = tg?.initData || "";
+const INIT_DATA = tg?.initData || tg?.initDataUnsafe || "";
 
 // =====================
 // API helper (ЕДИНСТВЕННЫЙ)
