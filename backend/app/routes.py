@@ -124,3 +124,57 @@ async def add_item(
 
     it = await crud.add_item(db, ch_id, body.name, body.description, body.stats)
     return {"id": it.id}
+
+@router.get("/characters/{ch_id}/items")
+async def list_items(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    items = await crud.list_items(db, ch_id)
+
+    return [
+        {
+            "id": i.id,
+            "name": i.name,
+            "description": i.description,
+            "stats": i.stats,
+        }
+        for i in items
+    ]
+
+@router.delete("/characters/{ch_id}/items/{item_id}")
+async def delete_item(
+    ch_id: int,
+    item_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    # доступ: владелец или DM
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    ok = await crud.delete_item(db, item_id)
+    if not ok:
+        raise HTTPException(404, "Item not found")
+
+    return {"status": "deleted"}

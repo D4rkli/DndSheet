@@ -232,5 +232,67 @@ function openTab(name) {
   if (name === "stats") {
     document.getElementById("tabBtnStats").classList.add("active");
   }
+
+  if (name === "inventory") {
+    loadInventory();
+  }
 }
 
+async function loadInventory() {
+  const items = await api(`/api/characters/${activeCharacterId}/items`);
+
+  const list = document.getElementById("inventoryList");
+  list.innerHTML = "";
+
+  if (!items.length) {
+    list.innerHTML = "<li class='muted'>Инвентарь пуст</li>";
+    return;
+  }
+
+  for (const i of items) {
+    const li = document.createElement("li");
+    li.className = "item";
+
+    li.innerHTML = `
+      <b>${i.name}</b>
+      <div class="muted">${i.description || ""}</div>
+      <pre>${i.stats || ""}</pre>
+      <button onclick="deleteItem(${i.id})">❌</button>
+    `;
+
+    list.appendChild(li);
+  }
+}
+
+async function addItem() {
+  const name = document.getElementById("itemName").value.trim();
+  const desc = document.getElementById("itemDesc").value.trim();
+  const stats = document.getElementById("itemStats").value.trim();
+
+  if (!name) return alert("Название обязательно");
+
+  await api(`/api/characters/${activeCharacterId}/items`, {
+    method: "POST",
+    body: {
+      name,
+      description: desc,
+      stats
+    }
+  });
+
+  document.getElementById("itemName").value = "";
+  document.getElementById("itemDesc").value = "";
+  document.getElementById("itemStats").value = "";
+
+  loadInventory();
+}
+
+async function deleteItem(itemId) {
+  if (!confirm("Удалить предмет?")) return;
+
+  await api(`/api/characters/${activeCharacterId}/items/${itemId}`, {
+    method: "DELETE"
+  });
+
+  loadInventory();
+}

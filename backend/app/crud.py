@@ -81,3 +81,22 @@ async def add_state(db: AsyncSession, ch_id: int, payload: dict) -> State:
     await db.commit()
     await db.refresh(st)
     return st
+
+async def list_items(db: AsyncSession, ch_id: int) -> list[Item]:
+    q = await db.execute(
+        select(Item).where(Item.character_id == ch_id)
+    )
+    return list(q.scalars().all())
+
+async def delete_item(db: AsyncSession, item_id: int) -> bool:
+    q = await db.execute(
+        select(Item).where(Item.id == item_id)
+    )
+    item = q.scalar_one_or_none()
+
+    if not item:
+        return False
+
+    await db.delete(item)
+    await db.commit()
+    return True

@@ -86,7 +86,19 @@
 
         <!-- 🎒 ИНВЕНТАРЬ -->
         <div id="tab-inventory" class="tab-content" style="display:none">
-          <p class="muted">Инвентарь будет позже</p>
+
+          <ul id="inventoryList" class="list"></ul>
+
+          <div class="card sub">
+            <h3>➕ Добавить предмет</h3>
+
+            <input id="itemName" placeholder="Название предмета" />
+            <textarea id="itemDesc" placeholder="Описание"></textarea>
+            <textarea id="itemStats" placeholder="Характеристики (опционально)"></textarea>
+
+            <button onclick="addItem()">Добавить</button>
+          </div>
+
         </div>
 
         <!-- ✨ ЗАКЛИНАНИЯ -->
