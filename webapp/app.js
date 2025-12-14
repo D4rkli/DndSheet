@@ -11,6 +11,10 @@ const listEl = document.getElementById("chars");
 const createBtn = document.getElementById("createBtn");
 const newName = document.getElementById("newName");
 
+console.log("tg.initData:", tg.initData);
+console.log("tg.initDataUnsafe:", tg.initDataUnsafe);
+
+
 // =====================
 // INIT DATA (ОБЯЗАТЕЛЬНО)
 // =====================
@@ -18,11 +22,11 @@ const INIT_DATA = tg?.initData || tg?.initDataUnsafe || "";
 
 let activeCharacterId = null;
 
-if (!tg || !INIT_DATA) {
-  document.body.innerHTML =
-    "<div style='padding:16px;color:#aaa'>Открой WebApp из Telegram</div>";
-  throw new Error("No Telegram initData");
-}
+// (!tg || !INIT_DATA) {
+//  document.body.innerHTML =
+//    "<div style='padding:16px;color:#aaa'>Открой WebApp из Telegram</div>";
+//  throw new Error("No Telegram initData");
+//}
 
 // =====================
 // API helper (ЕДИНСТВЕННЫЙ)
