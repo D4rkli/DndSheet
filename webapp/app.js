@@ -18,15 +18,18 @@ console.log("tg.initDataUnsafe:", tg.initDataUnsafe);
 // =====================
 // INIT DATA (ОБЯЗАТЕЛЬНО)
 // =====================
-const INIT_DATA = tg?.initData || tg?.initDataUnsafe || "";
+const INIT_DATA = tg.initData || "";
 
 let activeCharacterId = null;
 
-// (!tg || !INIT_DATA) {
-//  document.body.innerHTML =
-//    "<div style='padding:16px;color:#aaa'>Открой WebApp из Telegram</div>";
-//  throw new Error("No Telegram initData");
-//}
+if (!tg || !INIT_DATA) {
+  document.body.innerHTML = `
+    <div style="padding:16px;color:#aaa">
+      Открой WebApp из Telegram
+    </div>
+  `;
+  throw new Error("No Telegram initData");
+}
 
 // =====================
 // API helper (ЕДИНСТВЕННЫЙ)
