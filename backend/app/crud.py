@@ -18,15 +18,19 @@ async def list_characters(db: AsyncSession, user_id: int) -> list[Character]:
     q = await db.execute(select(Character).where(Character.owner_user_id == user_id))
     return list(q.scalars().all())
 
-async def create_character(db: AsyncSession, user_id: int, name: str) -> Character:
-    ch = Character(owner_user_id=user_id, name=name)
-    db.add(ch)
-    await db.flush()
-    eq = Equipment(character_id=ch.id)  # сразу создаём экипировку
-    db.add(eq)
-    await db.commit()
-    await db.refresh(ch)
-    return ch
+async def get_character(
+    db: AsyncSession,
+    character_id: int,
+    user_id: int,
+):
+    result = await db.execute(
+        select(Character).where(
+            Character.id == character_id,
+            Character.owner_user_id == user_id
+        )
+    )
+    return result.scalar_one_or_none()
+
 
 async def update_character(db, character_id: int, user_id: int, data):
     result = await db.execute(
