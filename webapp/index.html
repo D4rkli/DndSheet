@@ -24,8 +24,30 @@
     </div>
 
     <!-- 🧙‍♂️ ЭКРАН 2: ПЕРСОНАЖ (ПОКА ПУСТОЙ) -->
-    <div id="characterScreen" style="display:none">
-      <!-- сюда JS будет подставлять форму персонажа -->
+    <div id="characterScreen" class="card" style="display:none">
+
+      <button onclick="backToList()">← Назад</button>
+
+      <h2 id="charTitle">Персонаж</h2>
+
+      <div class="row">
+        <input id="charName" placeholder="Имя" />
+      </div>
+
+      <div class="row">
+        <input id="charRace" placeholder="Раса" />
+      </div>
+
+      <div class="row">
+        <input id="charClass" placeholder="Класс" />
+      </div>
+
+      <div class="row">
+        <input id="charLevel" type="number" min="1" placeholder="Уровень" />
+      </div>
+
+      <button onclick="saveCharacter()">💾 Сохранить</button>
+
     </div>
 
   </div>
