@@ -31,12 +31,16 @@ async def get_character(
     )
     return result.scalar_one_or_none()
 
-
-async def update_character(db, character_id: int, user_id: int, data):
+async def update_character(
+    db: AsyncSession,
+    character_id: int,
+    user_id: int,
+    data,
+):
     result = await db.execute(
         select(Character).where(
             Character.id == character_id,
-            Character.user_id == user_id
+            Character.owner_user_id == user_id
         )
     )
     ch = result.scalar_one_or_none()
@@ -49,11 +53,6 @@ async def update_character(db, character_id: int, user_id: int, data):
     await db.commit()
     await db.refresh(ch)
     return ch
-
-
-async def get_character(db: AsyncSession, ch_id: int) -> Character | None:
-    q = await db.execute(select(Character).where(Character.id == ch_id))
-    return q.scalar_one_or_none()
 
 async def add_item(db: AsyncSession, ch_id: int, name: str, description: str, stats: str) -> Item:
     it = Item(character_id=ch_id, name=name, description=description, stats=stats)
