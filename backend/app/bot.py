@@ -1,6 +1,6 @@
 import asyncio
 from aiogram import Bot, Dispatcher, F
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+from aiogram.types import Message, KeyboardButton, WebAppInfo, ReplyKeyboardMarkup
 from .config import settings
 
 bot = Bot(token=settings.BOT_TOKEN)
@@ -8,10 +8,21 @@ dp = Dispatcher()
 
 @dp.message(F.text == "/start")
 async def start(message: Message):
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📜 Открыть лист персонажа", web_app=WebAppInfo(url=settings.WEBAPP_URL))]
-    ])
-    await message.answer("Открывай лист через кнопку 👇", reply_markup=kb)
+    kb = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(
+                    text="🧙 Открыть лист персонажа",
+                    web_app=WebAppInfo(
+                        url="https://dnd-bot-backend.onrender.com/webapp"
+                    )
+                )
+            ]
+        ],
+        resize_keyboard=True
+    )
+
+    await message.answer("Открываем WebApp 👇", reply_markup=kb)
 
 async def main():
     await dp.start_polling(bot)
