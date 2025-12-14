@@ -45,6 +45,20 @@ async def list_characters(
     )
     return list(q.scalars().all())
 
+async def create_character(
+    db: AsyncSession,
+    user_id: int,
+    name: str,
+) -> Character:
+    ch = Character(
+        owner_user_id=user_id,
+        name=name,
+        level=1,
+    )
+    db.add(ch)
+    await db.commit()
+    await db.refresh(ch)
+    return ch
 
 async def get_character_for_user(
     db: AsyncSession,

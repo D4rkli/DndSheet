@@ -121,3 +121,78 @@ li { padding:8px; border-bottom: 1px solid #2a2f3a; }
 #itemEditor {
   margin-bottom: 80px;
 }
+
+/* =========================
+   Общие поля ввода
+   ========================= */
+
+input,
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+
+  background: #0f172a;           /* тёмный фон */
+  color: #e5e7eb;
+
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+
+  padding: 12px 14px;
+  margin-bottom: 10px;
+
+  font-size: 14px;
+  font-family: inherit;
+
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.4);
+}
+
+/* =========================
+   Текстовые области
+   ========================= */
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* =========================
+   Кнопки в редакторе
+   ========================= */
+
+#itemEditor button {
+  background: #2563eb;
+  border: none;
+  color: white;
+
+  padding: 12px 16px;
+  border-radius: 12px;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+#itemEditor button:hover {
+  background: #1d4ed8;
+}
+
+/* Кнопка удаления */
+#deleteItemBtn {
+  background: #dc2626;
+}
+
+#deleteItemBtn:hover {
+  background: #b91c1c;
+}
