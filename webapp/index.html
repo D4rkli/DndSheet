@@ -23,32 +23,27 @@
       <ul id="chars"></ul>
     </div>
 
-    <!-- 🧙‍♂️ ЭКРАН 2: ПЕРСОНАЖ (ПОКА ПУСТОЙ) -->
-    <div id="characterScreen" class="card" style="display:none">
+<!-- 🧙‍♂️ ЭКРАН 2: ПЕРСОНАЖ -->
+<div id="characterScreen" class="card" style="display:none">
 
-      <button onclick="backToList()">← Назад</button>
+  <button class="back" onclick="backToList()">← Назад</button>
 
-      <h2 id="charTitle">Персонаж</h2>
+  <h2 id="charTitle"></h2>
+  <div id="charMeta" class="muted"></div>
 
-      <div class="row">
-        <input id="charName" placeholder="Имя" />
-      </div>
+  <!-- ВКЛАДКИ -->
+  <div class="tabs">
+    <button class="tab active" onclick="openTab('stats')">Характеристики</button>
+    <button class="tab disabled">Инвентарь</button>
+    <button class="tab disabled">Заклинания</button>
+  </div>
 
-      <div class="row">
-        <input id="charRace" placeholder="Раса" />
-      </div>
+  <!-- КОНТЕНТ ВКЛАДКИ -->
+  <div id="tab-stats"></div>
 
-      <div class="row">
-        <input id="charClass" placeholder="Класс" />
-      </div>
+</div>
 
-      <div class="row">
-        <input id="charLevel" type="number" min="1" placeholder="Уровень" />
-      </div>
 
-      <button onclick="saveCharacter()">💾 Сохранить</button>
-
-    </div>
 
   </div>
 

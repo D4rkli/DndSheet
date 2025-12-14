@@ -21,6 +21,8 @@ console.log("tg.initDataUnsafe:", tg.initDataUnsafe);
 const INIT_DATA = tg.initData || "";
 
 let activeCharacterId = null;
+let currentCharacter = null;
+let editMode = false;
 
 if (!tg || !INIT_DATA) {
   document.body.innerHTML = `
@@ -116,28 +118,7 @@ async function openCharacter(id) {
   document.getElementById("listScreen").style.display = "none";
   document.getElementById("characterScreen").style.display = "block";
 
-  // заполняем форму
-  document.getElementById("charTitle").textContent = c.name;
-  document.getElementById("charName").value = c.name || "";
-  document.getElementById("charRace").value = c.race || "";
-  document.getElementById("charClass").value = c.klass || "";
-  document.getElementById("charLevel").value = c.level || 1;
-}
-
-async function saveCharacter() {
-  if (!activeCharacterId) return;
-
-  await api(`/api/characters/${activeCharacterId}`, {
-    method: "PATCH",
-    body: {
-      name: document.getElementById("charName").value,
-      race: document.getElementById("charRace").value,
-      klass: document.getElementById("charClass").value,
-      level: Number(document.getElementById("charLevel").value)
-    }
-  });
-
-  alert("Сохранено 💾");
+  renderCharacter();
 }
 
 function backToList() {
@@ -147,3 +128,78 @@ function backToList() {
   loadCharacters();
 }
 
+function renderCharacter() {
+  const c = currentCharacter;
+
+  document.getElementById("charTitle").textContent = c.name;
+  document.getElementById("charMeta").textContent =
+    `${c.race || "—"} • ${c.klass || "—"} • ур. ${c.level || 1}`;
+
+  renderStatsTab();
+}
+
+function renderCharacter() {
+  const c = currentCharacter;
+
+  document.getElementById("charTitle").textContent = c.name;
+  document.getElementById("charMeta").textContent =
+    `${c.race || "—"} • ${c.klass || "—"} • ур. ${c.level || 1}`;
+
+  renderStatsTab();
+}
+
+function renderStatsEdit(el) {
+  el.innerHTML = `
+    <div class="field">
+      <label>Имя</label>
+      <input id="edit-name" value="${currentCharacter.name}">
+    </div>
+
+    <div class="field">
+      <label>Раса</label>
+      <input id="edit-race" value="${currentCharacter.race || ""}">
+    </div>
+
+    <div class="field">
+      <label>Класс</label>
+      <input id="edit-klass" value="${currentCharacter.klass || ""}">
+    </div>
+
+    <div class="field">
+      <label>Уровень</label>
+      <input id="edit-level" type="number" value="${currentCharacter.level || 1}">
+    </div>
+
+    <div class="actions">
+      <button onclick="saveStats()">💾 Сохранить</button>
+      <button onclick="cancelEdit()">❌ Отмена</button>
+    </div>
+  `;
+}
+
+function enableEdit() {
+  editMode = true;
+  renderStatsTab();
+}
+
+function cancelEdit() {
+  editMode = false;
+  renderStatsTab();
+}
+
+async function saveStats() {
+  const payload = {
+    name: document.getElementById("edit-name").value,
+    race: document.getElementById("edit-race").value,
+    klass: document.getElementById("edit-klass").value,
+    level: Number(document.getElementById("edit-level").value),
+  };
+
+  currentCharacter = await api(`/api/characters/${activeCharacterId}`, {
+    method: "PATCH",
+    body: payload
+  });
+
+  editMode = false;
+  renderCharacter();
+}
