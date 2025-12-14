@@ -112,11 +112,8 @@ loadCharacters().catch(err => {
 
 async function openCharacter(id) {
   activeCharacterId = id;
+  currentCharacter = await api(`/api/characters/${id}`);
 
-  const c = await api(`/api/characters/${id}`);
-  currentCharacter = c;
-
-  // скрываем список
   document.getElementById("listScreen").style.display = "none";
   document.getElementById("characterScreen").style.display = "block";
 
@@ -217,50 +214,49 @@ async function saveStats() {
 }
 
 function openTab(name) {
+  if (!activeCharacterId) {
+    console.warn("Нет активного персонажа");
+    return;
+  }
+
   // скрываем все вкладки
   document.querySelectorAll(".tab-content").forEach(el => {
     el.style.display = "none";
   });
 
-  // убираем active у всех кнопок навигации
+  // убираем active у кнопок
   document.querySelectorAll(".bottom-nav button").forEach(btn => {
     btn.classList.remove("active");
   });
 
-  // показываем нужную вкладку
+  // показываем вкладку
   document.getElementById(`tab-${name}`).style.display = "block";
+  document.getElementById(`nav-${name}`).classList.add("active");
 
-  // подсвечиваем кнопку
-  document.getElementById(`nav-${name}`)?.classList.add("active");
-
-  // если инвентарь — грузим предметы
   if (name === "inventory") {
     loadInventory();
   }
 }
 
 async function loadInventory() {
+  const list = document.getElementById("inventoryList");
+  list.innerHTML = "<li class='muted'>Загрузка…</li>";
+
   const items = await api(`/api/characters/${activeCharacterId}/items`);
 
-  const list = document.getElementById("inventoryList");
-  list.innerHTML = "";
-
   if (!items.length) {
-    list.innerHTML = "<li class='muted'>Инвентарь пуст</li>";
+    list.innerHTML = "<li class='muted'>Пусто</li>";
     return;
   }
 
-  for (const i of items) {
+  list.innerHTML = "";
+  for (const it of items) {
     const li = document.createElement("li");
-    li.className = "item";
-
     li.innerHTML = `
-      <b>${i.name}</b>
-      <div class="muted">${i.description || ""}</div>
-      <pre>${i.stats || ""}</pre>
-      <button onclick="deleteItem(${i.id})">❌</button>
+      <b>${it.name}</b>
+      <div class="muted">${it.description || ""}</div>
+      <button onclick="openItem(${it.id})">⚙️</button>
     `;
-
     list.appendChild(li);
   }
 }
@@ -361,29 +357,32 @@ async function deleteItem() {
   loadInventory();
 }
 
-async function loadInventory() {
-  const items = await api(`/api/characters/${activeCharacterId}/items`);
-  const list = document.getElementById("inventoryList");
-
-  list.innerHTML = "";
-
-  if (!items.length) {
-    list.innerHTML = "<li class='muted'>Инвентарь пуст</li>";
-    return;
-  }
-
-  for (const i of items) {
-    const li = document.createElement("li");
-    li.innerHTML = `<b>${i.name}</b><br><small>${i.description || ""}</small>`;
-    li.onclick = () => openItemEditor(i);
-    list.appendChild(li);
-  }
-}
-
 document.getElementById("addItemFab").style.display =
   name === "inventory" ? "block" : "none";
 
 if (name === "inventory") {
+  loadInventory();
+}
+
+function openAddItem() {
+  document.getElementById("addItemModal").style.display = "block";
+}
+
+function closeAddItem() {
+  document.getElementById("addItemModal").style.display = "none";
+}
+
+async function addItem() {
+  await api(`/api/characters/${activeCharacterId}/items`, {
+    method: "POST",
+    body: {
+      name: itemName.value,
+      description: itemDesc.value,
+      stats: itemStats.value,
+    }
+  });
+
+  closeAddItem();
   loadInventory();
 }
 

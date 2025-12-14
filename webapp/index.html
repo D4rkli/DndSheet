@@ -67,8 +67,25 @@
 
       <!-- 🎒 ИНВЕНТАРЬ -->
       <div id="tab-inventory" class="tab-content" style="display:none">
-        <ul id="inventoryList"></ul>
+
+      <div class="inventory-header">
+        <h3>Инвентарь</h3>
+        <button class="add-btn" onclick="openAddItem()">➕</button>
       </div>
+
+      <ul id="inventoryList" class="list"></ul>
+
+      <!-- Модалка добавления -->
+      <div id="addItemModal" class="modal" style="display:none">
+        <input id="itemName" placeholder="Название">
+        <textarea id="itemDesc" placeholder="Описание"></textarea>
+        <textarea id="itemStats" placeholder="Характеристики"></textarea>
+
+        <button onclick="addItem()">Добавить</button>
+        <button onclick="closeAddItem()">Отмена</button>
+      </div>
+
+    </div>
 
       <!-- ✨ ЗАКЛИНАНИЯ -->
       <div id="tab-spells" class="tab-content" style="display:none">
