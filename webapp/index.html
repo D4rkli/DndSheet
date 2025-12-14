@@ -61,6 +61,29 @@
           <button onclick="enableEdit()">✏️ Редактировать</button>
         </div>
 
+        <!-- ✏️ РЕЖИМ РЕДАКТИРОВАНИЯ -->
+        <div id="editStats" class="tab-content" style="display:none">
+
+          <div class="row">
+            <input id="charName" placeholder="Имя">
+          </div>
+
+          <div class="row">
+            <input id="charRace" placeholder="Раса">
+          </div>
+
+          <div class="row">
+            <input id="charClass" placeholder="Класс">
+          </div>
+
+          <div class="row">
+            <input id="charLevel" type="number" min="1" placeholder="Уровень">
+          </div>
+
+          <button onclick="saveCharacter()">💾 Сохранить</button>
+          <button onclick="cancelEdit()">✖ Отмена</button>
+        </div>
+
         <!-- 🎒 ИНВЕНТАРЬ -->
         <div id="tab-inventory" class="tab-content" style="display:none">
           <p class="muted">Инвентарь будет позже</p>

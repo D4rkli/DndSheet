@@ -113,6 +113,7 @@ async function openCharacter(id) {
   activeCharacterId = id;
 
   const c = await api(`/api/characters/${id}`);
+  currentCharacter = c;
 
   // скрываем список
   document.getElementById("listScreen").style.display = "none";
@@ -127,16 +128,6 @@ function backToList() {
   document.getElementById("characterScreen").style.display = "none";
   document.getElementById("listScreen").style.display = "block";
   loadCharacters();
-}
-
-function renderCharacter() {
-  const c = currentCharacter;
-
-  document.getElementById("charTitle").textContent = c.name;
-  document.getElementById("charMeta").textContent =
-    `${c.race || "—"} • ${c.klass || "—"} • ур. ${c.level || 1}`;
-
-  renderStatsTab();
 }
 
 function renderCharacter() {
@@ -177,6 +168,24 @@ function renderStatsEdit(el) {
     </div>
   `;
 }
+
+function renderStatsTab() {
+  const view = document.getElementById("tab-stats");
+
+  if (!editMode) {
+    view.innerHTML = `
+      <p><b>Имя:</b> ${currentCharacter.name}</p>
+      <p><b>Раса:</b> ${currentCharacter.race || "—"}</p>
+      <p><b>Класс:</b> ${currentCharacter.klass || "—"}</p>
+      <p><b>Уровень:</b> ${currentCharacter.level || 1}</p>
+
+      <button onclick="enableEdit()">✏️ Редактировать</button>
+    `;
+  } else {
+    renderStatsEdit(view);
+  }
+}
+
 
 function enableEdit() {
   editMode = true;
