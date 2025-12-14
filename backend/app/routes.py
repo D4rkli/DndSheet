@@ -11,12 +11,18 @@ router = APIRouter()
 def _auth_user(x_tg_init_data: str | None):
     if not x_tg_init_data:
         raise HTTPException(401, "Missing X-TG-INIT-DATA")
-    data = verify_telegram_init_data(x_tg_init_data)
-    user_json = data.get("user")
-    if not user_json:
-        raise HTTPException(401, "No user in initData")
-    user = json.loads(user_json)
-    return user  # dict
+
+    try:
+        data = verify_telegram_init_data(x_tg_init_data)
+        user_json = data.get("user")
+        if not user_json:
+            raise ValueError("No user in initData")
+        return json.loads(user_json)
+
+    except Exception as e:
+        print("INIT DATA ERROR:", repr(e))
+        raise HTTPException(401, "Bad Telegram initData")
+
 
 @router.get("/me")
 async def me(
