@@ -30,8 +30,35 @@
 
       <h2 id="charTitle">Персонаж</h2>
       <div id="charMeta" class="muted"></div>
+    </div>
 
-      <!-- 📌 НИЖНЯЯ НАВИГАЦИЯ -->
+    <!-- 📦 КОНТЕНТ ВКЛАДОК -->
+    <div id="tabContent">
+
+      <!-- 📊 ХАРАКТЕРИСТИКИ -->
+      <div id="tab-stats" class="tab-content">
+        <p><b>Имя:</b> <span id="viewName"></span></p>
+        <p><b>Раса:</b> <span id="viewRace"></span></p>
+        <p><b>Класс:</b> <span id="viewClass"></span></p>
+        <p><b>Уровень:</b> <span id="viewLevel"></span></p>
+
+        <button onclick="enableEdit()">✏️ Редактировать</button>
+      </div>
+
+      <!-- 🎒 ИНВЕНТАРЬ -->
+      <div id="tab-inventory" class="tab-content" style="display:none">
+        <ul id="inventoryList"></ul>
+      </div>
+
+      <!-- ✨ ЗАКЛИНАНИЯ -->
+      <div id="tab-spells" class="tab-content" style="display:none">
+        <p class="muted">Заклинания будут позже</p>
+      </div>
+
+    </div>
+
+
+    <!-- 📌 НИЖНЯЯ НАВИГАЦИЯ -->
       <div class="bottom-nav">
         <button id="nav-stats" class="active" onclick="openTab('stats')">
           <span class="icon">📊</span>

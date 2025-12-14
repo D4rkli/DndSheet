@@ -126,6 +126,7 @@ async function openCharacter(id) {
 function backToList() {
   activeCharacterId = null;
   document.getElementById("characterScreen").style.display = "none";
+  document.getElementById("bottomNav").style.display = "none";
   document.getElementById("listScreen").style.display = "block";
   loadCharacters();
 }
