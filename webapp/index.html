@@ -24,27 +24,43 @@
     </div>
 
 <!-- 🧙‍♂️ ЭКРАН 2: ПЕРСОНАЖ -->
-<div id="characterScreen" class="card" style="display:none">
+    <div id="characterScreen" class="card" style="display:none">
 
-  <button class="back" onclick="backToList()">← Назад</button>
+      <button onclick="backToList()">← Назад</button>
 
-  <h2 id="charTitle"></h2>
-  <div id="charMeta" class="muted"></div>
+      <h2 id="charTitle">Персонаж</h2>
+      <div id="charMeta" class="muted"></div>
 
-  <!-- ВКЛАДКИ -->
-  <div class="tabs">
-    <button class="tab active" onclick="openTab('stats')">Характеристики</button>
-    <button class="tab disabled">Инвентарь</button>
-    <button class="tab disabled">Заклинания</button>
-  </div>
+      <!-- 🧭 ВКЛАДКИ -->
+      <div class="tabs">
+        <button id="tabBtnStats" class="active" onclick="openTab('stats')">
+          Характеристики
+        </button>
+        <button onclick="openTab('inventory')" disabled>
+          Инвентарь
+        </button>
+        <button onclick="openTab('spells')" disabled>
+          Заклинания
+        </button>
+      </div>
 
-  <!-- КОНТЕНТ ВКЛАДКИ -->
-  <div id="tab-stats"></div>
+      <!-- 📦 КОНТЕНТ ВКЛАДОК -->
+      <div id="tabContent">
 
-</div>
+        <!-- Характеристики -->
+        <div id="tab-stats"></div>
 
+        <!-- Заглушки -->
+        <div id="tab-inventory" style="display:none">
+          <div class="muted">Инвентарь скоро 👀</div>
+        </div>
 
+        <div id="tab-spells" style="display:none">
+          <div class="muted">Заклинания скоро 🔮</div>
+        </div>
 
+      </div>
+    </div>
   </div>
 
   <script src="app.js?v=2"></script>

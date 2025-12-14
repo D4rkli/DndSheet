@@ -119,6 +119,7 @@ async function openCharacter(id) {
   document.getElementById("characterScreen").style.display = "block";
 
   renderCharacter();
+  openTab("stats");
 }
 
 function backToList() {
@@ -202,4 +203,24 @@ async function saveStats() {
 
   editMode = false;
   renderCharacter();
+}
+
+function openTab(tab) {
+  // скрываем все вкладки
+  document.getElementById("tab-stats").style.display = "none";
+  document.getElementById("tab-inventory").style.display = "none";
+  document.getElementById("tab-spells").style.display = "none";
+
+  // убираем active у кнопок
+  document.querySelectorAll(".tabs button").forEach(b =>
+    b.classList.remove("active")
+  );
+
+  // показываем нужную
+  document.getElementById(`tab-${tab}`).style.display = "block";
+
+  if (tab === "stats") {
+    document.getElementById("tabBtnStats").classList.add("active");
+    renderStatsTab(); // 🔥 ВАЖНО
+  }
 }
