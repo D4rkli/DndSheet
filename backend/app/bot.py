@@ -1,0 +1,20 @@
+import asyncio
+from aiogram import Bot, Dispatcher, F
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+from .config import settings
+
+bot = Bot(token=settings.BOT_TOKEN)
+dp = Dispatcher()
+
+@dp.message(F.text == "/start")
+async def start(message: Message):
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📜 Открыть лист персонажа", web_app=WebAppInfo(url=settings.WEBAPP_URL))]
+    ])
+    await message.answer("Открывай лист через кнопку 👇", reply_markup=kb)
+
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
