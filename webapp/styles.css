@@ -100,3 +100,24 @@ li { padding:8px; border-bottom: 1px solid #2a2f3a; }
 #characterScreen {
   padding-bottom: 70px;
 }
+
+/* ➕ FAB */
+.fab {
+  position: fixed;
+  right: 16px;
+  bottom: 72px; /* над bottom-nav */
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 28px;
+  border: none;
+  background: #4f8cff;
+  color: #fff;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+/* карточка редактора */
+#itemEditor {
+  margin-bottom: 80px;
+}

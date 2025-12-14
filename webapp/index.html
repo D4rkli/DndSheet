@@ -32,6 +32,26 @@
       <div id="charMeta" class="muted"></div>
     </div>
 
+    <!-- 🧩 ЭКРАН ПРЕДМЕТА -->
+    <div id="itemEditor" class="card" style="display:none">
+
+      <button onclick="closeItemEditor()">← Назад</button>
+
+      <h2 id="itemEditorTitle">Новый предмет</h2>
+
+      <input id="itemName" placeholder="Название предмета" />
+      <textarea id="itemDesc" placeholder="Описание"></textarea>
+      <textarea id="itemStats" placeholder="Характеристики"></textarea>
+
+      <button onclick="saveItem()">💾 Сохранить</button>
+      <button id="deleteItemBtn"
+              onclick="deleteItem()"
+              style="display:none">
+        🗑 Удалить
+      </button>
+
+    </div>
+
     <!-- 📦 КОНТЕНТ ВКЛАДОК -->
     <div id="tabContent">
 
@@ -57,6 +77,13 @@
 
     </div>
 
+    <!-- ➕ FAB: добавить предмет -->
+    <button id="addItemFab"
+            class="fab"
+            onclick="openItemEditor()"
+            style="display:none">
+      +
+    </button>
 
     <!-- 📌 НИЖНЯЯ НАВИГАЦИЯ -->
       <div class="bottom-nav">

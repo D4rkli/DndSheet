@@ -22,6 +22,7 @@ const INIT_DATA = tg.initData || "";
 
 let activeCharacterId = null;
 let currentCharacter = null;
+let activeItemId = null;
 let editMode = false;
 
 if (!tg || !INIT_DATA) {
@@ -296,3 +297,93 @@ async function deleteItem(itemId) {
 
   loadInventory();
 }
+
+function openItemEditor(item = null) {
+  activeItemId = item?.id || null;
+
+  document.getElementById("characterScreen").style.display = "none";
+  document.getElementById("itemEditor").style.display = "block";
+  document.getElementById("bottomNav").style.display = "none";
+  document.getElementById("addItemFab").style.display = "none";
+
+  document.getElementById("itemEditorTitle").textContent =
+    item ? "Редактировать предмет" : "Новый предмет";
+
+  document.getElementById("itemName").value = item?.name || "";
+  document.getElementById("itemDesc").value = item?.description || "";
+  document.getElementById("itemStats").value = item?.stats || "";
+
+  document.getElementById("deleteItemBtn").style.display =
+    item ? "block" : "none";
+}
+
+function closeItemEditor() {
+  activeItemId = null;
+
+  document.getElementById("itemEditor").style.display = "none";
+  document.getElementById("characterScreen").style.display = "block";
+  document.getElementById("bottomNav").style.display = "flex";
+  document.getElementById("addItemFab").style.display = "block";
+
+  openTab("inventory");
+}
+
+async function saveItem() {
+  const payload = {
+    name: itemName.value,
+    description: itemDesc.value,
+    stats: itemStats.value
+  };
+
+  if (activeItemId) {
+    // позже PATCH (если захочешь)
+  } else {
+    await api(`/api/characters/${activeCharacterId}/items`, {
+      method: "POST",
+      body: payload
+    });
+  }
+
+  closeItemEditor();
+  loadInventory();
+}
+
+async function deleteItem() {
+  if (!activeItemId) return;
+
+  if (!confirm("Удалить предмет?")) return;
+
+  await api(`/api/characters/${activeCharacterId}/items/${activeItemId}`, {
+    method: "DELETE"
+  });
+
+  closeItemEditor();
+  loadInventory();
+}
+
+async function loadInventory() {
+  const items = await api(`/api/characters/${activeCharacterId}/items`);
+  const list = document.getElementById("inventoryList");
+
+  list.innerHTML = "";
+
+  if (!items.length) {
+    list.innerHTML = "<li class='muted'>Инвентарь пуст</li>";
+    return;
+  }
+
+  for (const i of items) {
+    const li = document.createElement("li");
+    li.innerHTML = `<b>${i.name}</b><br><small>${i.description || ""}</small>`;
+    li.onclick = () => openItemEditor(i);
+    list.appendChild(li);
+  }
+}
+
+document.getElementById("addItemFab").style.display =
+  name === "inventory" ? "block" : "none";
+
+if (name === "inventory") {
+  loadInventory();
+}
+
