@@ -33,13 +33,17 @@
 
       <!-- 🧭 ВКЛАДКИ -->
       <div class="tabs">
-        <button id="tabBtnStats" class="active" onclick="openTab('stats')">
+        <button id="tabBtnStats"
+                class="active"
+                onclick="openTab('stats')">
           Характеристики
         </button>
-        <button onclick="openTab('inventory')" disabled>
+
+        <button onclick="openTab('inventory')">
           Инвентарь
         </button>
-        <button onclick="openTab('spells')" disabled>
+
+        <button onclick="openTab('spells')">
           Заклинания
         </button>
       </div>
@@ -47,19 +51,26 @@
       <!-- 📦 КОНТЕНТ ВКЛАДОК -->
       <div id="tabContent">
 
-        <!-- Характеристики -->
-        <div id="tab-stats"></div>
+       <!-- 📊 ХАРАКТЕРИСТИКИ -->
+        <div id="tab-stats" class="tab-content">
+          <p><b>Имя:</b> <span id="viewName"></span></p>
+          <p><b>Раса:</b> <span id="viewRace"></span></p>
+          <p><b>Класс:</b> <span id="viewClass"></span></p>
+          <p><b>Уровень:</b> <span id="viewLevel"></span></p>
 
-        <!-- Заглушки -->
-        <div id="tab-inventory" style="display:none">
-          <div class="muted">Инвентарь скоро 👀</div>
+          <button onclick="enableEdit()">✏️ Редактировать</button>
         </div>
 
-        <div id="tab-spells" style="display:none">
-          <div class="muted">Заклинания скоро 🔮</div>
+        <!-- 🎒 ИНВЕНТАРЬ -->
+        <div id="tab-inventory" class="tab-content" style="display:none">
+          <p class="muted">Инвентарь будет позже</p>
         </div>
 
-      </div>
+        <!-- ✨ ЗАКЛИНАНИЯ -->
+        <div id="tab-spells" class="tab-content" style="display:none">
+          <p class="muted">Заклинания будут позже</p>
+        </div>
+       </div>
     </div>
   </div>
 

@@ -205,22 +205,23 @@ async function saveStats() {
   renderCharacter();
 }
 
-function openTab(tab) {
+function openTab(name) {
   // скрываем все вкладки
-  document.getElementById("tab-stats").style.display = "none";
-  document.getElementById("tab-inventory").style.display = "none";
-  document.getElementById("tab-spells").style.display = "none";
+  document.querySelectorAll(".tab-content").forEach(el => {
+    el.style.display = "none";
+  });
 
   // убираем active у кнопок
-  document.querySelectorAll(".tabs button").forEach(b =>
-    b.classList.remove("active")
-  );
+  document.querySelectorAll(".tabs button").forEach(btn => {
+    btn.classList.remove("active");
+  });
 
-  // показываем нужную
-  document.getElementById(`tab-${tab}`).style.display = "block";
+  // показываем нужную вкладку
+  document.getElementById(`tab-${name}`).style.display = "block";
 
-  if (tab === "stats") {
+  // делаем кнопку активной
+  if (name === "stats") {
     document.getElementById("tabBtnStats").classList.add("active");
-    renderStatsTab(); // 🔥 ВАЖНО
   }
 }
+
