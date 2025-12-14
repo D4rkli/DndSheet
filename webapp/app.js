@@ -220,19 +220,18 @@ function openTab(name) {
     el.style.display = "none";
   });
 
-  // убираем active у кнопок
-  document.querySelectorAll(".tabs button").forEach(btn => {
+  // убираем active у всех кнопок навигации
+  document.querySelectorAll(".bottom-nav button").forEach(btn => {
     btn.classList.remove("active");
   });
 
   // показываем нужную вкладку
   document.getElementById(`tab-${name}`).style.display = "block";
 
-  // делаем кнопку активной
-  if (name === "stats") {
-    document.getElementById("tabBtnStats").classList.add("active");
-  }
+  // подсвечиваем кнопку
+  document.getElementById(`nav-${name}`)?.classList.add("active");
 
+  // если инвентарь — грузим предметы
   if (name === "inventory") {
     loadInventory();
   }

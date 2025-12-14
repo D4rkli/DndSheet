@@ -31,83 +31,23 @@
       <h2 id="charTitle">Персонаж</h2>
       <div id="charMeta" class="muted"></div>
 
-      <!-- 🧭 ВКЛАДКИ -->
-      <div class="tabs">
-        <button id="tabBtnStats"
-                class="active"
-                onclick="openTab('stats')">
-          Характеристики
+      <!-- 📌 НИЖНЯЯ НАВИГАЦИЯ -->
+      <div class="bottom-nav">
+        <button id="nav-stats" class="active" onclick="openTab('stats')">
+          <span class="icon">📊</span>
+          <span class="label">Хар-ки</span>
         </button>
 
-        <button onclick="openTab('inventory')">
-          Инвентарь
+        <button id="nav-inventory" onclick="openTab('inventory')">
+          <span class="icon">🎒</span>
+          <span class="label">Инвентарь</span>
         </button>
 
-        <button onclick="openTab('spells')">
-          Заклинания
+        <button id="nav-spells" onclick="openTab('spells')">
+          <span class="icon">✨</span>
+          <span class="label">Магия</span>
         </button>
       </div>
-
-      <!-- 📦 КОНТЕНТ ВКЛАДОК -->
-      <div id="tabContent">
-
-       <!-- 📊 ХАРАКТЕРИСТИКИ -->
-        <div id="tab-stats" class="tab-content">
-          <p><b>Имя:</b> <span id="viewName"></span></p>
-          <p><b>Раса:</b> <span id="viewRace"></span></p>
-          <p><b>Класс:</b> <span id="viewClass"></span></p>
-          <p><b>Уровень:</b> <span id="viewLevel"></span></p>
-
-          <button onclick="enableEdit()">✏️ Редактировать</button>
-        </div>
-
-        <!-- ✏️ РЕЖИМ РЕДАКТИРОВАНИЯ -->
-        <div id="editStats" class="tab-content" style="display:none">
-
-          <div class="row">
-            <input id="charName" placeholder="Имя">
-          </div>
-
-          <div class="row">
-            <input id="charRace" placeholder="Раса">
-          </div>
-
-          <div class="row">
-            <input id="charClass" placeholder="Класс">
-          </div>
-
-          <div class="row">
-            <input id="charLevel" type="number" min="1" placeholder="Уровень">
-          </div>
-
-          <button onclick="saveCharacter()">💾 Сохранить</button>
-          <button onclick="cancelEdit()">✖ Отмена</button>
-        </div>
-
-        <!-- 🎒 ИНВЕНТАРЬ -->
-        <div id="tab-inventory" class="tab-content" style="display:none">
-
-          <ul id="inventoryList" class="list"></ul>
-
-          <div class="card sub">
-            <h3>➕ Добавить предмет</h3>
-
-            <input id="itemName" placeholder="Название предмета" />
-            <textarea id="itemDesc" placeholder="Описание"></textarea>
-            <textarea id="itemStats" placeholder="Характеристики (опционально)"></textarea>
-
-            <button onclick="addItem()">Добавить</button>
-          </div>
-
-        </div>
-
-        <!-- ✨ ЗАКЛИНАНИЯ -->
-        <div id="tab-spells" class="tab-content" style="display:none">
-          <p class="muted">Заклинания будут позже</p>
-        </div>
-       </div>
-    </div>
-  </div>
 
   <script src="app.js?v=2"></script>
 </body>

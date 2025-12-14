@@ -57,3 +57,46 @@ li { padding:8px; border-bottom: 1px solid #2a2f3a; }
   background: #4f8cff;
   color: white;
 }
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
+  background: #0f172a;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 8px 0;
+
+  z-index: 100;
+}
+
+.bottom-nav button {
+  background: none;
+  border: none;
+  color: #94a3b8;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  font-size: 12px;
+  gap: 2px;
+}
+
+.bottom-nav .icon {
+  font-size: 20px;
+}
+
+.bottom-nav button.active {
+  color: #3b82f6;
+}
+
+/* чтобы контент не прятался под кнопками */
+#characterScreen {
+  padding-bottom: 70px;
+}
