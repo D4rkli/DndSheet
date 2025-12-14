@@ -113,7 +113,7 @@ async def add_item(
 ):
     tg_user = _auth_user(x_tg_init_data)
     u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
-    ch = await crud.get_character(db, ch_id)
+    ch = await crud.get_character(db, ch_id, u.id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
