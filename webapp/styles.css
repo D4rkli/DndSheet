@@ -196,3 +196,18 @@ textarea {
 #deleteItemBtn:hover {
   background: #b91c1c;
 }
+
+.form-control,
+.form-control:focus {
+  background-color: #020617;
+  color: #e5e7eb;
+  border-color: #1e293b;
+}
+
+.form-control::placeholder {
+  color: #64748b;
+}
+
+.btn {
+  border-radius: 12px;
+}
