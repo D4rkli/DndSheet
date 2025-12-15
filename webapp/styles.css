@@ -1,274 +1,143 @@
-body { font-family: system-ui, Arial, sans-serif; margin: 0; background:#0f1115; color:#fff; }
-.wrap { max-width: 720px; margin: 0 auto; padding: 16px; }
-h1 { margin: 0 0 12px; font-size: 22px; }
-.card { background:#171a21; border:1px solid #2a2f3a; border-radius: 12px; padding: 12px; margin-top: 12px; }
-.muted { color:#9aa4b2; }
-.row { display:flex; gap:8px; margin: 8px 0; }
-input { flex:1; padding:10px; border-radius:10px; border:1px solid #2a2f3a; background:#0f1115; color:#fff; }
-button { padding:10px 12px; border-radius:10px; border:0; background:#3b82f6; color:#fff; cursor:pointer; }
-li { padding:8px; border-bottom: 1px solid #2a2f3a; }
-
-.tabs {
-  display: flex;
-  gap: 8px;
-  margin: 12px 0;
-}
-
-.tab {
-  flex: 1;
-  padding: 8px;
-  border-radius: 8px;
-  background: #222;
-  color: #aaa;
-  border: none;
-  cursor: pointer;
-}
-
-.tab.active {
-  background: #3b82f6;
-  color: white;
-}
-
-.tab.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.field {
-  margin-bottom: 10px;
-}
-
-.field label {
-  font-size: 12px;
-  color: #888;
-}
-
-.field-value {
+/* ===== ОСНОВА ===== */
+body {
+  background: #0f1115;
+  color: #ffffff;
   font-size: 16px;
 }
 
-.actions {
-  margin-top: 16px;
-  display: flex;
-  gap: 8px;
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
 }
 
-.tabs button.active {
-  background: #4f8cff;
-  color: white;
+/* ===== ЗАГОЛОВКИ ===== */
+h1, h2, h3 {
+  color: #ffffff;
+  font-weight: 600;
 }
 
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-
-  background: #0f172a;
-  border-top: 1px solid rgba(255,255,255,0.1);
-  padding: 8px 0;
-
-  z-index: 100;
+h1 {
+  font-size: 24px;
 }
 
-.bottom-nav button {
-  background: none;
-  border: none;
-  color: #94a3b8;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  font-size: 12px;
-  gap: 2px;
-}
-
-.bottom-nav .icon {
+h2 {
   font-size: 20px;
 }
 
-.bottom-nav button.active {
-  color: #3b82f6;
+/* ===== КАРТОЧКИ ===== */
+.card {
+  background: #171a21;
+  border: 1px solid #2a2f3a;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 12px;
 }
 
-/* чтобы контент не прятался под кнопками */
-#characterScreen {
-  padding-bottom: 70px;
+/* ===== ТЕКСТ ===== */
+p, span, li {
+  font-size: 16px;
+  line-height: 1.5;
 }
 
-/* ➕ FAB */
-.fab {
-  position: fixed;
-  right: 16px;
-  bottom: 72px; /* над bottom-nav */
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  font-size: 28px;
-  border: none;
-  background: #4f8cff;
-  color: #fff;
-  cursor: pointer;
-  z-index: 1000;
+.muted {
+  color: #b3bcc9; /* было слишком бледно */
+  font-size: 14px;
 }
 
-/* карточка редактора */
-#itemEditor {
-  margin-bottom: 80px;
-}
-
-/* =========================
-   Общие поля ввода
-   ========================= */
-
+/* ===== INPUT / TEXTAREA ===== */
 input,
 textarea {
-  width: 100%;
-  box-sizing: border-box;
-
-  background: #0f172a;           /* тёмный фон */
-  color: #e5e7eb;
-
-  border: 1px solid #1e293b;
-  border-radius: 10px;
-
-  padding: 12px 14px;
-  margin-bottom: 10px;
-
-  font-size: 14px;
-  font-family: inherit;
-
-  outline: none;
+  background: #0f1115 !important;
+  color: #ffffff !important;
+  border: 1px solid #2a2f3a !important;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #94a3b8;
+  color: #8b95a7;
 }
 
-input:focus,
-textarea:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 1px rgba(59,130,246,0.4);
+/* ===== КНОПКИ ===== */
+button {
+  font-size: 16px;
 }
 
-/* =========================
-   Текстовые области
-   ========================= */
-
-textarea {
-  min-height: 90px;
-  resize: vertical;
-}
-
-/* =========================
-   Кнопки в редакторе
-   ========================= */
-
-#itemEditor button {
-  background: #2563eb;
+.btn-primary {
+  background-color: #3b82f6;
   border: none;
-  color: white;
-
-  padding: 12px 16px;
-  border-radius: 12px;
-
-  font-size: 14px;
-  font-weight: 500;
-
-  cursor: pointer;
 }
 
-#itemEditor button:hover {
-  background: #1d4ed8;
+.btn-danger {
+  background-color: #ef4444;
+  border: none;
 }
 
-/* Кнопка удаления */
-#deleteItemBtn {
-  background: #dc2626;
+.btn-success {
+  background-color: #22c55e;
+  border: none;
 }
 
-#deleteItemBtn:hover {
-  background: #b91c1c;
+/* ===== СПИСКИ ===== */
+ul {
+  padding-left: 0;
 }
 
-.form-control,
-.form-control:focus {
-  background-color: #020617;
-  color: #e5e7eb;
-  border-color: #1e293b;
+li {
+  list-style: none;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: #0f1115;
+  border-radius: 8px;
+  border: 1px solid #2a2f3a;
 }
 
-.form-control::placeholder {
-  color: #64748b;
-}
-
-.btn {
-  border-radius: 12px;
-}
-
-.resources {
-  margin: 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* ===== РЕСУРСЫ ===== */
+.resource {
+  margin-bottom: 14px;
 }
 
 .resource-label {
-  font-size: 14px;
   margin-bottom: 4px;
-  display: flex;
-  justify-content: space-between;
-  color: #e5e7eb;
+  font-weight: 500;
 }
 
 .progress {
-  width: 100%;
-  height: 12px;
-  background: #020617;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  transition: width 0.3s ease;
+  height: 18px;
+  background: #0f1115;
 }
 
 .progress-bar.hp {
-  background: linear-gradient(90deg, #dc2626, #f87171);
+  background-color: #ef4444;
 }
 
 .progress-bar.mana {
-  background: linear-gradient(90deg, #2563eb, #60a5fa);
+  background-color: #3b82f6;
 }
 
 .progress-bar.energy {
-  background: linear-gradient(90deg, #ca8a04, #fde047);
+  background-color: #eab308;
 }
 
-/* ===== Bootstrap dark fix ===== */
-
-.form-control,
-.form-control:focus,
-textarea.form-control {
-  background-color: #0f172a;       /* тёмный фон */
-  color: #e5e7eb;                  /* светлый текст */
-  border: 1px solid #1f2937;
+/* ===== НИЖНЯЯ НАВИГАЦИЯ ===== */
+.bottom-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
 }
 
-.form-control::placeholder,
-textarea.form-control::placeholder {
-  color: #94a3b8;                  /* читабельный placeholder */
-  opacity: 1;
+.bottom-nav button {
+  flex: 1;
+  background: #0f1115;
+  color: #ffffff;
+  border: 1px solid #2a2f3a;
+  border-radius: 10px;
+  padding: 10px 6px;
+  font-size: 14px;
 }
 
-.form-control:focus {
+.bottom-nav button.active {
+  background: #3b82f6;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 0.15rem rgba(59,130,246,.25);
 }
