@@ -251,3 +251,24 @@ textarea {
 .progress-bar.energy {
   background: linear-gradient(90deg, #ca8a04, #fde047);
 }
+
+/* ===== Bootstrap dark fix ===== */
+
+.form-control,
+.form-control:focus,
+textarea.form-control {
+  background-color: #0f172a;       /* тёмный фон */
+  color: #e5e7eb;                  /* светлый текст */
+  border: 1px solid #1f2937;
+}
+
+.form-control::placeholder,
+textarea.form-control::placeholder {
+  color: #94a3b8;                  /* читабельный placeholder */
+  opacity: 1;
+}
+
+.form-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 0.15rem rgba(59,130,246,.25);
+}
