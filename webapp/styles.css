@@ -1,8 +1,12 @@
-/* ===== ОСНОВА ===== */
+/* =========================
+   ОСНОВА
+   ========================= */
+
 body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   background: #0f1115;
   color: #ffffff;
-  font-size: 16px;
 }
 
 .wrap {
@@ -11,46 +15,73 @@ body {
   padding: 16px;
 }
 
-/* ===== ЗАГОЛОВКИ ===== */
-h1, h2, h3 {
-  color: #ffffff;
-  font-weight: 600;
-}
+/* =========================
+   ЗАГОЛОВКИ
+   ========================= */
 
 h1 {
-  font-size: 24px;
+  font-size: 22px;
+  margin: 0 0 12px;
 }
 
 h2 {
-  font-size: 20px;
+  font-size: 18px;
+  margin: 0 0 8px;
 }
 
-/* ===== КАРТОЧКИ ===== */
+h3 {
+  font-size: 16px;
+  margin: 0 0 6px;
+}
+
+/* =========================
+   КАРТОЧКИ
+   ========================= */
+
 .card {
   background: #171a21;
   border: 1px solid #2a2f3a;
   border-radius: 12px;
-  padding: 16px;
+  padding: 14px;
   margin-top: 12px;
 }
 
-/* ===== ТЕКСТ ===== */
-p, span, li {
-  font-size: 16px;
+/* =========================
+   ТЕКСТ
+   ========================= */
+
+p {
+  margin: 6px 0;
   line-height: 1.5;
 }
 
 .muted {
-  color: #b3bcc9; /* было слишком бледно */
+  color: #9aa4b2;
   font-size: 14px;
 }
 
-/* ===== INPUT / TEXTAREA ===== */
+/* =========================
+   ФОРМЫ
+   ========================= */
+
 input,
 textarea {
-  background: #0f1115 !important;
-  color: #ffffff !important;
-  border: 1px solid #2a2f3a !important;
+  width: 100%;
+  box-sizing: border-box;
+
+  background: #0f1115;
+  color: #ffffff;
+
+  border: 1px solid #2a2f3a;
+  border-radius: 10px;
+
+  padding: 10px 12px;
+  margin-bottom: 10px;
+
+  font-size: 14px;
+  font-family: inherit;
+
+  outline: none;
 }
 
 input::placeholder,
@@ -58,86 +89,184 @@ textarea::placeholder {
   color: #8b95a7;
 }
 
-/* ===== КНОПКИ ===== */
+input:focus,
+textarea:focus {
+  border-color: #3b82f6;
+}
+
+/* =========================
+   КНОПКИ
+   ========================= */
+
 button {
-  font-size: 16px;
-}
+  background: #3b82f6;
+  color: #ffffff;
 
-.btn-primary {
-  background-color: #3b82f6;
   border: none;
+  border-radius: 10px;
+
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
 }
 
-.btn-danger {
-  background-color: #ef4444;
-  border: none;
+button:hover {
+  background: #2563eb;
 }
 
-.btn-success {
-  background-color: #22c55e;
-  border: none;
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-/* ===== СПИСКИ ===== */
+/* =========================
+   РЯДЫ
+   ========================= */
+
+.row {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.row input {
+  flex: 1;
+}
+
+/* =========================
+   СПИСКИ
+   ========================= */
+
 ul {
-  padding-left: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 li {
-  list-style: none;
   padding: 10px;
   margin-bottom: 8px;
+
   background: #0f1115;
-  border-radius: 8px;
   border: 1px solid #2a2f3a;
+  border-radius: 8px;
 }
 
-/* ===== РЕСУРСЫ ===== */
-.resource {
-  margin-bottom: 14px;
+/* =========================
+   РЕСУРСЫ (HP / MANA / ENERGY)
+   ========================= */
+
+.resources {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .resource-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
   margin-bottom: 4px;
-  font-weight: 500;
 }
 
 .progress {
-  height: 18px;
+  width: 100%;
+  height: 14px;
   background: #0f1115;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  transition: width 0.25s ease;
 }
 
 .progress-bar.hp {
-  background-color: #ef4444;
+  background: linear-gradient(90deg, #dc2626, #f87171);
 }
 
 .progress-bar.mana {
-  background-color: #3b82f6;
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
 }
 
 .progress-bar.energy {
-  background-color: #eab308;
+  background: linear-gradient(90deg, #ca8a04, #fde047);
 }
 
-/* ===== НИЖНЯЯ НАВИГАЦИЯ ===== */
-.bottom-nav {
+/* =========================
+   ИНВЕНТАРЬ
+   ========================= */
+
+.inventory-header {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
-  margin-top: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* =========================
+   НИЖНЯЯ НАВИГАЦИЯ
+   ========================= */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
+  background: #0f172a;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  padding: 8px 0;
+  z-index: 100;
 }
 
 .bottom-nav button {
-  flex: 1;
-  background: #0f1115;
-  color: #ffffff;
-  border: 1px solid #2a2f3a;
-  border-radius: 10px;
-  padding: 10px 6px;
-  font-size: 14px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  font-size: 12px;
+  gap: 2px;
+}
+
+.bottom-nav .icon {
+  font-size: 20px;
 }
 
 .bottom-nav button.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* чтобы контент не уезжал под навигацию */
+#characterScreen {
+  padding-bottom: 72px;
+}
+
+/* =========================
+   ЭКРАН ПРЕДМЕТА
+   ========================= */
+
+#itemEditor {
+  margin-bottom: 80px;
+}
+
+#deleteItemBtn {
+  background: #dc2626;
+}
+
+#deleteItemBtn:hover {
+  background: #b91c1c;
 }
