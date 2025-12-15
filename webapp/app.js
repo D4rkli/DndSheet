@@ -309,16 +309,17 @@ function showOnly(name) {
 }
 
 function renderResources() {
-  if (!currentCharacter) return;
+  const c = currentCharacter;
 
-  // если полей нет — не рендерим
-  if (
-    currentCharacter.hp == null &&
-    currentCharacter.mana == null &&
-    currentCharacter.energy == null
-  ) {
-    return;
-  }
+  // временно: если max нет — считаем, что max = текущее
+  const hpMax = c.hp_max ?? c.hp ?? 0;
+  const manaMax = c.mana_max ?? c.mana ?? 0;
+  const energyMax = c.energy_max ?? c.energy ?? 0;
+
+  setBar("hp", c.hp ?? 0, hpMax);
+  setBar("mana", c.mana ?? 0, manaMax);
+  setBar("energy", c.energy ?? 0, energyMax);
+}
 
   const hp = currentCharacter.hp ?? 0;
   const mana = currentCharacter.mana ?? 0;
@@ -336,11 +337,11 @@ function renderResources() {
 }
 
 function setBar(type, value, max) {
-  const percent = Math.max(0, Math.min(100, (value / max) * 100));
+  const safeMax = Math.max(1, max);
+  const percent = Math.max(0, Math.min(100, (value / safeMax) * 100));
 
   document.getElementById(`${type}Bar`).style.width = `${percent}%`;
-  document.getElementById(`${type}Text`).textContent =
-    `${value} / ${max}`;
+  document.getElementById(`${type}Text`).textContent = `${value} / ${max}`;
 }
 
 async function spendResources({ hp = 0, mana = 0, energy = 0 }) {

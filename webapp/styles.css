@@ -270,3 +270,21 @@ li {
 #deleteItemBtn:hover {
   background: #b91c1c;
 }
+
+.resource-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.resource-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.resource-value {
+  font-size: 13px;
+  color: #cbd5f5;
+  font-variant-numeric: tabular-nums;
+}
