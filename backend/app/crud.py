@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from .schemas import CharacterUpdate
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import (
