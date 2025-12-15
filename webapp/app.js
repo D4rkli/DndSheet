@@ -114,6 +114,7 @@ async function openCharacter(id) {
 
   renderCharacter();
   openTab("stats");
+  renderResources();
 }
 
 function backToList() {
@@ -296,4 +297,40 @@ function showOnly(name) {
   if (name === "list") listScreen.style.display = "block";
   if (name === "character") characterScreen.style.display = "block";
   if (name === "item") itemEditor.style.display = "block";
+}
+
+function renderResources() {
+  const c = currentCharacter;
+
+  // если пока без *_max — временно считаем max = текущее
+  const hpMax = c.hp_max ?? c.hp;
+  const manaMax = c.mana_max ?? c.mana;
+  const energyMax = c.energy_max ?? c.energy;
+
+  setBar("hp", c.hp, hpMax);
+  setBar("mana", c.mana, manaMax);
+  setBar("energy", c.energy, energyMax);
+}
+
+function setBar(type, value, max) {
+  const percent = Math.max(0, Math.min(100, (value / max) * 100));
+
+  document.getElementById(`${type}Bar`).style.width = `${percent}%`;
+  document.getElementById(`${type}Text`).textContent =
+    `${value} / ${max}`;
+}
+
+async function spendResources({ hp = 0, mana = 0, energy = 0 }) {
+  const payload = {
+    hp: currentCharacter.hp - hp,
+    mana: currentCharacter.mana - mana,
+    energy: currentCharacter.energy - energy
+  };
+
+  currentCharacter = await api(
+    `/api/characters/${activeCharacterId}`,
+    { method: "PATCH", body: payload }
+  );
+
+  renderResources();
 }
