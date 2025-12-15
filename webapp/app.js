@@ -309,19 +309,30 @@ function showOnly(name) {
 }
 
 function renderResources() {
-  const c = currentCharacter;
+  if (!currentCharacter) return;
 
-  const hp = c.hp ?? 0;
-  const mana = c.mana ?? 0;
-  const energy = c.energy ?? 0;
+  // если полей нет — не рендерим
+  if (
+    currentCharacter.hp == null &&
+    currentCharacter.mana == null &&
+    currentCharacter.energy == null
+  ) {
+    return;
+  }
 
-  const hpMax = c.hp_max ?? hp || 1;
-  const manaMax = c.mana_max ?? mana || 1;
-  const energyMax = c.energy_max ?? energy || 1;
+  const hp = currentCharacter.hp ?? 0;
+  const mana = currentCharacter.mana ?? 0;
+  const energy = currentCharacter.energy ?? 0;
 
-  setBar("hp", hp, hpMax);
-  setBar("mana", mana, manaMax);
-  setBar("energy", energy, energyMax);
+  const hpMax = currentCharacter.hp_max ?? hp;
+  const manaMax = currentCharacter.mana_max ?? mana;
+  const energyMax = currentCharacter.energy_max ?? energy;
+
+  if (document.getElementById("hpBar")) {
+    setBar("hp", hp, hpMax);
+    setBar("mana", mana, manaMax);
+    setBar("energy", energy, energyMax);
+  }
 }
 
 function setBar(type, value, max) {
