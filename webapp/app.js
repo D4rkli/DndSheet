@@ -309,17 +309,7 @@ function showOnly(name) {
 }
 
 function renderResources() {
-  const c = currentCharacter;
-
-  // временно: если max нет — считаем, что max = текущее
-  const hpMax = c.hp_max ?? c.hp ?? 0;
-  const manaMax = c.mana_max ?? c.mana ?? 0;
-  const energyMax = c.energy_max ?? c.energy ?? 0;
-
-  setBar("hp", c.hp ?? 0, hpMax);
-  setBar("mana", c.mana ?? 0, manaMax);
-  setBar("energy", c.energy ?? 0, energyMax);
-}
+  if (!currentCharacter) return;
 
   const hp = currentCharacter.hp ?? 0;
   const mana = currentCharacter.mana ?? 0;
@@ -329,19 +319,22 @@ function renderResources() {
   const manaMax = currentCharacter.mana_max ?? mana;
   const energyMax = currentCharacter.energy_max ?? energy;
 
-  if (document.getElementById("hpBar")) {
-    setBar("hp", hp, hpMax);
-    setBar("mana", mana, manaMax);
-    setBar("energy", energy, energyMax);
-  }
+  setBar("hp", hp, hpMax);
+  setBar("mana", mana, manaMax);
+  setBar("energy", energy, energyMax);
 }
 
 function setBar(type, value, max) {
-  const safeMax = Math.max(1, max);
-  const percent = Math.max(0, Math.min(100, (value / safeMax) * 100));
+  const bar = document.getElementById(`${type}Bar`);
+  const text = document.getElementById(`${type}Text`);
 
-  document.getElementById(`${type}Bar`).style.width = `${percent}%`;
-  document.getElementById(`${type}Text`).textContent = `${value} / ${max}`;
+  if (!bar || !text) return;
+
+  const safeMax = Math.max(1, max);
+  const percent = Math.min(100, (value / safeMax) * 100);
+
+  bar.style.width = `${percent}%`;
+  text.textContent = `${value} / ${safeMax}`;
 }
 
 async function spendResources({ hp = 0, mana = 0, energy = 0 }) {
