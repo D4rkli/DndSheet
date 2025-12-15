@@ -131,10 +131,19 @@ function backToList() {
 // RENDER CHARACTER
 // =====================
 function renderCharacter() {
-  document.getElementById("charTitle").textContent = currentCharacter.name;
-  document.getElementById("charMeta").textContent =
-    `${currentCharacter.race || "—"} • ${currentCharacter.klass || "—"} • ур. ${currentCharacter.level || 1}`;
+  const c = currentCharacter;
 
+  document.getElementById("charTitle").textContent = c.name;
+  document.getElementById("charMeta").textContent =
+    `${c.race || "—"} • ${c.klass || "—"} • ур. ${c.level || 1}`;
+
+  // 👇 ВОТ ЭТОГО НЕ ХВАТАЛО
+  document.getElementById("viewName").textContent = c.name;
+  document.getElementById("viewRace").textContent = c.race || "—";
+  document.getElementById("viewClass").textContent = c.klass || "—";
+  document.getElementById("viewLevel").textContent = c.level || 1;
+
+  renderResources();   // 👈 КЛЮЧ
   renderStats();
 }
 
