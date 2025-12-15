@@ -93,14 +93,56 @@ async def update_character(
     db: AsyncSession,
     character_id: int,
     user_id: int,
-    data,
-) -> Character | None:
+    data: CharacterUpdate,
+):
     ch = await get_character_for_user(db, character_id, user_id)
     if not ch:
         return None
 
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(ch, field, value)
+    payload = data.model_dump(exclude_unset=True)
+
+    # =========================
+    # ТЕКСТОВЫЕ ПОЛЯ
+    # =========================
+    for field in ("name", "race", "klass"):
+        if field in payload:
+            setattr(ch, field, payload[field])
+
+    # =========================
+    # УРОВЕНЬ
+    # =========================
+    if "level" in payload:
+        lvl = payload["level"]
+        if lvl < 1:
+            lvl = 1
+        ch.level = lvl
+
+    # =========================
+    # РЕСУРСЫ (HP / MANA / ENERGY)
+    # =========================
+    for res in ("hp", "mana", "energy"):
+        if res not in payload:
+            continue
+
+        value = payload[res]
+
+        # защита от отрицательных
+        if value < 0:
+            value = 0
+
+        # max, если есть
+        max_attr = f"{res}_max"
+        max_value = getattr(ch, max_attr, None)
+
+        # если max нет — считаем max = текущее
+        if not max_value or max_value <= 0:
+            max_value = getattr(ch, res, 0)
+
+        # защита от переполнения
+        if value > max_value:
+            value = max_value
+
+        setattr(ch, res, value)
 
     await db.commit()
     await db.refresh(ch)

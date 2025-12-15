@@ -1,15 +1,19 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class CharacterCreate(BaseModel):
     name: str
 
 class CharacterUpdate(BaseModel):
-    name: str | None = None
-    race: str | None = None
-    gender: str | None = None
-    klass: str | None = None
-    level: int | None = None
-    xp: int | None = None
+    name: Optional[str] = None
+    race: Optional[str] = None
+    klass: Optional[str] = None
+    level: Optional[int] = None
+
+    hp: Optional[int] = None
+    mana: Optional[int] = None
+    energy: Optional[int] = None
+
 
     aggression_kindness: int | None = None
     intellect: int | None = None

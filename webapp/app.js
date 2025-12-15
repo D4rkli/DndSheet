@@ -380,7 +380,10 @@ async function changeResource(type, delta) {
 
 async function editResource(type) {
   const current = currentCharacter[type] ?? 0;
-  const max = currentCharacter[`${type}_max`] ?? current;
+
+  // ВАЖНО: если max = 0 или undefined — разрешаем ввод
+  const rawMax = currentCharacter[`${type}_max`];
+  const max = rawMax && rawMax > 0 ? rawMax : 999999;
 
   const value = prompt(
     `Введите ${type.toUpperCase()} (0 – ${max})`,
@@ -390,7 +393,7 @@ async function editResource(type) {
   if (value === null) return;
 
   const num = Number(value);
-  if (isNaN(num)) return;
+  if (Number.isNaN(num)) return;
 
   const safe = Math.max(0, Math.min(max, num));
 
@@ -404,3 +407,4 @@ async function editResource(type) {
 
   renderResources();
 }
+
