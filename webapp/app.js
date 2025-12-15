@@ -327,14 +327,18 @@ function renderResources() {
 function setBar(type, value, max) {
   const bar = document.getElementById(`${type}Bar`);
   const text = document.getElementById(`${type}Text`);
+  const barText = document.getElementById(`${type}BarText`);
 
-  if (!bar || !text) return;
+  if (!bar || !text || !barText) return;
 
   const safeMax = Math.max(1, max);
   const percent = Math.min(100, (value / safeMax) * 100);
 
   bar.style.width = `${percent}%`;
-  text.textContent = `${value} / ${safeMax}`;
+
+  const label = `${value} / ${safeMax}`;
+  text.textContent = label;
+  barText.textContent = label;
 }
 
 async function spendResources({ hp = 0, mana = 0, energy = 0 }) {
@@ -347,6 +351,55 @@ async function spendResources({ hp = 0, mana = 0, energy = 0 }) {
   currentCharacter = await api(
     `/api/characters/${activeCharacterId}`,
     { method: "PATCH", body: payload }
+  );
+
+  renderResources();
+}
+
+async function changeResource(type, delta) {
+  if (!currentCharacter) return;
+
+  const field = type;
+  const maxField = `${type}_max`;
+
+  const current = currentCharacter[field] ?? 0;
+  const max = currentCharacter[maxField] ?? current;
+
+  const next = Math.max(0, Math.min(max, current + delta));
+
+  currentCharacter = await api(
+    `/api/characters/${activeCharacterId}`,
+    {
+      method: "PATCH",
+      body: { [field]: next }
+    }
+  );
+
+  renderResources();
+}
+
+async function editResource(type) {
+  const current = currentCharacter[type] ?? 0;
+  const max = currentCharacter[`${type}_max`] ?? current;
+
+  const value = prompt(
+    `Введите ${type.toUpperCase()} (0 – ${max})`,
+    current
+  );
+
+  if (value === null) return;
+
+  const num = Number(value);
+  if (isNaN(num)) return;
+
+  const safe = Math.max(0, Math.min(max, num));
+
+  currentCharacter = await api(
+    `/api/characters/${activeCharacterId}`,
+    {
+      method: "PATCH",
+      body: { [type]: safe }
+    }
   );
 
   renderResources();

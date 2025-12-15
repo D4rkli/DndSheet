@@ -53,37 +53,84 @@
       <div class="resource">
         <div class="resource-top">
           <span class="resource-name">❤️ HP</span>
-          <span id="hpText" class="resource-value">0 / 0</span>
+
+          <div class="resource-controls">
+            <button onclick="changeResource('hp', -1)">−</button>
+
+            <span
+              class="resource-value"
+              onclick="editResource('hp')"
+              id="hpText"
+            >
+              0 / 0
+            </span>
+
+            <button onclick="changeResource('hp', 1)">+</button>
+          </div>
         </div>
 
         <div class="progress">
-          <div id="hpBar" class="progress-bar hp"></div>
+          <div id="hpBar" class="progress-bar hp">
+            <span class="bar-text" id="hpBarText"></span>
+          </div>
         </div>
       </div>
 
       <!-- Mana -->
       <div class="resource">
         <div class="resource-top">
-          <span class="resource-name">🔵 Мана</span>
-          <span id="manaText" class="resource-value">0 / 0</span>
+          <span class="resource-name">❤️ HP</span>
+
+          <div class="resource-controls">
+            <button onclick="changeResource('hp', -1)">−</button>
+
+            <span
+              class="resource-value"
+              onclick="editResource('hp')"
+              id="hpText"
+            >
+              0 / 0
+            </span>
+
+            <button onclick="changeResource('hp', 1)">+</button>
+          </div>
         </div>
 
         <div class="progress">
-          <div id="manaBar" class="progress-bar mana"></div>
+          <div id="hpBar" class="progress-bar hp">
+            <span class="bar-text" id="hpBarText"></span>
+          </div>
         </div>
       </div>
+
 
       <!-- Energy -->
       <div class="resource">
         <div class="resource-top">
-          <span class="resource-name">⚡ Энергия</span>
-          <span id="energyText" class="resource-value">0 / 0</span>
+          <span class="resource-name">❤️ HP</span>
+
+          <div class="resource-controls">
+            <button onclick="changeResource('hp', -1)">−</button>
+
+            <span
+              class="resource-value"
+              onclick="editResource('hp')"
+              id="hpText"
+            >
+              0 / 0
+            </span>
+
+            <button onclick="changeResource('hp', 1)">+</button>
+          </div>
         </div>
 
         <div class="progress">
-          <div id="energyBar" class="progress-bar energy"></div>
+          <div id="hpBar" class="progress-bar hp">
+            <span class="bar-text" id="hpBarText"></span>
+          </div>
         </div>
       </div>
+
 
     </div> <!-- ✅ ВОТ ЭТОГО НЕ ХВАТАЛО -->
 
