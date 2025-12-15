@@ -53,6 +53,9 @@ async def create_character(
     ch = Character(
         owner_user_id=user_id,
         name=name,
+        hp=10,
+        mana=5,
+        energy=3,
         level=1,
     )
     db.add(ch)

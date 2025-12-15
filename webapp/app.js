@@ -302,14 +302,17 @@ function showOnly(name) {
 function renderResources() {
   const c = currentCharacter;
 
-  // если пока без *_max — временно считаем max = текущее
-  const hpMax = c.hp_max ?? c.hp;
-  const manaMax = c.mana_max ?? c.mana;
-  const energyMax = c.energy_max ?? c.energy;
+  const hp = c.hp ?? 0;
+  const mana = c.mana ?? 0;
+  const energy = c.energy ?? 0;
 
-  setBar("hp", c.hp, hpMax);
-  setBar("mana", c.mana, manaMax);
-  setBar("energy", c.energy, energyMax);
+  const hpMax = c.hp_max ?? hp || 1;
+  const manaMax = c.mana_max ?? mana || 1;
+  const energyMax = c.energy_max ?? energy || 1;
+
+  setBar("hp", hp, hpMax);
+  setBar("mana", mana, manaMax);
+  setBar("energy", energy, energyMax);
 }
 
 function setBar(type, value, max) {
