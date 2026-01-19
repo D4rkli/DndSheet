@@ -5,14 +5,14 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="allow",  # 🔥 ВАЖНО
+        extra="allow",
     )
 
     BOT_TOKEN: str
 
     BASE_URL: str = "http://127.0.0.1:8000"
     WEBAPP_URL: str = "http://127.0.0.1:8000/webapp"
-    SQLITE_PATH: str = "sqlite+aiosqlite:///./dnd.sqlite3"
+    SQLITE_PATH: str = "sqlite+aiosqlite:///./dnd._v2.sqlite3"
     DM_USER_IDS: str = ""
 
     def dm_ids(self) -> set[int]:

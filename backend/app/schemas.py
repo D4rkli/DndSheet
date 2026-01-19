@@ -1,19 +1,17 @@
+# app/schemas.py
 from pydantic import BaseModel
 from typing import Optional
-
 
 class CharacterCreate(BaseModel):
     name: str
 
-
 class CharacterUpdate(BaseModel):
-    # базовое
     name: Optional[str] = None
     race: Optional[str] = None
     klass: Optional[str] = None
     level: Optional[int] = None
 
-    # текущие ресурсы
+    # текущее
     hp: Optional[int] = None
     mana: Optional[int] = None
     energy: Optional[int] = None
