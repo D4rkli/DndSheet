@@ -29,6 +29,7 @@ const newName = document.getElementById("newName");
 // =====================
 const INIT_DATA = tg.initData || "";
 
+let activeResource = null; // "hp" | "mana" | "energy"
 let activeCharacterId = null;
 let currentCharacter = null;
 let activeItemId = null;
@@ -297,6 +298,62 @@ function openHpEditor() {
   hpPerLevelInput.value = (rules?.hp_per_level ?? "");
 }
 
+function openResourceEditor(res) {
+  if (!currentCharacter) return;
+
+  activeResource = res;
+
+  const titleMap = { hp: "❤️ HP", mana: "🔵 Мана", energy: "⚡ Энергия" };
+  document.getElementById("resourceEditorTitle").textContent = `Настройка: ${titleMap[res]}`;
+
+  const cur = currentCharacter[res] ?? 0;
+  const max = currentCharacter[`${res}_max`] ?? 0;
+  const per = currentCharacter[`${res}_per_level`] ?? 0;
+
+  document.getElementById("resCurrent").value = cur;
+  document.getElementById("resMax").value = max;
+  document.getElementById("resPerLevel").value = per;
+
+  showOnly("resource");
+  bottomNav.style.display = "none";
+}
+
+function closeResourceEditor() {
+  activeResource = null;
+  showOnly("character");
+  bottomNav.style.display = "flex";
+  renderResources();
+}
+
+function stepResource(delta) {
+  const input = document.getElementById("resCurrent");
+  const v = Number(input.value || 0) + delta;
+  input.value = v;
+}
+
+async function saveResource() {
+  if (!activeResource) return;
+
+  const res = activeResource;
+
+  const cur = Number(document.getElementById("resCurrent").value || 0);
+  const max = Number(document.getElementById("resMax").value || 0);
+  const per = Number(document.getElementById("resPerLevel").value || 0);
+
+  const payload = {
+    [res]: cur,
+    [`${res}_max`]: max,
+    [`${res}_per_level`]: per,
+  };
+
+  currentCharacter = await api(`/api/characters/${activeCharacterId}`, {
+    method: "PATCH",
+    body: payload,
+  });
+
+  closeResourceEditor();
+}
+
 function closeHpEditor() {
   showOnly("character");
   bottomNav.style.display = "flex";
@@ -370,45 +427,35 @@ function showOnly(name) {
   listScreen.style.display = "none";
   characterScreen.style.display = "none";
   itemEditor.style.display = "none";
-  hpEditor.style.display = "none";
+  document.getElementById("resourceEditor").style.display = "none";
 
   if (name === "list") listScreen.style.display = "block";
   if (name === "character") characterScreen.style.display = "block";
   if (name === "item") itemEditor.style.display = "block";
-  if (name === "hp") hpEditor.style.display = "block";
+  if (name === "resource") document.getElementById("resourceEditor").style.display = "block";
 }
 
 function renderResources() {
-  if (!currentCharacter) return;
+  const c = currentCharacter;
 
-  const hp = currentCharacter.hp ?? 0;
-  const mana = currentCharacter.mana ?? 0;
-  const energy = currentCharacter.energy ?? 0;
+  const hpMax = (c.hp_max ?? 0) > 0 ? c.hp_max : c.hp;
+  const manaMax = (c.mana_max ?? 0) > 0 ? c.mana_max : c.mana;
+  const energyMax = (c.energy_max ?? 0) > 0 ? c.energy_max : c.energy;
 
-  const hpMax = currentCharacter.hp_max ?? hp;
-  const manaMax = currentCharacter.mana_max ?? mana;
-  const energyMax = currentCharacter.energy_max ?? energy;
-
-  setBar("hp", hp, hpMax);
-  setBar("mana", mana, manaMax);
-  setBar("energy", energy, energyMax);
+  setBar("hp", c.hp ?? 0, hpMax ?? 0);
+  setBar("mana", c.mana ?? 0, manaMax ?? 0);
+  setBar("energy", c.energy ?? 0, energyMax ?? 0);
 }
 
 function setBar(type, value, max) {
-  const bar = document.getElementById(`${type}Bar`);
-  const text = document.getElementById(`${type}Text`);
-  const barText = document.getElementById(`${type}BarText`);
+  const safeMax = max > 0 ? max : 1;
+  const percent = Math.max(0, Math.min(100, (value / safeMax) * 100));
 
-  if (!bar || !text || !barText) return;
+  document.getElementById(`${type}Bar`).style.width = `${percent}%`;
 
-  const safeMax = Math.max(1, max);
-  const percent = Math.min(100, (value / safeMax) * 100);
-
-  bar.style.width = `${percent}%`;
-
-  const label = `${value} / ${safeMax}`;
-  text.textContent = label;
-  barText.textContent = label;
+  const text = `${value} / ${max > 0 ? max : value}`;
+  document.getElementById(`${type}Text`).textContent = text;
+  document.getElementById(`${type}TextOnBar`).textContent = text;
 }
 
 async function spendResources({ hp = 0, mana = 0, energy = 0 }) {

@@ -102,52 +102,50 @@ async def update_character(
 
     payload = data.model_dump(exclude_unset=True)
 
-    # =========================
-    # ТЕКСТОВЫЕ ПОЛЯ
-    # =========================
+    # текстовые
     for field in ("name", "race", "klass"):
         if field in payload:
             setattr(ch, field, payload[field])
 
-    # =========================
-    # УРОВЕНЬ
-    # =========================
+    # уровень (минимум 1)
     if "level" in payload:
-        lvl = payload["level"]
-        if lvl < 1:
-            lvl = 1
-        ch.level = lvl
+        ch.level = max(1, int(payload["level"]))
 
-    # =========================
-    # РЕСУРСЫ (HP / MANA / ENERGY)
-    # =========================
+    # max значения (не меньше 0)
+    for field in ("hp_max", "mana_max", "energy_max"):
+        if field in payload:
+            setattr(ch, field, max(0, int(payload[field])))
+
+    # прибавка за уровень (может быть 0)
+    for field in ("hp_per_level", "mana_per_level", "energy_per_level"):
+        if field in payload:
+            setattr(ch, field, int(payload[field]))
+
+    # текущие ресурсы (не меньше 0, не больше max если max задан)
     for res in ("hp", "mana", "energy"):
         if res not in payload:
             continue
 
-        value = payload[res]
+        value = max(0, int(payload[res]))
+        max_value = getattr(ch, f"{res}_max", 0)
 
-        # защита от отрицательных
-        if value < 0:
-            value = 0
-
-        # max, если есть
-        max_attr = f"{res}_max"
-        max_value = getattr(ch, max_attr, None)
-
-        # если max нет — считаем max = текущее
-        if not max_value or max_value <= 0:
-            max_value = getattr(ch, res, 0)
-
-        # защита от переполнения
-        if value > max_value:
-            value = max_value
+        if max_value and max_value > 0:
+            value = min(value, max_value)
 
         setattr(ch, res, value)
+
+    # если max уменьшили — подрежем текущее тоже
+    for res in ("hp", "mana", "energy"):
+        max_value = getattr(ch, f"{res}_max", 0)
+        if max_value and max_value > 0:
+            cur = getattr(ch, res, 0)
+            if cur > max_value:
+                setattr(ch, res, max_value)
 
     await db.commit()
     await db.refresh(ch)
     return ch
+
 
 
 # =========================

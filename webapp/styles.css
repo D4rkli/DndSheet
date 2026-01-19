@@ -1,307 +1,212 @@
-/* =========================
-   ОСНОВА
-   ========================= */
-
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #0f1115;
-  color: #ffffff;
+:root{
+  --bg:#0f1115;
+  --card:#171a21;
+  --border:#2a2f3a;
+  --text:#ffffff;
+  --muted:#b3bcc9;
+  --input:#0f1115;
+  --primary:#3b82f6;
+  --danger:#ef4444;
 }
 
-.wrap {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 16px;
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family:system-ui, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:16px;
 }
 
-/* =========================
-   ЗАГОЛОВКИ
-   ========================= */
-
-h1 {
-  font-size: 22px;
-  margin: 0 0 12px;
+.wrap{
+  max-width:720px;
+  margin:0 auto;
+  padding:16px;
 }
 
-h2 {
-  font-size: 18px;
-  margin: 0 0 8px;
+h1{ margin:0 0 12px; font-size:24px; }
+h2{ margin:0 0 8px; font-size:20px; }
+h3{ margin:0; font-size:18px; }
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+  margin-top:12px;
 }
 
-h3 {
-  font-size: 16px;
-  margin: 0 0 6px;
+.muted{ color:var(--muted); font-size:14px; }
+
+.row{
+  display:flex;
+  gap:8px;
+  margin:10px 0;
 }
 
-/* =========================
-   КАРТОЧКИ
-   ========================= */
-
-.card {
-  background: #171a21;
-  border: 1px solid #2a2f3a;
-  border-radius: 12px;
-  padding: 14px;
-  margin-top: 12px;
+input, textarea{
+  width:100%;
+  background:var(--input);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 14px;
+  outline:none;
+  font-size:14px;
 }
 
-/* =========================
-   ТЕКСТ
-   ========================= */
+textarea{ min-height:90px; resize:vertical; }
 
-p {
-  margin: 6px 0;
-  line-height: 1.5;
+input::placeholder, textarea::placeholder{ color:#8b95a7; }
+
+input:focus, textarea:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 1px rgba(59,130,246,0.35);
 }
 
-.muted {
-  color: #9aa4b2;
-  font-size: 14px;
+button{
+  padding:12px 14px;
+  border-radius:10px;
+  border:0;
+  background:var(--primary);
+  color:#fff;
+  cursor:pointer;
+  font-size:14px;
 }
 
-/* =========================
-   ФОРМЫ
-   ========================= */
+button:active{ transform: translateY(1px); }
 
-input,
-textarea {
-  width: 100%;
-  box-sizing: border-box;
+.btn-danger{ background:var(--danger); }
 
-  background: #0f1115;
-  color: #ffffff;
-
-  border: 1px solid #2a2f3a;
-  border-radius: 10px;
-
-  padding: 10px 12px;
-  margin-bottom: 10px;
-
-  font-size: 14px;
-  font-family: inherit;
-
-  outline: none;
+.btn-ghost{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:10px 12px;
 }
 
-input::placeholder,
-textarea::placeholder {
-  color: #8b95a7;
+.btn-icon{
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  padding:0;
+  display:grid;
+  place-items:center;
 }
 
-input:focus,
-textarea:focus {
-  border-color: #3b82f6;
+ul{ padding:0; margin:10px 0 0; }
+li{
+  list-style:none;
+  padding:10px;
+  margin-bottom:8px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:10px;
 }
 
-/* =========================
-   КНОПКИ
-   ========================= */
-
-button {
-  background: #3b82f6;
-  color: #ffffff;
-
-  border: none;
-  border-radius: 10px;
-
-  padding: 10px 12px;
-  font-size: 14px;
-  font-weight: 500;
-
-  cursor: pointer;
+.bottom-nav{
+  position:fixed;
+  bottom:0; left:0; right:0;
+  display:flex;
+  justify-content:space-around;
+  background:#0f172a;
+  border-top:1px solid rgba(255,255,255,0.1);
+  padding:8px 0;
+  z-index:100;
 }
 
-button:hover {
-  background: #2563eb;
+.bottom-nav button{
+  background:none;
+  border:none;
+  color:#94a3b8;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  padding:6px 10px;
 }
 
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.bottom-nav .icon{ font-size:20px; }
+.bottom-nav button.active{ color:var(--primary); }
+
+#characterScreen{ padding-bottom:80px; }
+
+/* ===== Resources ===== */
+.resources{
+  margin:14px 0 8px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
 
-/* =========================
-   РЯДЫ
-   ========================= */
-
-.row {
-  display: flex;
-  gap: 8px;
-  margin: 8px 0;
+.resource{
+  cursor:pointer;
+  user-select:none;
 }
 
-.row input {
-  flex: 1;
+.resource-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:6px;
+  color:var(--text);
+  font-weight:600;
 }
 
-/* =========================
-   СПИСКИ
-   ========================= */
-
-ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.resource-value{
+  color:var(--muted);
+  font-weight:500;
 }
 
-li {
-  padding: 10px;
-  margin-bottom: 8px;
-
-  background: #0f1115;
-  border: 1px solid #2a2f3a;
-  border-radius: 8px;
+.progress{
+  position:relative;
+  height:14px;
+  background:#020617;
+  border-radius:999px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,0.06);
 }
 
-/* =========================
-   РЕСУРСЫ (HP / MANA / ENERGY)
-   ========================= */
-
-.resources {
-  margin: 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.progress-bar{
+  height:100%;
+  width:0%;
+  transition:width .25s ease;
 }
 
-.resource-label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  margin-bottom: 4px;
-}
+.progress-bar.hp{ background:linear-gradient(90deg,#dc2626,#f87171); }
+.progress-bar.mana{ background:linear-gradient(90deg,#2563eb,#60a5fa); }
+.progress-bar.energy{ background:linear-gradient(90deg,#ca8a04,#fde047); }
 
-.progress {
-  width: 100%;
-  height: 14px;
-  background: #0f1115;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  transition: width 0.25s ease;
-}
-
-.progress-bar.hp {
-  background: linear-gradient(90deg, #dc2626, #f87171);
-}
-
-.progress-bar.mana {
-  background: linear-gradient(90deg, #2563eb, #60a5fa);
-}
-
-.progress-bar.energy {
-  background: linear-gradient(90deg, #ca8a04, #fde047);
-}
-
-/* =========================
-   ИНВЕНТАРЬ
-   ========================= */
-
-.inventory-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-/* =========================
-   НИЖНЯЯ НАВИГАЦИЯ
-   ========================= */
-
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-
-  background: #0f172a;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-
-  padding: 8px 0;
-  z-index: 100;
-}
-
-.bottom-nav button {
-  background: none;
-  border: none;
-  color: #94a3b8;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  font-size: 12px;
-  gap: 2px;
-}
-
-.bottom-nav .icon {
-  font-size: 20px;
-}
-
-.bottom-nav button.active {
-  color: #3b82f6;
-}
-
-/* чтобы контент не уезжал под навигацию */
-#characterScreen {
-  padding-bottom: 72px;
-}
-
-/* =========================
-   ЭКРАН ПРЕДМЕТА
-   ========================= */
-
-#itemEditor {
-  margin-bottom: 80px;
-}
-
-#deleteItemBtn {
-  background: #dc2626;
-}
-
-#deleteItemBtn:hover {
-  background: #b91c1c;
-}
-
-.resource-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.resource-name {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.resource-value {
-  font-size: 13px;
-  color: #cbd5f5;
-  font-variant-numeric: tabular-nums;
-}
-
-.progress { cursor: pointer; position: relative; }
-
-.progress-bar { position: relative; }
-
-.bar-text{
+.progress-text{
   position:absolute;
   inset:0;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:12px;
-  font-weight:600;
-  color:#0b1220;
-  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+  color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,0.6);
   pointer-events:none;
+}
+
+/* ===== Resource editor ===== */
+.field{ margin:12px 0; }
+.field label{ display:block; margin-bottom:6px; color:var(--muted); font-size:13px; }
+
+.stepper{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.stepper input{
+  text-align:center;
+}
+
+.btn-step{
+  width:44px;
+  height:44px;
+  border-radius:10px;
+  padding:0;
 }

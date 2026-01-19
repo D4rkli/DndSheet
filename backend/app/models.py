@@ -51,6 +51,21 @@ class Character(Base):
     action_points: Mapped[int] = mapped_column(Integer, default=0)
     dodges: Mapped[int] = mapped_column(Integer, default=0)
 
+    # Боевые параметры (текущее)
+    hp: Mapped[int] = mapped_column(Integer, default=0)
+    mana: Mapped[int] = mapped_column(Integer, default=0)
+    energy: Mapped[int] = mapped_column(Integer, default=0)
+
+    # Максимумы
+    hp_max: Mapped[int] = mapped_column(Integer, default=0)
+    mana_max: Mapped[int] = mapped_column(Integer, default=0)
+    energy_max: Mapped[int] = mapped_column(Integer, default=0)
+
+    # Прибавка за уровень
+    hp_per_level: Mapped[int] = mapped_column(Integer, default=0)
+    mana_per_level: Mapped[int] = mapped_column(Integer, default=0)
+    energy_per_level: Mapped[int] = mapped_column(Integer, default=0)
+
     # формула/настройка “прироста за уровень” — пока как текст (можно сделать JSON)
     level_up_rules: Mapped[str] = mapped_column(Text, default="")
 

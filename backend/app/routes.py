@@ -74,8 +74,19 @@ async def get_character(
         "race": ch.race,
         "klass": ch.klass,
         "level": ch.level,
-    }
 
+        "hp": ch.hp,
+        "mana": ch.mana,
+        "energy": ch.energy,
+
+        "hp_max": ch.hp_max,
+        "mana_max": ch.mana_max,
+        "energy_max": ch.energy_max,
+
+        "hp_per_level": ch.hp_per_level,
+        "mana_per_level": ch.mana_per_level,
+        "energy_per_level": ch.energy_per_level,
+    }
 
 @router.patch("/characters/{character_id}")
 async def update_character(
@@ -103,6 +114,7 @@ async def create_character(
     u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
     ch = await crud.create_character(db, u.id, body.name)
     return {"id": ch.id, "name": ch.name}
+
 
 @router.post("/characters/{ch_id}/items")
 async def add_item(

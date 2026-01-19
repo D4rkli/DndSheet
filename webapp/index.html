@@ -9,7 +9,6 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-
 <div class="wrap">
 
   <h1>DnD Sheet</h1>
@@ -19,251 +18,144 @@
   <!-- 🧙 ЭКРАН 1: ПЕРСОНАЖИ -->
   <!-- ===================== -->
   <div id="listScreen" class="card">
-
     <h2>Персонажи</h2>
 
     <div class="row">
-      <input
-        id="newName"
-        placeholder="Имя персонажа"
-      />
-      <button id="createBtn">
-        Создать
-      </button>
+      <input id="newName" placeholder="Имя персонажа" />
+      <button id="createBtn">Создать</button>
     </div>
 
     <ul id="chars"></ul>
-
   </div>
 
   <!-- ===================== -->
   <!-- 🧙‍♂️ ЭКРАН 2: ПЕРСОНАЖ -->
   <!-- ===================== -->
   <div id="characterScreen" class="card" style="display:none">
-
-    <button onclick="backToList()">← Назад</button>
+    <button class="btn-ghost" onclick="backToList()">← Назад</button>
 
     <h2 id="charTitle"></h2>
     <div id="charMeta" class="muted"></div>
 
-    <!-- ❤️ РЕСУРСЫ -->
+    <!-- ❤️ РЕСУРСЫ (кликабельные) -->
     <div class="resources">
 
-      <!-- HP -->
-      <div class="resource">
+      <div class="resource" onclick="openResourceEditor('hp')">
         <div class="resource-top">
           <span class="resource-name">❤️ HP</span>
-
-          <div class="resource-controls">
-            <button onclick="changeResource('hp', -1)">−</button>
-
-            <span
-              class="resource-value"
-              onclick="editResource('hp')"
-              id="hpText"
-            >
-              0 / 0
-            </span>
-
-            <button onclick="changeResource('hp', 1)">+</button>
-          </div>
+          <span id="hpText" class="resource-value"></span>
         </div>
-
-        <div class="progress" onclick="openHpEditor()">
-          <div id="hpBar" class="progress-bar hp">
-            <span id="hpText" class="bar-text"></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Mana -->
-      <div class="resource">
-        <div class="resource-top">
-          <span class="resource-name">❤️ Mana</span>
-
-          <div class="resource-controls">
-            <button onclick="changeResource('hp', -1)">−</button>
-
-            <span
-              class="resource-value"
-              onclick="editResource('hp')"
-              id="hpText"
-            >
-              0 / 0
-            </span>
-
-            <button onclick="changeResource('hp', 1)">+</button>
-          </div>
-        </div>
-
         <div class="progress">
-          <div id="hpBar" class="progress-bar hp">
-            <span class="bar-text" id="hpBarText"></span>
-          </div>
+          <div id="hpBar" class="progress-bar hp"></div>
+          <div class="progress-text" id="hpTextOnBar"></div>
         </div>
       </div>
 
-
-      <!-- Energy -->
-      <div class="resource">
+      <div class="resource" onclick="openResourceEditor('mana')">
         <div class="resource-top">
-          <span class="resource-name">❤️ Energy</span>
-
-          <div class="resource-controls">
-            <button onclick="changeResource('hp', -1)">−</button>
-
-            <span
-              class="resource-value"
-              onclick="editResource('hp')"
-              id="hpText"
-            >
-              0 / 0
-            </span>
-
-            <button onclick="changeResource('hp', 1)">+</button>
-          </div>
+          <span class="resource-name">🔵 Мана</span>
+          <span id="manaText" class="resource-value"></span>
         </div>
-
         <div class="progress">
-          <div id="hpBar" class="progress-bar hp">
-            <span class="bar-text" id="hpBarText"></span>
-          </div>
+          <div id="manaBar" class="progress-bar mana"></div>
+          <div class="progress-text" id="manaTextOnBar"></div>
         </div>
       </div>
 
-
-    </div> <!-- ✅ ВОТ ЭТОГО НЕ ХВАТАЛО -->
-
-
-    <!-- ===================== -->
-    <!-- 📦 ВКЛАДКИ -->
-    <!-- ===================== -->
-    <div id="tabContent">
-
-      <!-- 📊 ХАРАКТЕРИСТИКИ -->
-      <div id="tab-stats" class="tab-content">
-
-        <p><b>Имя:</b> <span id="viewName"></span></p>
-        <p><b>Раса:</b> <span id="viewRace"></span></p>
-        <p><b>Класс:</b> <span id="viewClass"></span></p>
-        <p><b>Уровень:</b> <span id="viewLevel"></span></p>
-
-        <button onclick="enableEdit()">✏️ Редактировать</button>
-
-      </div>
-
-      <!-- 🎒 ИНВЕНТАРЬ -->
-      <div id="tab-inventory" class="tab-content" style="display:none">
-
-        <div class="inventory-header">
-          <h3>Инвентарь</h3>
-          <button onclick="openItemEditor()">➕</button>
+      <div class="resource" onclick="openResourceEditor('energy')">
+        <div class="resource-top">
+          <span class="resource-name">⚡ Энергия</span>
+          <span id="energyText" class="resource-value"></span>
         </div>
-
-        <ul id="inventoryList" class="list"></ul>
-
-      </div>
-
-      <!-- ✨ ЗАКЛИНАНИЯ -->
-      <div id="tab-spells" class="tab-content" style="display:none">
-        <p class="muted">Заклинания будут позже</p>
+        <div class="progress">
+          <div id="energyBar" class="progress-bar energy"></div>
+          <div class="progress-text" id="energyTextOnBar"></div>
+        </div>
       </div>
 
     </div>
 
-    <!-- ===================== -->
-    <!-- 📌 НИЖНЯЯ НАВИГАЦИЯ -->
-    <!-- ===================== -->
-    <div id="bottomNav" class="bottom-nav" style="display:none">
+    <!-- 📦 ВКЛАДКИ -->
+    <div id="tabContent">
+      <div id="tab-stats" class="tab-content"></div>
 
+      <div id="tab-inventory" class="tab-content" style="display:none">
+        <div class="inventory-header">
+          <h3>Инвентарь</h3>
+          <button class="btn-icon" onclick="openItemEditor()">➕</button>
+        </div>
+        <ul id="inventoryList" class="list"></ul>
+      </div>
+
+      <div id="tab-spells" class="tab-content" style="display:none">
+        <p class="muted">Заклинания будут позже</p>
+      </div>
+    </div>
+
+    <!-- 📌 НИЖНЯЯ НАВИГАЦИЯ -->
+    <div id="bottomNav" class="bottom-nav" style="display:none">
       <button id="nav-stats" class="active" onclick="openTab('stats')">
         <span class="icon">📊</span>
         <span class="label">Хар-ки</span>
       </button>
-
       <button id="nav-inventory" onclick="openTab('inventory')">
         <span class="icon">🎒</span>
         <span class="label">Инвентарь</span>
       </button>
-
       <button id="nav-spells" onclick="openTab('spells')">
         <span class="icon">✨</span>
         <span class="label">Магия</span>
       </button>
-
     </div>
-
   </div>
 
   <!-- ===================== -->
   <!-- 🧩 ЭКРАН: ПРЕДМЕТ -->
   <!-- ===================== -->
   <div id="itemEditor" class="card" style="display:none">
-
-    <button onclick="closeItemEditor()">← Назад</button>
+    <button class="btn-ghost" onclick="closeItemEditor()">← Назад</button>
 
     <h2 id="itemEditorTitle">Предмет</h2>
 
-    <input
-      id="editItemName"
-      placeholder="Название предмета"
-    />
-
-    <textarea
-      id="editItemDesc"
-      placeholder="Описание"
-    ></textarea>
-
-    <textarea
-      id="editItemStats"
-      placeholder="Характеристики"
-    ></textarea>
+    <input id="editItemName" placeholder="Название предмета" />
+    <textarea id="editItemDesc" placeholder="Описание"></textarea>
+    <textarea id="editItemStats" placeholder="Характеристики"></textarea>
 
     <button onclick="saveItem()">💾 Сохранить</button>
-
-    <button
-      id="deleteItemBtn"
-      onclick="deleteItem()"
-      style="display:none"
-    >
+    <button id="deleteItemBtn" class="btn-danger" onclick="deleteItem()" style="display:none">
       🗑 Удалить
     </button>
-
   </div>
 
   <!-- ===================== -->
-  <!-- ❤️ ЭКРАН: НАСТРОЙКА HP -->
+  <!-- 🧩 ЭКРАН: РЕСУРС -->
   <!-- ===================== -->
-  <div id="hpEditor" class="card" style="display:none">
+  <div id="resourceEditor" class="card" style="display:none">
+    <button class="btn-ghost" onclick="closeResourceEditor()">← Назад</button>
 
-    <button onclick="closeHpEditor()">← Назад</button>
-
-    <h2>HP</h2>
-
-    <div class="muted" id="hpEditorMeta"></div>
+    <h2 id="resourceEditorTitle">Ресурс</h2>
 
     <div class="field">
-      <label>Макс HP</label>
-      <input id="hpMaxInput" type="number" min="0" placeholder="Напр. 30">
+      <label>Текущее</label>
+      <div class="stepper">
+        <button class="btn-step" onclick="stepResource(-1)">−</button>
+        <input id="resCurrent" type="number" />
+        <button class="btn-step" onclick="stepResource(1)">+</button>
+      </div>
     </div>
 
     <div class="field">
-      <label>Текущее HP</label>
-      <input id="hpNowInput" type="number" min="0" placeholder="Напр. 24">
+      <label>Максимум</label>
+      <input id="resMax" type="number" />
     </div>
 
     <div class="field">
       <label>Прибавка за уровень</label>
-      <input id="hpPerLevelInput" type="number" min="0" placeholder="Напр. 6">
-      <div class="muted" style="margin-top:6px">
-        (пока просто сохраняем число; позже можно делать “Применить к уровню”)
-      </div>
+      <input id="resPerLevel" type="number" />
     </div>
 
-    <button onclick="saveHpSettings()">💾 Сохранить</button>
-
+    <button onclick="saveResource()">💾 Сохранить</button>
   </div>
-
 
 </div>
 

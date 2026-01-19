@@ -14,32 +14,14 @@ class CharacterUpdate(BaseModel):
     mana: Optional[int] = None
     energy: Optional[int] = None
 
+    hp_max: Optional[int] = None
+    mana_max: Optional[int] = None
+    energy_max: Optional[int] = None
 
-    aggression_kindness: int | None = None
-    intellect: int | None = None
-    fearlessness: int | None = None
-    humor: int | None = None
-    emotionality: int | None = None
-    sociability: int | None = None
-    responsibility: int | None = None
-    intimidation: int | None = None
-    attentiveness: int | None = None
-    learnability: int | None = None
-    luck: int | None = None
-    stealth: int | None = None
-
-    hp: int | None = None
-    mana: int | None = None
-    initiative: int | None = None
-    attack: int | None = None
-    energy: int | None = None
-    counterattack: int | None = None
-    steps: int | None = None
-    defense: int | None = None
-    perm_armor: int | None = None
-    temp_armor: int | None = None
-    action_points: int | None = None
-    dodges: int | None = None
+    # прибавка за уровень
+    hp_per_level: Optional[int] = None
+    mana_per_level: Optional[int] = None
+    energy_per_level: Optional[int] = None
 
     level_up_rules: str | None = None
 
