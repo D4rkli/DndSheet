@@ -72,6 +72,12 @@ class Character(Base):
     abilities: Mapped[list["Ability"]] = relationship(back_populates="character", cascade="all, delete-orphan")
     states: Mapped[list["State"]] = relationship(back_populates="character", cascade="all, delete-orphan")
 
+    equipment: Mapped["Equipment"] = relationship(
+        back_populates="character",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+
 class Item(Base):
     __tablename__ = "items"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
