@@ -288,3 +288,20 @@ li {
   color: #cbd5f5;
   font-variant-numeric: tabular-nums;
 }
+
+.progress { cursor: pointer; position: relative; }
+
+.progress-bar { position: relative; }
+
+.bar-text{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:600;
+  color:#0b1220;
+  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+  pointer-events:none;
+}

@@ -14,6 +14,12 @@ const characterScreen = document.getElementById("characterScreen");
 const itemEditor = document.getElementById("itemEditor");
 const bottomNav = document.getElementById("bottomNav");
 
+const hpEditor = document.getElementById("hpEditor");
+const hpEditorMeta = document.getElementById("hpEditorMeta");
+const hpMaxInput = document.getElementById("hpMaxInput");
+const hpNowInput = document.getElementById("hpNowInput");
+const hpPerLevelInput = document.getElementById("hpPerLevelInput");
+
 const listEl = document.getElementById("chars");
 const createBtn = document.getElementById("createBtn");
 const newName = document.getElementById("newName");
@@ -268,6 +274,68 @@ function closeItemEditor() {
   openTab("inventory");
 }
 
+function openHpEditor() {
+  if (!currentCharacter) return;
+
+  // закрываем всё и показываем редактор
+  showOnly("hp");
+  bottomNav.style.display = "none";
+
+  hpEditorMeta.textContent =
+    `${currentCharacter.name} • ур. ${currentCharacter.level || 1}`;
+
+  // берём значения (если max ещё нет — считаем max = текущее, как ты делала)
+  const hpMax = currentCharacter.hp_max ?? currentCharacter.hp ?? 0;
+  const hpNow = currentCharacter.hp ?? 0;
+
+  hpMaxInput.value = hpMax;
+  hpNowInput.value = hpNow;
+
+  // прибавка за уровень — пока храним в level_up_rules (как текст/JSON)
+  // если пока нет — ставим пусто
+  const rules = safeParseJson(currentCharacter.level_up_rules);
+  hpPerLevelInput.value = (rules?.hp_per_level ?? "");
+}
+
+function closeHpEditor() {
+  showOnly("character");
+  bottomNav.style.display = "flex";
+  renderResources(); // обновим отображение
+}
+
+async function saveHpSettings() {
+  if (!activeCharacterId) return;
+
+  const hpMax = Number(hpMaxInput.value || 0);
+  let hpNow = Number(hpNowInput.value || 0);
+
+  if (hpNow > hpMax) hpNow = hpMax;
+  if (hpNow < 0) hpNow = 0;
+
+  const hpPerLevel = hpPerLevelInput.value === "" ? null : Number(hpPerLevelInput.value);
+
+  // сохраняем правила в level_up_rules как JSON
+  const rules = safeParseJson(currentCharacter.level_up_rules) || {};
+  if (hpPerLevel === null || Number.isNaN(hpPerLevel)) {
+    delete rules.hp_per_level;
+  } else {
+    rules.hp_per_level = hpPerLevel;
+  }
+
+  const payload = {
+    hp: hpNow,
+    hp_max: hpMax,
+    level_up_rules: JSON.stringify(rules),
+  };
+
+  currentCharacter = await api(`/api/characters/${activeCharacterId}`, {
+    method: "PATCH",
+    body: payload,
+  });
+
+  closeHpEditor();
+}
+
 async function saveItem() {
   const payload = {
     name: editItemName.value,
@@ -302,10 +370,12 @@ function showOnly(name) {
   listScreen.style.display = "none";
   characterScreen.style.display = "none";
   itemEditor.style.display = "none";
+  hpEditor.style.display = "none";
 
   if (name === "list") listScreen.style.display = "block";
   if (name === "character") characterScreen.style.display = "block";
   if (name === "item") itemEditor.style.display = "block";
+  if (name === "hp") hpEditor.style.display = "block";
 }
 
 function renderResources() {
@@ -408,3 +478,11 @@ async function editResource(type) {
   renderResources();
 }
 
+function safeParseJson(str) {
+  try {
+    if (!str) return null;
+    return JSON.parse(str);
+  } catch {
+    return null;
+  }
+}

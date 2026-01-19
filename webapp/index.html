@@ -69,9 +69,9 @@
           </div>
         </div>
 
-        <div class="progress">
+        <div class="progress" onclick="openHpEditor()">
           <div id="hpBar" class="progress-bar hp">
-            <span class="bar-text" id="hpBarText"></span>
+            <span id="hpText" class="bar-text"></span>
           </div>
         </div>
       </div>
@@ -230,6 +230,40 @@
     </button>
 
   </div>
+
+  <!-- ===================== -->
+  <!-- ❤️ ЭКРАН: НАСТРОЙКА HP -->
+  <!-- ===================== -->
+  <div id="hpEditor" class="card" style="display:none">
+
+    <button onclick="closeHpEditor()">← Назад</button>
+
+    <h2>HP</h2>
+
+    <div class="muted" id="hpEditorMeta"></div>
+
+    <div class="field">
+      <label>Макс HP</label>
+      <input id="hpMaxInput" type="number" min="0" placeholder="Напр. 30">
+    </div>
+
+    <div class="field">
+      <label>Текущее HP</label>
+      <input id="hpNowInput" type="number" min="0" placeholder="Напр. 24">
+    </div>
+
+    <div class="field">
+      <label>Прибавка за уровень</label>
+      <input id="hpPerLevelInput" type="number" min="0" placeholder="Напр. 6">
+      <div class="muted" style="margin-top:6px">
+        (пока просто сохраняем число; позже можно делать “Применить к уровню”)
+      </div>
+    </div>
+
+    <button onclick="saveHpSettings()">💾 Сохранить</button>
+
+  </div>
+
 
 </div>
 
