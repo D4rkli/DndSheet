@@ -68,24 +68,53 @@ async def get_character(
     if not ch:
         raise HTTPException(status_code=404, detail="Character not found")
 
+    # отдаём расширенный лист (чтобы webapp мог рисовать все поля)
     return {
         "id": ch.id,
         "name": ch.name,
         "race": ch.race,
+        "gender": ch.gender,
         "klass": ch.klass,
         "level": ch.level,
+        "xp": ch.xp,
 
+        # ресурсы
         "hp": ch.hp,
         "mana": ch.mana,
         "energy": ch.energy,
-
         "hp_max": ch.hp_max,
         "mana_max": ch.mana_max,
         "energy_max": ch.energy_max,
-
         "hp_per_level": ch.hp_per_level,
         "mana_per_level": ch.mana_per_level,
         "energy_per_level": ch.energy_per_level,
+
+        # характер
+        "aggression_kindness": ch.aggression_kindness,
+        "intellect": ch.intellect,
+        "fearlessness": ch.fearlessness,
+        "humor": ch.humor,
+        "emotionality": ch.emotionality,
+        "sociability": ch.sociability,
+        "responsibility": ch.responsibility,
+        "intimidation": ch.intimidation,
+        "attentiveness": ch.attentiveness,
+        "learnability": ch.learnability,
+        "luck": ch.luck,
+        "stealth": ch.stealth,
+
+        # боёвка
+        "initiative": ch.initiative,
+        "attack": ch.attack,
+        "counterattack": ch.counterattack,
+        "steps": ch.steps,
+        "defense": ch.defense,
+        "perm_armor": ch.perm_armor,
+        "temp_armor": ch.temp_armor,
+        "action_points": ch.action_points,
+        "dodges": ch.dodges,
+
+        "level_up_rules": ch.level_up_rules,
     }
 
 @router.patch("/characters/{character_id}")
@@ -190,3 +219,341 @@ async def delete_item(
         raise HTTPException(404, "Item not found")
 
     return {"status": "deleted"}
+
+
+# =========================
+# SPELLS
+# =========================
+
+@router.get("/characters/{ch_id}/spells")
+async def list_spells(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    spells = await crud.list_spells(db, ch_id)
+    return [
+        {
+            "id": s.id,
+            "name": s.name,
+            "description": s.description,
+            "range": s.range,
+            "duration": s.duration,
+            "cost": s.cost,
+        }
+        for s in spells
+    ]
+
+
+@router.post("/characters/{ch_id}/spells")
+async def add_spell(
+    ch_id: int,
+    body: schemas.SpellCreate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_for_user(db, ch_id, u.id)
+    if not ch:
+        # DM может добавлять не только своим
+        ch = await crud.get_character_by_id(db, ch_id)
+
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    sp = await crud.add_spell(db, ch_id, body.model_dump())
+    return {"id": sp.id}
+
+
+@router.delete("/characters/{ch_id}/spells/{spell_id}")
+async def delete_spell(
+    ch_id: int,
+    spell_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    ok = await crud.delete_spell(db, spell_id)
+    if not ok:
+        raise HTTPException(404, "Spell not found")
+    return {"status": "deleted"}
+
+
+# =========================
+# ABILITIES
+# =========================
+
+@router.get("/characters/{ch_id}/abilities")
+async def list_abilities(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    abilities = await crud.list_abilities(db, ch_id)
+    return [
+        {
+            "id": a.id,
+            "name": a.name,
+            "description": a.description,
+            "range": a.range,
+            "duration": a.duration,
+            "cost": a.cost,
+        }
+        for a in abilities
+    ]
+
+
+@router.post("/characters/{ch_id}/abilities")
+async def add_ability(
+    ch_id: int,
+    body: schemas.AbilityCreate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    ab = await crud.add_ability(db, ch_id, body.model_dump())
+    return {"id": ab.id}
+
+
+@router.delete("/characters/{ch_id}/abilities/{ability_id}")
+async def delete_ability(
+    ch_id: int,
+    ability_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    ok = await crud.delete_ability(db, ability_id)
+    if not ok:
+        raise HTTPException(404, "Ability not found")
+    return {"status": "deleted"}
+
+
+# =========================
+# STATES
+# =========================
+
+@router.get("/characters/{ch_id}/states")
+async def list_states(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    states = await crud.list_states(db, ch_id)
+    return [
+        {
+            "id": s.id,
+            "name": s.name,
+            "hp_cost": s.hp_cost,
+            "duration": s.duration,
+            "is_active": s.is_active,
+        }
+        for s in states
+    ]
+
+
+@router.post("/characters/{ch_id}/states")
+async def add_state(
+    ch_id: int,
+    body: schemas.StateCreate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    st = await crud.add_state(db, ch_id, body.model_dump())
+    return {"id": st.id}
+
+
+@router.delete("/characters/{ch_id}/states/{state_id}")
+async def delete_state(
+    ch_id: int,
+    state_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    ok = await crud.delete_state(db, state_id)
+    if not ok:
+        raise HTTPException(404, "State not found")
+    return {"status": "deleted"}
+
+
+# =========================
+# EQUIPMENT
+# =========================
+
+@router.get("/characters/{ch_id}/equipment")
+async def get_equipment(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    eq = await crud.get_or_create_equipment(db, ch_id)
+    return {
+        "head": eq.head,
+        "armor": eq.armor,
+        "back": eq.back,
+        "hands": eq.hands,
+        "legs": eq.legs,
+        "feet": eq.feet,
+        "weapon1": eq.weapon1,
+        "weapon2": eq.weapon2,
+        "belt": eq.belt,
+        "ring1": eq.ring1,
+        "ring2": eq.ring2,
+        "ring3": eq.ring3,
+        "ring4": eq.ring4,
+        "jewelry": eq.jewelry,
+    }
+
+
+@router.patch("/characters/{ch_id}/equipment")
+async def update_equipment(
+    ch_id: int,
+    body: schemas.EquipmentUpdate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    eq = await crud.update_equipment(db, ch_id, body.model_dump(exclude_unset=True))
+    return {"status": "ok", "equipment": {"id": eq.id}}
+
+
+# =========================
+# FULL SHEET (one call for webapp)
+# =========================
+
+@router.get("/characters/{ch_id}/sheet")
+async def get_full_sheet(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    """Удобно для WebApp: одним запросом тянем всё."""
+    _ = _auth_user(x_tg_init_data)
+    # проверку доступа делаем через list_items (там уже владелец/DM)
+    ch = await get_character(ch_id, db=db, x_tg_init_data=x_tg_init_data)
+    items = await list_items(ch_id, db=db, x_tg_init_data=x_tg_init_data)
+    spells = await list_spells(ch_id, db=db, x_tg_init_data=x_tg_init_data)
+    abilities = await list_abilities(ch_id, db=db, x_tg_init_data=x_tg_init_data)
+    states = await list_states(ch_id, db=db, x_tg_init_data=x_tg_init_data)
+    equipment = await get_equipment(ch_id, db=db, x_tg_init_data=x_tg_init_data)
+
+    return {
+        "character": ch,
+        "items": items,
+        "spells": spells,
+        "abilities": abilities,
+        "states": states,
+        "equipment": equipment,
+    }

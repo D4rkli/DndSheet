@@ -1,535 +1,535 @@
-// =====================
-// Telegram WebApp init
-// =====================
-const tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
+/* global Telegram, bootstrap */
 
-// =====================
-// DOM
-// =====================
-const statusEl = document.getElementById("status");
-const listScreen = document.getElementById("listScreen");
-const characterScreen = document.getElementById("characterScreen");
-const itemEditor = document.getElementById("itemEditor");
-const bottomNav = document.getElementById("bottomNav");
-
-const hpEditor = document.getElementById("hpEditor");
-const hpEditorMeta = document.getElementById("hpEditorMeta");
-const hpMaxInput = document.getElementById("hpMaxInput");
-const hpNowInput = document.getElementById("hpNowInput");
-const hpPerLevelInput = document.getElementById("hpPerLevelInput");
-
-const listEl = document.getElementById("chars");
-const createBtn = document.getElementById("createBtn");
-const newName = document.getElementById("newName");
-
-// =====================
-// STATE
-// =====================
-const INIT_DATA = tg.initData || "";
-
-let activeResource = null; // "hp" | "mana" | "energy"
-let activeCharacterId = null;
-let currentCharacter = null;
-let activeItemId = null;
-let editMode = false;
-
-if (!INIT_DATA) {
-  document.body.innerHTML = "<p>Открой приложение из Telegram</p>";
-  throw new Error("No Telegram initData");
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
 }
 
-// =====================
-// API helper
-// =====================
-async function api(path, opts = {}) {
-  const res = await fetch(path, {
-    method: opts.method || "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "X-TG-INIT-DATA": INIT_DATA,
-    },
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
+const API_BASE = (window.location.origin || ""); // same host as backend static
+
+function tgInitData() {
+  return tg?.initData || "";
+}
+
+async function api(path, options = {}) {
+  const headers = new Headers(options.headers || {});
+  headers.set("Content-Type", "application/json");
+  const init = tgInitData();
+  if (init) headers.set("X-TG-INIT-DATA", init);
+
+  const res = await fetch(`${API_BASE}/api${path}`, {
+    ...options,
+    headers,
   });
-
   if (!res.ok) {
-    throw new Error(await res.text());
+    const txt = await res.text();
+    throw new Error(`API ${res.status}: ${txt}`);
   }
-
   return res.json();
 }
 
-// =====================
-// INIT
-// =====================
-loadCharacters();
+const el = (id) => document.getElementById(id);
 
-// =====================
-// LOAD CHARACTERS
-// =====================
-async function loadCharacters() {
-  showOnly("list");
-
-  const me = await api("/api/me");
-  statusEl.textContent =
-    `Привет, ${me.tg.first_name || "игрок"}! DM: ${me.is_dm ? "да" : "нет"}`;
-
-  const chars = await api("/api/characters");
-  listEl.innerHTML = "";
-
-  if (!chars.length) {
-    listEl.innerHTML = "<li class='muted'>Нет персонажей</li>";
-    return;
-  }
-
-  for (const c of chars) {
-    const li = document.createElement("li");
-    li.textContent = `${c.name} (ур. ${c.level || 1})`;
-    li.onclick = () => openCharacter(c.id);
-    listEl.appendChild(li);
-  }
-}
-
-// =====================
-// CREATE CHARACTER
-// =====================
-createBtn.onclick = async () => {
-  const name = newName.value.trim();
-  if (!name) return;
-
-  await api("/api/characters", {
-    method: "POST",
-    body: { name },
-  });
-
-  newName.value = "";
-  loadCharacters();
+const state = {
+  me: null,
+  characters: [],
+  chId: null,
+  sheet: null,
 };
 
-// =====================
-// OPEN CHARACTER
-// =====================
-async function openCharacter(id) {
-  activeCharacterId = id;
-  editMode = false;
-
-  currentCharacter = await api(`/api/characters/${id}`);
-
-  showOnly("character");
-  bottomNav.style.display = "flex";
-
-  renderCharacter();
-  openTab("stats");
-  renderResources();
+function setStatus(text) {
+  el("status").textContent = text;
 }
 
-function backToList() {
-  activeCharacterId = null;
-  currentCharacter = null;
-  editMode = false;
-
-  bottomNav.style.display = "none";
-  showOnly("list");
-  loadCharacters();
+function currentChId() {
+  return state.chId;
 }
 
-// =====================
-// RENDER CHARACTER
-// =====================
-function renderCharacter() {
-  const c = currentCharacter;
-
-  document.getElementById("charTitle").textContent = c.name;
-  document.getElementById("charMeta").textContent =
-    `${c.race || "—"} • ${c.klass || "—"} • ур. ${c.level || 1}`;
-
-  // 👇 ВОТ ЭТОГО НЕ ХВАТАЛО
-  document.getElementById("viewName").textContent = c.name;
-  document.getElementById("viewRace").textContent = c.race || "—";
-  document.getElementById("viewClass").textContent = c.klass || "—";
-  document.getElementById("viewLevel").textContent = c.level || 1;
-
-  renderResources();   // 👈 КЛЮЧ
-  renderStats();
+function intOrNull(v) {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }
 
-// =====================
-// STATS TAB
-// =====================
-function renderStats() {
-  const el = document.getElementById("tab-stats");
-
-  if (!editMode) {
-    el.innerHTML = `
-      <p><b>Имя:</b> ${currentCharacter.name}</p>
-      <p><b>Раса:</b> ${currentCharacter.race || "—"}</p>
-      <p><b>Класс:</b> ${currentCharacter.klass || "—"}</p>
-      <p><b>Уровень:</b> ${currentCharacter.level || 1}</p>
-      <button onclick="enableEdit()">✏️ Редактировать</button>
-    `;
-  } else {
-    el.innerHTML = `
-      <input id="edit-name" value="${currentCharacter.name}">
-      <input id="edit-race" value="${currentCharacter.race || ""}">
-      <input id="edit-klass" value="${currentCharacter.klass || ""}">
-      <input id="edit-level" type="number" value="${currentCharacter.level || 1}">
-      <button onclick="saveStats()">💾 Сохранить</button>
-      <button onclick="cancelEdit()">❌ Отмена</button>
-    `;
-  }
+function fillInput(id, value) {
+  const node = el(id);
+  if (!node) return;
+  node.value = value ?? "";
 }
 
-function enableEdit() {
-  editMode = true;
-  renderStats();
-}
-
-function cancelEdit() {
-  editMode = false;
-  renderStats();
-}
-
-async function saveStats() {
-  const payload = {
-    name: document.getElementById("edit-name").value,
-    race: document.getElementById("edit-race").value,
-    klass: document.getElementById("edit-klass").value,
-    level: Number(document.getElementById("edit-level").value),
-  };
-
-  currentCharacter = await api(`/api/characters/${activeCharacterId}`, {
-    method: "PATCH",
-    body: payload,
+function tabSwitch(name) {
+  document.querySelectorAll("#tabs .nav-link").forEach((b) => {
+    b.classList.toggle("active", b.dataset.tab === name);
   });
-
-  editMode = false;
-  renderCharacter();
+  document.querySelectorAll(".tab").forEach((s) => s.classList.add("d-none"));
+  el(`tab-${name}`).classList.remove("d-none");
 }
 
-// =====================
-// TABS
-// =====================
-function openTab(name) {
-  if (!activeCharacterId) return;
-
-  document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
-  document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.remove("active"));
-
-  document.getElementById(`tab-${name}`).style.display = "block";
-  document.getElementById(`nav-${name}`).classList.add("active");
-
-  if (name === "inventory") loadInventory();
+function buildStatInputs(containerId, fields) {
+  const wrap = el(containerId);
+  wrap.innerHTML = "";
+  fields.forEach(({ key, label }) => {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <label class="form-label">${label}</label>
+      <input class="form-control" type="number" data-key="${key}" />
+    `;
+    wrap.appendChild(div);
+  });
 }
 
-// =====================
-// INVENTORY
-// =====================
-async function loadInventory() {
-  const list = document.getElementById("inventoryList");
-  list.innerHTML = "<li class='muted'>Загрузка…</li>";
+function readStatInputs(containerId) {
+  const data = {};
+  el(containerId).querySelectorAll("input[data-key]").forEach((input) => {
+    const key = input.dataset.key;
+    const val = intOrNull(input.value);
+    if (val !== null) data[key] = val;
+  });
+  return data;
+}
 
-  const items = await api(`/api/characters/${activeCharacterId}/items`);
-  list.innerHTML = "";
+function fillStatInputs(containerId, source) {
+  el(containerId).querySelectorAll("input[data-key]").forEach((input) => {
+    const key = input.dataset.key;
+    input.value = source?.[key] ?? 0;
+  });
+}
 
-  if (!items.length) {
-    list.innerHTML = "<li class='muted'>Пусто</li>";
+function renderList(containerId, rows, onDelete) {
+  const root = el(containerId);
+  root.innerHTML = "";
+  if (!rows || rows.length === 0) {
+    root.innerHTML = `<div class="muted">Пусто.</div>`;
     return;
   }
 
-  for (const it of items) {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <b>${it.name}</b>
-      <div class="muted">${it.description || ""}</div>
-      <button onclick='openItemEditor(${JSON.stringify(it)})'>⚙️</button>
+  rows.forEach((r) => {
+    const card = document.createElement("div");
+    card.className = "item";
+    const sub = r.sub || r.description || "";
+    card.innerHTML = `
+      <div class="item-title">${escapeHtml(r.title || r.name || "")}</div>
+      <div class="item-sub">${escapeHtml(sub)}</div>
+      <div class="item-actions">
+        <button class="btn btn-sm btn-outline-light" data-act="delete">Удалить</button>
+      </div>
     `;
-    list.appendChild(li);
-  }
-}
-
-// =====================
-// ITEM EDITOR
-// =====================
-function openItemEditor(item = null) {
-  activeItemId = item?.id || null;
-
-  showOnly("item");
-  bottomNav.style.display = "none";
-
-  document.getElementById("itemEditorTitle").textContent =
-    item ? "Редактировать предмет" : "Новый предмет";
-
-  document.getElementById("editItemName").value = item?.name || "";
-  document.getElementById("editItemDesc").value = item?.description || "";
-  document.getElementById("editItemStats").value = item?.stats || "";
-
-  document.getElementById("deleteItemBtn").style.display =
-    item ? "block" : "none";
-}
-
-function closeItemEditor() {
-  activeItemId = null;
-  showOnly("character");
-  bottomNav.style.display = "flex";
-  openTab("inventory");
-}
-
-function openHpEditor() {
-  if (!currentCharacter) return;
-
-  // закрываем всё и показываем редактор
-  showOnly("hp");
-  bottomNav.style.display = "none";
-
-  hpEditorMeta.textContent =
-    `${currentCharacter.name} • ур. ${currentCharacter.level || 1}`;
-
-  // берём значения (если max ещё нет — считаем max = текущее, как ты делала)
-  const hpMax = currentCharacter.hp_max ?? currentCharacter.hp ?? 0;
-  const hpNow = currentCharacter.hp ?? 0;
-
-  hpMaxInput.value = hpMax;
-  hpNowInput.value = hpNow;
-
-  // прибавка за уровень — пока храним в level_up_rules (как текст/JSON)
-  // если пока нет — ставим пусто
-  const rules = safeParseJson(currentCharacter.level_up_rules);
-  hpPerLevelInput.value = (rules?.hp_per_level ?? "");
-}
-
-function openResourceEditor(res) {
-  if (!currentCharacter) return;
-
-  activeResource = res;
-
-  const titleMap = { hp: "❤️ HP", mana: "🔵 Мана", energy: "⚡ Энергия" };
-  document.getElementById("resourceEditorTitle").textContent = `Настройка: ${titleMap[res]}`;
-
-  const cur = currentCharacter[res] ?? 0;
-  const max = currentCharacter[`${res}_max`] ?? 0;
-  const per = currentCharacter[`${res}_per_level`] ?? 0;
-
-  document.getElementById("resCurrent").value = cur;
-  document.getElementById("resMax").value = max;
-  document.getElementById("resPerLevel").value = per;
-
-  showOnly("resource");
-  bottomNav.style.display = "none";
-}
-
-function closeResourceEditor() {
-  activeResource = null;
-  showOnly("character");
-  bottomNav.style.display = "flex";
-  renderResources();
-}
-
-function stepResource(delta) {
-  const input = document.getElementById("resCurrent");
-  const v = Number(input.value || 0) + delta;
-  input.value = v;
-}
-
-async function saveResource() {
-  if (!activeResource) return;
-
-  const res = activeResource;
-
-  const cur = Number(document.getElementById("resCurrent").value || 0);
-  const max = Number(document.getElementById("resMax").value || 0);
-  const per = Number(document.getElementById("resPerLevel").value || 0);
-
-  const payload = {
-    [res]: cur,
-    [`${res}_max`]: max,
-    [`${res}_per_level`]: per,
-  };
-
-  currentCharacter = await api(`/api/characters/${activeCharacterId}`, {
-    method: "PATCH",
-    body: payload,
+    card.querySelector("button[data-act='delete']").addEventListener("click", () => onDelete(r));
+    root.appendChild(card);
   });
-
-  closeResourceEditor();
 }
 
-function closeHpEditor() {
-  showOnly("character");
-  bottomNav.style.display = "flex";
-  renderResources(); // обновим отображение
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-async function saveHpSettings() {
-  if (!activeCharacterId) return;
+// ===== Modal helpers
+const modalEl = el("editModal");
+const modal = new bootstrap.Modal(modalEl);
+let modalOnSave = null;
 
-  const hpMax = Number(hpMaxInput.value || 0);
-  let hpNow = Number(hpNowInput.value || 0);
-
-  if (hpNow > hpMax) hpNow = hpMax;
-  if (hpNow < 0) hpNow = 0;
-
-  const hpPerLevel = hpPerLevelInput.value === "" ? null : Number(hpPerLevelInput.value);
-
-  // сохраняем правила в level_up_rules как JSON
-  const rules = safeParseJson(currentCharacter.level_up_rules) || {};
-  if (hpPerLevel === null || Number.isNaN(hpPerLevel)) {
-    delete rules.hp_per_level;
-  } else {
-    rules.hp_per_level = hpPerLevel;
-  }
-
-  const payload = {
-    hp: hpNow,
-    hp_max: hpMax,
-    level_up_rules: JSON.stringify(rules),
-  };
-
-  currentCharacter = await api(`/api/characters/${activeCharacterId}`, {
-    method: "PATCH",
-    body: payload,
-  });
-
-  closeHpEditor();
+function openModal(title, bodyHtml, onSave) {
+  el("modalTitle").textContent = title;
+  el("modalBody").innerHTML = bodyHtml;
+  modalOnSave = onSave;
+  modal.show();
 }
 
-async function saveItem() {
-  const payload = {
-    name: editItemName.value,
-    description: editItemDesc.value,
-    stats: editItemStats.value,
-  };
-
-  if (!activeItemId) {
-    await api(`/api/characters/${activeCharacterId}/items`, {
-      method: "POST",
-      body: payload,
-    });
-  }
-
-  closeItemEditor();
-}
-
-async function deleteItem() {
-  if (!confirm("Удалить предмет?")) return;
-
-  await api(`/api/characters/${activeCharacterId}/items/${activeItemId}`, {
-    method: "DELETE",
-  });
-
-  closeItemEditor();
-}
-
-// =====================
-// SCREEN SWITCHER
-// =====================
-function showOnly(name) {
-  listScreen.style.display = "none";
-  characterScreen.style.display = "none";
-  itemEditor.style.display = "none";
-  document.getElementById("resourceEditor").style.display = "none";
-
-  if (name === "list") listScreen.style.display = "block";
-  if (name === "character") characterScreen.style.display = "block";
-  if (name === "item") itemEditor.style.display = "block";
-  if (name === "resource") document.getElementById("resourceEditor").style.display = "block";
-}
-
-function renderResources() {
-  const c = currentCharacter;
-
-  const hpMax = (c.hp_max ?? 0) > 0 ? c.hp_max : c.hp;
-  const manaMax = (c.mana_max ?? 0) > 0 ? c.mana_max : c.mana;
-  const energyMax = (c.energy_max ?? 0) > 0 ? c.energy_max : c.energy;
-
-  setBar("hp", c.hp ?? 0, hpMax ?? 0);
-  setBar("mana", c.mana ?? 0, manaMax ?? 0);
-  setBar("energy", c.energy ?? 0, energyMax ?? 0);
-}
-
-function setBar(type, value, max) {
-  const safeMax = max > 0 ? max : 1;
-  const percent = Math.max(0, Math.min(100, (value / safeMax) * 100));
-
-  document.getElementById(`${type}Bar`).style.width = `${percent}%`;
-
-  const text = `${value} / ${max > 0 ? max : value}`;
-  document.getElementById(`${type}Text`).textContent = text;
-  document.getElementById(`${type}TextOnBar`).textContent = text;
-}
-
-async function spendResources({ hp = 0, mana = 0, energy = 0 }) {
-  const payload = {
-    hp: currentCharacter.hp - hp,
-    mana: currentCharacter.mana - mana,
-    energy: currentCharacter.energy - energy
-  };
-
-  currentCharacter = await api(
-    `/api/characters/${activeCharacterId}`,
-    { method: "PATCH", body: payload }
-  );
-
-  renderResources();
-}
-
-async function changeResource(type, delta) {
-  if (!currentCharacter) return;
-
-  const field = type;
-  const maxField = `${type}_max`;
-
-  const current = currentCharacter[field] ?? 0;
-  const max = currentCharacter[maxField] ?? current;
-
-  const next = Math.max(0, Math.min(max, current + delta));
-
-  currentCharacter = await api(
-    `/api/characters/${activeCharacterId}`,
-    {
-      method: "PATCH",
-      body: { [field]: next }
-    }
-  );
-
-  renderResources();
-}
-
-async function editResource(type) {
-  const current = currentCharacter[type] ?? 0;
-
-  // ВАЖНО: если max = 0 или undefined — разрешаем ввод
-  const rawMax = currentCharacter[`${type}_max`];
-  const max = rawMax && rawMax > 0 ? rawMax : 999999;
-
-  const value = prompt(
-    `Введите ${type.toUpperCase()} (0 – ${max})`,
-    current
-  );
-
-  if (value === null) return;
-
-  const num = Number(value);
-  if (Number.isNaN(num)) return;
-
-  const safe = Math.max(0, Math.min(max, num));
-
-  currentCharacter = await api(
-    `/api/characters/${activeCharacterId}`,
-    {
-      method: "PATCH",
-      body: { [type]: safe }
-    }
-  );
-
-  renderResources();
-}
-
-function safeParseJson(str) {
+el("modalSave").addEventListener("click", async () => {
+  if (!modalOnSave) return;
   try {
-    if (!str) return null;
-    return JSON.parse(str);
-  } catch {
-    return null;
+    await modalOnSave();
+    modal.hide();
+  } catch (e) {
+    alert(e.message);
+  }
+});
+
+// ===== UI wiring
+
+document.querySelectorAll("#tabs .nav-link").forEach((btn) => {
+  btn.addEventListener("click", () => tabSwitch(btn.dataset.tab));
+});
+
+el("btnSync").addEventListener("click", () => loadSheet());
+
+el("characterSelect").addEventListener("change", async (e) => {
+  state.chId = Number(e.target.value);
+  await loadSheet();
+});
+
+el("btnNew").addEventListener("click", () => {
+  openModal(
+    "Новый персонаж",
+    `
+      <label class="form-label">Имя</label>
+      <input id="newName" class="form-control" placeholder="Напр. Элвин" />
+    `,
+    async () => {
+      const name = document.getElementById("newName").value.trim();
+      if (!name) throw new Error("Введите имя");
+      await api(`/characters`, { method: "POST", body: JSON.stringify({ name }) });
+      await loadCharacters();
+    }
+  );
+});
+
+// MAIN save
+async function saveMain(extra = {}) {
+  const payload = {
+    name: el("f_name").value.trim(),
+    race: el("f_race").value.trim(),
+    klass: el("f_klass").value.trim(),
+    gender: el("f_gender").value.trim(),
+    level: intOrNull(el("f_level").value),
+    xp: intOrNull(el("f_xp").value),
+
+    hp: intOrNull(el("f_hp").value),
+    hp_max: intOrNull(el("f_hp_max").value),
+    hp_per_level: intOrNull(el("f_hp_per_level").value),
+
+    mana: intOrNull(el("f_mana").value),
+    mana_max: intOrNull(el("f_mana_max").value),
+    mana_per_level: intOrNull(el("f_mana_per_level").value),
+
+    energy: intOrNull(el("f_energy").value),
+    energy_max: intOrNull(el("f_energy_max").value),
+    energy_per_level: intOrNull(el("f_energy_per_level").value),
+
+    level_up_rules: el("f_level_up_rules").value,
+
+    ...extra,
+  };
+
+  // remove nulls
+  Object.keys(payload).forEach((k) => payload[k] === null && delete payload[k]);
+
+  const id = currentChId();
+  await api(`/characters/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+  setStatus("Сохранено ✅");
+  await loadSheet(false);
+}
+
+document.getElementById("btnSaveMain").addEventListener("click", () => saveMain());
+document.getElementById("btnSaveRules").addEventListener("click", () => saveMain());
+
+// STATS
+const personalityFields = [
+  { key: "aggression_kindness", label: "Агрессия/Доброта" },
+  { key: "intellect", label: "Интеллект" },
+  { key: "fearlessness", label: "Бесстрашие" },
+  { key: "humor", label: "Юмор" },
+  { key: "emotionality", label: "Эмоц." },
+  { key: "sociability", label: "Общительность" },
+  { key: "responsibility", label: "Ответственность" },
+  { key: "intimidation", label: "Запугивание" },
+  { key: "attentiveness", label: "Внимательность" },
+  { key: "learnability", label: "Обучаемость" },
+  { key: "luck", label: "Удача" },
+  { key: "stealth", label: "Скрытность" },
+];
+
+const combatFields = [
+  { key: "initiative", label: "Инициатива" },
+  { key: "attack", label: "Атака" },
+  { key: "counterattack", label: "Контратака" },
+  { key: "steps", label: "Шаги" },
+  { key: "defense", label: "Защита" },
+  { key: "perm_armor", label: "Броня (пост.)" },
+  { key: "temp_armor", label: "Броня (врем.)" },
+  { key: "action_points", label: "Очки действий" },
+  { key: "dodges", label: "Увороты" },
+];
+
+buildStatInputs("statsPersonality", personalityFields);
+buildStatInputs("statsCombat", combatFields);
+
+el("btnSaveStats").addEventListener("click", async () => {
+  const extra = { ...readStatInputs("statsPersonality"), ...readStatInputs("statsCombat") };
+  await saveMain(extra);
+});
+
+// EQUIPMENT
+const equipFields = [
+  { key: "head", label: "Голова" },
+  { key: "armor", label: "Броня" },
+  { key: "back", label: "Спина" },
+  { key: "hands", label: "Руки" },
+  { key: "legs", label: "Ноги" },
+  { key: "feet", label: "Ступни" },
+  { key: "weapon1", label: "Оружие 1" },
+  { key: "weapon2", label: "Оружие 2" },
+  { key: "belt", label: "Пояс" },
+  { key: "ring1", label: "Кольцо 1" },
+  { key: "ring2", label: "Кольцо 2" },
+  { key: "ring3", label: "Кольцо 3" },
+  { key: "ring4", label: "Кольцо 4" },
+  { key: "jewelry", label: "Украшения" },
+];
+
+(function buildEquip() {
+  const wrap = el("equipGrid");
+  wrap.innerHTML = "";
+  equipFields.forEach(({ key, label }) => {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <label class="form-label">${label}</label>
+      <input class="form-control" data-eq="${key}" />
+    `;
+    wrap.appendChild(div);
+  });
+})();
+
+function fillEquip(equipment) {
+  document.querySelectorAll("input[data-eq]").forEach((input) => {
+    const key = input.dataset.eq;
+    input.value = equipment?.[key] ?? "";
+  });
+}
+
+function readEquip() {
+  const payload = {};
+  document.querySelectorAll("input[data-eq]").forEach((input) => {
+    const key = input.dataset.eq;
+    payload[key] = input.value;
+  });
+  return payload;
+}
+
+el("btnSaveEquip").addEventListener("click", async () => {
+  const id = currentChId();
+  await api(`/characters/${id}/equipment`, { method: "PATCH", body: JSON.stringify(readEquip()) });
+  setStatus("Сохранено ✅");
+  await loadSheet(false);
+});
+
+// INVENTORY / SPELLS / ABILITIES / STATES
+el("btnAddItem").addEventListener("click", () => {
+  openModal(
+    "Добавить предмет",
+    `
+      <label class="form-label">Название</label>
+      <input id="m_name" class="form-control" />
+      <label class="form-label mt-2">Описание</label>
+      <textarea id="m_desc" class="form-control" rows="3"></textarea>
+      <label class="form-label mt-2">Статы (по желанию)</label>
+      <textarea id="m_stats" class="form-control" rows="2" placeholder="Напр. +2 AC, 1d6"></textarea>
+    `,
+    async () => {
+      const id = currentChId();
+      await api(`/characters/${id}/items`, {
+        method: "POST",
+        body: JSON.stringify({
+          name: document.getElementById("m_name").value,
+          description: document.getElementById("m_desc").value,
+          stats: document.getElementById("m_stats").value,
+        }),
+      });
+      await loadSheet(false);
+    }
+  );
+});
+
+function openSpellModal(kind) {
+  const labels = {
+    spell: "Заклинание",
+    ability: "Умение",
+  };
+  const title = `Добавить ${labels[kind]}`;
+  openModal(
+    title,
+    `
+      <label class="form-label">Название</label>
+      <input id="m_name" class="form-control" />
+      <label class="form-label mt-2">Описание</label>
+      <textarea id="m_desc" class="form-control" rows="3"></textarea>
+      <div class="row g-2 mt-1">
+        <div class="col-6">
+          <label class="form-label">Дальность</label>
+          <input id="m_range" class="form-control" />
+        </div>
+        <div class="col-6">
+          <label class="form-label">Длительность</label>
+          <input id="m_duration" class="form-control" />
+        </div>
+      </div>
+      <label class="form-label mt-2">Цена/стоимость</label>
+      <input id="m_cost" class="form-control" />
+    `,
+    async () => {
+      const id = currentChId();
+      const payload = {
+        name: document.getElementById("m_name").value,
+        description: document.getElementById("m_desc").value,
+        range: document.getElementById("m_range").value,
+        duration: document.getElementById("m_duration").value,
+        cost: document.getElementById("m_cost").value,
+      };
+      const path = kind === "spell" ? `/characters/${id}/spells` : `/characters/${id}/abilities`;
+      await api(path, { method: "POST", body: JSON.stringify(payload) });
+      await loadSheet(false);
+    }
+  );
+}
+
+document.getElementById("btnAddSpell").addEventListener("click", () => openSpellModal("spell"));
+document.getElementById("btnAddAbility").addEventListener("click", () => openSpellModal("ability"));
+
+document.getElementById("btnAddState").addEventListener("click", () => {
+  openModal(
+    "Добавить состояние",
+    `
+      <label class="form-label">Название</label>
+      <input id="m_name" class="form-control" />
+      <div class="row g-2 mt-1">
+        <div class="col-6">
+          <label class="form-label">HP стоимость</label>
+          <input id="m_hp_cost" type="number" class="form-control" value="0" />
+        </div>
+        <div class="col-6">
+          <label class="form-label">Длительность</label>
+          <input id="m_duration" class="form-control" />
+        </div>
+      </div>
+      <div class="form-check mt-2">
+        <input class="form-check-input" type="checkbox" value="" id="m_active" checked>
+        <label class="form-check-label" for="m_active">Активно</label>
+      </div>
+    `,
+    async () => {
+      const id = currentChId();
+      const payload = {
+        name: document.getElementById("m_name").value,
+        hp_cost: intOrNull(document.getElementById("m_hp_cost").value) ?? 0,
+        duration: document.getElementById("m_duration").value,
+        is_active: document.getElementById("m_active").checked,
+      };
+      await api(`/characters/${id}/states`, { method: "POST", body: JSON.stringify(payload) });
+      await loadSheet(false);
+    }
+  );
+});
+
+// ===== Loaders
+async function loadMe() {
+  state.me = await api("/me");
+}
+
+async function loadCharacters() {
+  state.characters = await api("/characters");
+  const sel = el("characterSelect");
+  sel.innerHTML = "";
+  state.characters.forEach((c) => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = `${c.name} (lvl ${c.level})`;
+    sel.appendChild(opt);
+  });
+
+  if (!state.chId && state.characters.length > 0) {
+    state.chId = state.characters[0].id;
+  }
+  if (state.chId) sel.value = state.chId;
+}
+
+async function loadSheet(showStatus = true) {
+  const id = currentChId();
+  if (!id) {
+    setStatus("Создай персонажа 👆");
+    return;
+  }
+
+  if (showStatus) setStatus("Загрузка…");
+  state.sheet = await api(`/characters/${id}/sheet`);
+
+  const ch = state.sheet.character;
+  fillInput("f_name", ch.name);
+  fillInput("f_race", ch.race);
+  fillInput("f_klass", ch.klass);
+  fillInput("f_gender", ch.gender);
+  fillInput("f_level", ch.level);
+  fillInput("f_xp", ch.xp);
+
+  fillInput("f_hp", ch.hp);
+  fillInput("f_hp_max", ch.hp_max);
+  fillInput("f_hp_per_level", ch.hp_per_level);
+
+  fillInput("f_mana", ch.mana);
+  fillInput("f_mana_max", ch.mana_max);
+  fillInput("f_mana_per_level", ch.mana_per_level);
+
+  fillInput("f_energy", ch.energy);
+  fillInput("f_energy_max", ch.energy_max);
+  fillInput("f_energy_per_level", ch.energy_per_level);
+
+  fillInput("f_level_up_rules", ch.level_up_rules);
+
+  fillStatInputs("statsPersonality", ch);
+  fillStatInputs("statsCombat", ch);
+
+  fillEquip(state.sheet.equipment);
+
+  renderList("invList", state.sheet.items, async (it) => {
+    await api(`/characters/${id}/items/${it.id}`, { method: "DELETE" });
+    await loadSheet(false);
+  });
+
+  renderList(
+    "spellsList",
+    state.sheet.spells.map((s) => ({
+      ...s,
+      sub: [s.range, s.duration, s.cost].filter(Boolean).join(" · ") + (s.description ? `\n${s.description}` : ""),
+    })),
+    async (s) => {
+      await api(`/characters/${id}/spells/${s.id}`, { method: "DELETE" });
+      await loadSheet(false);
+    }
+  );
+
+  renderList(
+    "abilitiesList",
+    state.sheet.abilities.map((a) => ({
+      ...a,
+      sub: [a.range, a.duration, a.cost].filter(Boolean).join(" · ") + (a.description ? `\n${a.description}` : ""),
+    })),
+    async (a) => {
+      await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
+      await loadSheet(false);
+    }
+  );
+
+  renderList(
+    "statesList",
+    state.sheet.states.map((s) => ({
+      ...s,
+      sub: `${s.is_active ? "Активно" : "Неактивно"}${s.duration ? ` · ${s.duration}` : ""}${s.hp_cost ? ` · HP ${s.hp_cost}` : ""}`,
+    })),
+    async (s) => {
+      await api(`/characters/${id}/states/${s.id}`, { method: "DELETE" });
+      await loadSheet(false);
+    }
+  );
+
+  setStatus("Ок ✅");
+}
+
+async function boot() {
+  try {
+    await loadMe();
+    await loadCharacters();
+    if (state.characters.length === 0) setStatus("Персонажей нет. Создай нового 👆");
+    await loadSheet();
+  } catch (e) {
+    console.error(e);
+    setStatus("Ошибка");
+    alert(e.message);
   }
 }
+
+boot();

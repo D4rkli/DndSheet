@@ -76,3 +76,20 @@ class StateCreate(BaseModel):
     hp_cost: int = 0
     duration: str = ""
     is_active: bool = True
+
+
+class EquipmentUpdate(BaseModel):
+    head: Optional[str] = None
+    armor: Optional[str] = None
+    back: Optional[str] = None
+    hands: Optional[str] = None
+    legs: Optional[str] = None
+    feet: Optional[str] = None
+    weapon1: Optional[str] = None
+    weapon2: Optional[str] = None
+    belt: Optional[str] = None
+    ring1: Optional[str] = None
+    ring2: Optional[str] = None
+    ring3: Optional[str] = None
+    ring4: Optional[str] = None
+    jewelry: Optional[str] = None

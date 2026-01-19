@@ -9,6 +9,7 @@ from .models import (
     Spell,
     Ability,
     State,
+    Equipment,
 )
 
 # =========================
@@ -100,13 +101,47 @@ async def update_character(
     payload = data.model_dump(exclude_unset=True)
 
     # текстовые
-    for field in ("name", "race", "klass"):
+    for field in ("name", "race", "gender", "klass", "level_up_rules"):
         if field in payload:
             setattr(ch, field, payload[field])
+
+    # опыт
+    if "xp" in payload:
+        ch.xp = max(0, int(payload["xp"]))
 
     # уровень (минимум 1)
     if "level" in payload:
         ch.level = max(1, int(payload["level"]))
+
+    # характер / прочие числовые параметры
+    int_fields = (
+        "aggression_kindness",
+        "intellect",
+        "fearlessness",
+        "humor",
+        "emotionality",
+        "sociability",
+        "responsibility",
+        "intimidation",
+        "attentiveness",
+        "learnability",
+        "luck",
+        "stealth",
+
+        "initiative",
+        "attack",
+        "counterattack",
+        "steps",
+        "defense",
+        "perm_armor",
+        "temp_armor",
+        "action_points",
+        "dodges",
+    )
+
+    for field in int_fields:
+        if field in payload:
+            setattr(ch, field, int(payload[field]))
 
     # max значения (не меньше 0)
     for field in ("hp_max", "mana_max", "energy_max"):
@@ -216,6 +251,21 @@ async def add_spell(
     return sp
 
 
+async def list_spells(db: AsyncSession, character_id: int) -> list[Spell]:
+    q = await db.execute(select(Spell).where(Spell.character_id == character_id))
+    return list(q.scalars().all())
+
+
+async def delete_spell(db: AsyncSession, spell_id: int) -> bool:
+    q = await db.execute(select(Spell).where(Spell.id == spell_id))
+    sp = q.scalar_one_or_none()
+    if not sp:
+        return False
+    await db.delete(sp)
+    await db.commit()
+    return True
+
+
 # =========================
 # ABILITIES
 # =========================
@@ -235,6 +285,21 @@ async def add_ability(
     return ab
 
 
+async def list_abilities(db: AsyncSession, character_id: int) -> list[Ability]:
+    q = await db.execute(select(Ability).where(Ability.character_id == character_id))
+    return list(q.scalars().all())
+
+
+async def delete_ability(db: AsyncSession, ability_id: int) -> bool:
+    q = await db.execute(select(Ability).where(Ability.id == ability_id))
+    ab = q.scalar_one_or_none()
+    if not ab:
+        return False
+    await db.delete(ab)
+    await db.commit()
+    return True
+
+
 # =========================
 # STATES
 # =========================
@@ -252,3 +317,47 @@ async def add_state(
     await db.commit()
     await db.refresh(st)
     return st
+
+
+async def list_states(db: AsyncSession, character_id: int) -> list[State]:
+    q = await db.execute(select(State).where(State.character_id == character_id))
+    return list(q.scalars().all())
+
+
+async def delete_state(db: AsyncSession, state_id: int) -> bool:
+    q = await db.execute(select(State).where(State.id == state_id))
+    st = q.scalar_one_or_none()
+    if not st:
+        return False
+    await db.delete(st)
+    await db.commit()
+    return True
+
+
+# =========================
+# EQUIPMENT
+# =========================
+
+async def get_or_create_equipment(db: AsyncSession, character_id: int) -> Equipment:
+    q = await db.execute(select(Equipment).where(Equipment.character_id == character_id))
+    eq = q.scalar_one_or_none()
+    if eq:
+        return eq
+
+    eq = Equipment(character_id=character_id)
+    db.add(eq)
+    await db.commit()
+    await db.refresh(eq)
+    return eq
+
+
+async def update_equipment(db: AsyncSession, character_id: int, payload: dict) -> Equipment:
+    eq = await get_or_create_equipment(db, character_id)
+
+    for field, value in payload.items():
+        if hasattr(eq, field):
+            setattr(eq, field, value or "")
+
+    await db.commit()
+    await db.refresh(eq)
+    return eq
