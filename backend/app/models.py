@@ -13,6 +13,7 @@ class User(Base):
 
 class Character(Base):
     __tablename__ = "characters"
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
 
@@ -38,11 +39,8 @@ class Character(Base):
     stealth: Mapped[int] = mapped_column(Integer, default=0)
 
     # Боевые параметры
-    hp: Mapped[int] = mapped_column(Integer, default=0)
-    mana: Mapped[int] = mapped_column(Integer, default=0)
     initiative: Mapped[int] = mapped_column(Integer, default=0)
     attack: Mapped[int] = mapped_column(Integer, default=0)
-    energy: Mapped[int] = mapped_column(Integer, default=0)
     counterattack: Mapped[int] = mapped_column(Integer, default=0)
     steps: Mapped[int] = mapped_column(Integer, default=0)
     defense: Mapped[int] = mapped_column(Integer, default=0)
@@ -51,12 +49,12 @@ class Character(Base):
     action_points: Mapped[int] = mapped_column(Integer, default=0)
     dodges: Mapped[int] = mapped_column(Integer, default=0)
 
-    # Боевые параметры (текущее)
+    # РЕСУРСЫ (текущее)
     hp: Mapped[int] = mapped_column(Integer, default=0)
     mana: Mapped[int] = mapped_column(Integer, default=0)
     energy: Mapped[int] = mapped_column(Integer, default=0)
 
-    # Максимумы
+    # РЕСУРСЫ (макс)
     hp_max: Mapped[int] = mapped_column(Integer, default=0)
     mana_max: Mapped[int] = mapped_column(Integer, default=0)
     energy_max: Mapped[int] = mapped_column(Integer, default=0)
@@ -66,15 +64,13 @@ class Character(Base):
     mana_per_level: Mapped[int] = mapped_column(Integer, default=0)
     energy_per_level: Mapped[int] = mapped_column(Integer, default=0)
 
-    # формула/настройка “прироста за уровень” — пока как текст (можно сделать JSON)
     level_up_rules: Mapped[str] = mapped_column(Text, default="")
 
     owner: Mapped["User"] = relationship(back_populates="characters")
     items: Mapped[list["Item"]] = relationship(back_populates="character", cascade="all, delete-orphan")
     spells: Mapped[list["Spell"]] = relationship(back_populates="character", cascade="all, delete-orphan")
     abilities: Mapped[list["Ability"]] = relationship(back_populates="character", cascade="all, delete-orphan")
-    states: Mapped[list["State"]] = relationship(back_populates="character", cascade="all, delete-orphan")
-    equipment: Mapped["Equipment"] = relationship(back_populates="character", cascade="all, delete-orphan", uselist=False)
+    states: Mapped[list["State"]] = relationship(back_populates="states", cascade="all, delete-orphan")
 
 class Item(Base):
     __tablename__ = "items"

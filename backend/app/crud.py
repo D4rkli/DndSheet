@@ -46,18 +46,15 @@ async def list_characters(
     )
     return list(q.scalars().all())
 
-async def create_character(
-    db: AsyncSession,
-    user_id: int,
-    name: str,
-) -> Character:
+async def create_character(db: AsyncSession, user_id: int, name: str) -> Character:
     ch = Character(
         owner_user_id=user_id,
         name=name,
-        hp=10,
-        mana=5,
-        energy=3,
         level=1,
+
+        hp=10, hp_max=10, hp_per_level=0,
+        mana=5, mana_max=5, mana_per_level=0,
+        energy=3, energy_max=3, energy_per_level=0,
     )
     db.add(ch)
     await db.commit()
