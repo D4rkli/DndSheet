@@ -70,7 +70,7 @@ class Character(Base):
     items: Mapped[list["Item"]] = relationship(back_populates="character", cascade="all, delete-orphan")
     spells: Mapped[list["Spell"]] = relationship(back_populates="character", cascade="all, delete-orphan")
     abilities: Mapped[list["Ability"]] = relationship(back_populates="character", cascade="all, delete-orphan")
-    states: Mapped[list["State"]] = relationship(back_populates="states", cascade="all, delete-orphan")
+    states: Mapped[list["State"]] = relationship(back_populates="character", cascade="all, delete-orphan")
 
 class Item(Base):
     __tablename__ = "items"
