@@ -960,3 +960,23 @@ async function boot() {
 }
 
 boot();
+
+// =========================
+// Steppers (- / +) handler
+// =========================
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("button.step-btn");
+  if (!btn) return;
+
+  const targetId = btn.dataset.target;
+  const step = parseInt(btn.dataset.step || "0", 10);
+  const input = document.getElementById(targetId);
+  if (!input) return;
+
+  const current = parseInt(input.value || "0", 10);
+  const next = Math.max(0, current + step);
+  input.value = String(next);
+
+  // чтобы UI и логика реагировали
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+});
