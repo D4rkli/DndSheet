@@ -762,3 +762,139 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 .stepper .step-btn:active{
   transform: translateY(1px);
 }
+
+/* =========================
+   TAB TILES: compact + equal
+   ========================= */
+
+/* сетка — ровная, одинаковые ячейки */
+#tabs.nav{
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 10px !important;
+}
+
+/* плитка — одинаковая высота, меньше воздуха */
+#tabs .nav-link{
+  min-height: 68px !important;
+  padding: 8px 8px !important;
+  border-radius: 14px !important;
+
+  display: flex !important;
+  flex-direction: row !important;      /* иконка слева, текст справа */
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important;
+
+  text-align: left !important;
+}
+
+/* иконки меньше и ровнее */
+#tabs .nav-link i{
+  font-size: 16px !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+}
+
+/* текст компактнее */
+#tabs .nav-link span{
+  font-size: 13px !important;
+  line-height: 1.05 !important;
+  font-weight: 800 !important;
+}
+
+/* активная плитка — без “раздувания” */
+#tabs .nav-link.active{
+  transform: none !important;
+}
+
+/* =========================
+   HEADER: compact
+   ========================= */
+
+.topbar{
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+.app-title{
+  font-size: 18px !important;
+  line-height: 1.1 !important;
+  margin-bottom: 2px !important;
+}
+
+#status.muted{
+  font-size: 12px !important;
+  line-height: 1.1 !important;
+}
+
+/* кнопки в шапке чуть меньше */
+header.topbar .btn{
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+  border-radius: 12px !important;
+}
+
+/* =========================
+   TABS: one-row scroll (Android-like)
+   ========================= */
+
+/* контейнер табов превращаем в горизонтальную ленту */
+#tabs.nav{
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 10px !important;
+
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch;
+
+  padding: 8px 2px !important;
+  margin: 10px 0 12px !important;
+}
+
+/* прячем скроллбар */
+#tabs.nav::-webkit-scrollbar{ height: 0; }
+#tabs.nav{ scrollbar-width: none; }
+
+/* каждая вкладка — компактная “пилюля” */
+#tabs .nav-item{
+  flex: 0 0 auto;
+}
+
+#tabs .nav-link{
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+
+  padding: 10px 14px !important;
+  min-height: 44px !important;
+  border-radius: 999px !important;        /* pill */
+
+  border: 1px solid rgba(255,255,255,.12) !important;
+  background: rgba(255,255,255,.06) !important;
+  color: rgba(170,205,255,.95) !important;
+
+  font-weight: 800;
+  white-space: nowrap;                    /* важно */
+}
+
+/* активная */
+#tabs .nav-link.active{
+  background: rgba(80,145,255,.95) !important;
+  border-color: rgba(80,145,255,.95) !important;
+  color: #fff !important;
+}
+
+/* иконки */
+#tabs .nav-link i{
+  font-size: 16px !important;
+  line-height: 1 !important;
+}
+
+/* текст */
+#tabs .nav-link span{
+  font-size: 13px !important;
+  line-height: 1.05 !important;
+}
