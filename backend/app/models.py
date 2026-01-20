@@ -78,6 +78,23 @@ class Character(Base):
         uselist=False,
     )
 
+class SheetTemplate(Base):
+    __tablename__ = "sheet_templates"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+
+    template_id: Mapped[int | None] = mapped_column(ForeignKey("sheet_templates.id"), nullable=True)
+    custom_values: Mapped[str] = mapped_column(Text, default="{}")
+    name: Mapped[str] = mapped_column(String(120))
+
+    # Конфиг шаблона (JSON-строкой): tabs, custom_sections, etc.
+    config_json: Mapped[str] = mapped_column(Text, default="{}")
+
+    owner: Mapped["User"] = relationship(back_populates="templates")
+    characters: Mapped[list["Character"]] = relationship(back_populates="template")
+
+
 class Item(Base):
     __tablename__ = "items"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -148,25 +165,15 @@ class Equipment(Base):
 
     character: Mapped["Character"] = relationship(back_populates="equipment")
 
-
 class SheetTemplate(Base):
-    """Шаблон листа персонажа.
-
-    config_json хранит JSON-строку с настройками вкладок/полей.
-    Минимальный формат (можно расширять):
-      {
-        "tabs": ["main","stats","inv","spells","abilities","states","equip"],
-        "notes": "...",
-        "version": 1
-      }
-    """
-
     __tablename__ = "sheet_templates"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
 
     name: Mapped[str] = mapped_column(String(120))
+    # JSON string: tabs + custom_sections definitions
     config_json: Mapped[str] = mapped_column(Text, default="{}")
 
-    owner: Mapped["User"] = relationship()
+    owner: Mapped["User"] = relationship(back_populates="templates")
+    characters: Mapped[list["Character"]] = relationship(back_populates="template")

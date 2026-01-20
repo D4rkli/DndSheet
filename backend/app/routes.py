@@ -539,23 +539,103 @@ async def get_full_sheet(
     db: AsyncSession = Depends(get_db),
     x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
 ):
-    """Удобно для WebApp: одним запросом тянем всё."""
-    _ = _auth_user(x_tg_init_data)
-    # проверку доступа делаем через list_items (там уже владелец/DM)
-    ch = await get_character(ch_id, db=db, x_tg_init_data=x_tg_init_data)
-    items = await list_items(ch_id, db=db, x_tg_init_data=x_tg_init_data)
-    spells = await list_spells(ch_id, db=db, x_tg_init_data=x_tg_init_data)
-    abilities = await list_abilities(ch_id, db=db, x_tg_init_data=x_tg_init_data)
-    states = await list_states(ch_id, db=db, x_tg_init_data=x_tg_init_data)
-    equipment = await get_equipment(ch_id, db=db, x_tg_init_data=x_tg_init_data)
+    """For WebApp: one request returns everything, including template + custom values."""
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    # access check: owner or DM
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    sheet = await crud.get_sheet(db, ch_id, ch.owner_user_id)
+    if not sheet:
+        raise HTTPException(404, "Character not found")
+
+    # serialize ORM objects
+    character = sheet["character"]
+    equipment = sheet["equipment"]
 
     return {
-        "character": ch,
-        "items": items,
-        "spells": spells,
-        "abilities": abilities,
-        "states": states,
-        "equipment": equipment,
+        "character": {
+            "id": character.id,
+            "name": character.name,
+            "race": character.race,
+            "gender": character.gender,
+            "klass": character.klass,
+            "level": character.level,
+            "xp": character.xp,
+            "hp": character.hp,
+            "mana": character.mana,
+            "energy": character.energy,
+            "hp_max": character.hp_max,
+            "mana_max": character.mana_max,
+            "energy_max": character.energy_max,
+            "hp_per_level": character.hp_per_level,
+            "mana_per_level": character.mana_per_level,
+            "energy_per_level": character.energy_per_level,
+            "aggression_kindness": character.aggression_kindness,
+            "intellect": character.intellect,
+            "fearlessness": character.fearlessness,
+            "humor": character.humor,
+            "emotionality": character.emotionality,
+            "sociability": character.sociability,
+            "responsibility": character.responsibility,
+            "intimidation": character.intimidation,
+            "attentiveness": character.attentiveness,
+            "learnability": character.learnability,
+            "luck": character.luck,
+            "stealth": character.stealth,
+            "initiative": character.initiative,
+            "attack": character.attack,
+            "counterattack": character.counterattack,
+            "steps": character.steps,
+            "defense": character.defense,
+            "perm_armor": character.perm_armor,
+            "temp_armor": character.temp_armor,
+            "action_points": character.action_points,
+            "dodges": character.dodges,
+            "level_up_rules": character.level_up_rules,
+            "template_id": character.template_id,
+        },
+        "items": [
+            {"id": i.id, "name": i.name, "description": i.description, "stats": i.stats}
+            for i in sheet["items"]
+        ],
+        "spells": [
+            {"id": s.id, "name": s.name, "description": s.description, "range": s.range, "duration": s.duration, "cost": s.cost}
+            for s in sheet["spells"]
+        ],
+        "abilities": [
+            {"id": a.id, "name": a.name, "description": a.description, "range": a.range, "duration": a.duration, "cost": a.cost}
+            for a in sheet["abilities"]
+        ],
+        "states": [
+            {"id": st.id, "name": st.name, "hp_cost": st.hp_cost, "duration": st.duration, "is_active": st.is_active}
+            for st in sheet["states"]
+        ],
+        "equipment": {
+            "head": equipment.head,
+            "armor": equipment.armor,
+            "back": equipment.back,
+            "hands": equipment.hands,
+            "legs": equipment.legs,
+            "feet": equipment.feet,
+            "weapon1": equipment.weapon1,
+            "weapon2": equipment.weapon2,
+            "belt": equipment.belt,
+            "ring1": equipment.ring1,
+            "ring2": equipment.ring2,
+            "ring3": equipment.ring3,
+            "ring4": equipment.ring4,
+            "jewelry": equipment.jewelry,
+        },
+        "template": sheet.get("template"),
+        "custom_values": sheet.get("custom_values", {}),
     }
 
 
@@ -656,3 +736,49 @@ async def create_character_from_template(
     if not ch:
         raise HTTPException(404, "Template not found")
     return {"status": "ok", "character_id": ch.id}
+
+
+# =========================
+# TEMPLATE APPLY + CUSTOM VALUES
+# =========================
+
+@router.post("/characters/{ch_id}/apply-template")
+async def apply_template(
+    ch_id: int,
+    body: schemas.ApplyTemplate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_for_user(db, ch_id, u.id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    updated = await crud.apply_template_to_character(db, ch_id, u.id, body.template_id)
+    if not updated:
+        raise HTTPException(404, "Template not found")
+
+    return {"status": "ok", "character_id": updated.id, "template_id": updated.template_id}
+
+
+@router.patch("/characters/{ch_id}/custom")
+async def patch_custom_values(
+    ch_id: int,
+    body: schemas.CustomValuesUpdate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_for_user(db, ch_id, u.id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    ok = await crud.update_custom_values(db, ch_id, u.id, body.values)
+    if not ok:
+        raise HTTPException(404, "Character not found")
+
+    return {"status": "ok"}

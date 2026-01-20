@@ -1,5 +1,3 @@
-import json
-
 from sqlalchemy import select
 from .schemas import CharacterUpdate
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,21 +9,7 @@ from .models import (
     Spell,
     Ability,
     State,
-    Equipment,
-    SheetTemplate,
 )
-
-
-def _model_to_dict(obj, fields: tuple[str, ...]) -> dict:
-    return {f: getattr(obj, f) for f in fields}
-
-
-def _safe_json_loads(text: str) -> dict:
-    try:
-        data = json.loads(text) if text else {}
-        return data if isinstance(data, dict) else {}
-    except Exception:
-        return {}
 
 # =========================
 # USERS
@@ -115,85 +99,47 @@ async def update_character(
 
     payload = data.model_dump(exclude_unset=True)
 
-    # текстовые
-    for field in ("name", "race", "gender", "klass", "level_up_rules"):
-        if field in payload:
-            setattr(ch, field, payload[field])
-
-    # опыт
-    if "xp" in payload:
-        ch.xp = max(0, int(payload["xp"]))
-
-    # уровень (минимум 1)
+    # Level: minimum 1
     if "level" in payload:
-        ch.level = max(1, int(payload["level"]))
+        payload["level"] = max(1, int(payload["level"]))
 
-    # характер / прочие числовые параметры
-    int_fields = (
-        "aggression_kindness",
-        "intellect",
-        "fearlessness",
-        "humor",
-        "emotionality",
-        "sociability",
-        "responsibility",
-        "intimidation",
-        "attentiveness",
-        "learnability",
-        "luck",
-        "stealth",
-
-        "initiative",
-        "attack",
-        "counterattack",
-        "steps",
-        "defense",
-        "perm_armor",
-        "temp_armor",
-        "action_points",
-        "dodges",
-    )
-
-    for field in int_fields:
-        if field in payload:
-            setattr(ch, field, int(payload[field]))
-
-    # max значения (не меньше 0)
+    # Clamp max resources to >=0
     for field in ("hp_max", "mana_max", "energy_max"):
         if field in payload:
-            setattr(ch, field, max(0, int(payload[field])))
+            payload[field] = max(0, int(payload[field]))
 
-    # прибавка за уровень (может быть 0)
+    # Per-level deltas: ints
     for field in ("hp_per_level", "mana_per_level", "energy_per_level"):
         if field in payload:
-            setattr(ch, field, int(payload[field]))
+            payload[field] = int(payload[field])
 
-    # текущие ресурсы (не меньше 0, не больше max если max задан)
-    for res in ("hp", "mana", "energy"):
-        if res not in payload:
+    # Apply any known fields directly
+    for key, value in payload.items():
+        if not hasattr(ch, key):
             continue
+        # keep strings as-is, cast ints where appropriate
+        if isinstance(value, bool):
+            setattr(ch, key, value)
+        elif isinstance(value, int):
+            setattr(ch, key, value)
+        elif value is None:
+            setattr(ch, key, value)
+        else:
+            # pydantic may give str for some fields
+            setattr(ch, key, value)
 
-        value = max(0, int(payload[res]))
-        max_value = getattr(ch, f"{res}_max", 0)
-
-        if max_value and max_value > 0:
-            value = min(value, max_value)
-
-        setattr(ch, res, value)
-
-    # если max уменьшили — подрежем текущее тоже
+    # Clamp current resources
     for res in ("hp", "mana", "energy"):
-        max_value = getattr(ch, f"{res}_max", 0)
-        if max_value and max_value > 0:
-            cur = getattr(ch, res, 0)
-            if cur > max_value:
-                setattr(ch, res, max_value)
+        cur = getattr(ch, res, 0) or 0
+        cur = max(0, int(cur))
+        max_value = getattr(ch, f"{res}_max", 0) or 0
+        if max_value > 0:
+            cur = min(cur, max_value)
+        setattr(ch, res, cur)
 
     await db.commit()
     await db.refresh(ch)
     return ch
-
-
 
 # =========================
 # ITEMS (INVENTORY)
@@ -266,21 +212,6 @@ async def add_spell(
     return sp
 
 
-async def list_spells(db: AsyncSession, character_id: int) -> list[Spell]:
-    q = await db.execute(select(Spell).where(Spell.character_id == character_id))
-    return list(q.scalars().all())
-
-
-async def delete_spell(db: AsyncSession, spell_id: int) -> bool:
-    q = await db.execute(select(Spell).where(Spell.id == spell_id))
-    sp = q.scalar_one_or_none()
-    if not sp:
-        return False
-    await db.delete(sp)
-    await db.commit()
-    return True
-
-
 # =========================
 # ABILITIES
 # =========================
@@ -298,21 +229,6 @@ async def add_ability(
     await db.commit()
     await db.refresh(ab)
     return ab
-
-
-async def list_abilities(db: AsyncSession, character_id: int) -> list[Ability]:
-    q = await db.execute(select(Ability).where(Ability.character_id == character_id))
-    return list(q.scalars().all())
-
-
-async def delete_ability(db: AsyncSession, ability_id: int) -> bool:
-    q = await db.execute(select(Ability).where(Ability.id == ability_id))
-    ab = q.scalar_one_or_none()
-    if not ab:
-        return False
-    await db.delete(ab)
-    await db.commit()
-    return True
 
 
 # =========================
@@ -334,6 +250,66 @@ async def add_state(
     return st
 
 
+# =========================
+# EQUIPMENT
+# =========================
+
+async def get_or_create_equipment(db: AsyncSession, character_id: int) -> Equipment:
+    q = await db.execute(select(Equipment).where(Equipment.character_id == character_id))
+    eq = q.scalar_one_or_none()
+    if eq:
+        return eq
+    eq = Equipment(character_id=character_id)
+    db.add(eq)
+    await db.commit()
+    await db.refresh(eq)
+    return eq
+
+
+async def update_equipment(db: AsyncSession, character_id: int, payload: dict) -> Equipment:
+    eq = await get_or_create_equipment(db, character_id)
+    for key, value in payload.items():
+        if hasattr(eq, key) and value is not None:
+            setattr(eq, key, str(value))
+    await db.commit()
+    await db.refresh(eq)
+    return eq
+
+
+# =========================
+# SPELLS / ABILITIES / STATES
+# =========================
+
+async def list_spells(db: AsyncSession, character_id: int) -> list[Spell]:
+    q = await db.execute(select(Spell).where(Spell.character_id == character_id))
+    return list(q.scalars().all())
+
+
+async def delete_spell(db: AsyncSession, spell_id: int) -> bool:
+    q = await db.execute(select(Spell).where(Spell.id == spell_id))
+    sp = q.scalar_one_or_none()
+    if not sp:
+        return False
+    await db.delete(sp)
+    await db.commit()
+    return True
+
+
+async def list_abilities(db: AsyncSession, character_id: int) -> list[Ability]:
+    q = await db.execute(select(Ability).where(Ability.character_id == character_id))
+    return list(q.scalars().all())
+
+
+async def delete_ability(db: AsyncSession, ability_id: int) -> bool:
+    q = await db.execute(select(Ability).where(Ability.id == ability_id))
+    ab = q.scalar_one_or_none()
+    if not ab:
+        return False
+    await db.delete(ab)
+    await db.commit()
+    return True
+
+
 async def list_states(db: AsyncSession, character_id: int) -> list[State]:
     q = await db.execute(select(State).where(State.character_id == character_id))
     return list(q.scalars().all())
@@ -350,188 +326,6 @@ async def delete_state(db: AsyncSession, state_id: int) -> bool:
 
 
 # =========================
-# EQUIPMENT
-# =========================
-
-async def get_or_create_equipment(db: AsyncSession, character_id: int) -> Equipment:
-    q = await db.execute(select(Equipment).where(Equipment.character_id == character_id))
-    eq = q.scalar_one_or_none()
-    if eq:
-        return eq
-
-    eq = Equipment(character_id=character_id)
-    db.add(eq)
-    await db.commit()
-    await db.refresh(eq)
-    return eq
-
-
-async def update_equipment(db: AsyncSession, character_id: int, payload: dict) -> Equipment:
-    eq = await get_or_create_equipment(db, character_id)
-
-    for field, value in payload.items():
-        if hasattr(eq, field):
-            setattr(eq, field, value or "")
-
-    await db.commit()
-    await db.refresh(eq)
-    return eq
-
-
-# =========================
-# SHEET EXPORT / IMPORT
-# =========================
-
-CHARACTER_EXPORT_FIELDS = (
-    "id",
-    "name",
-    "race",
-    "gender",
-    "klass",
-    "level",
-    "xp",
-
-    # характер
-    "aggression_kindness",
-    "intellect",
-    "fearlessness",
-    "humor",
-    "emotionality",
-    "sociability",
-    "responsibility",
-    "intimidation",
-    "attentiveness",
-    "learnability",
-    "luck",
-    "stealth",
-
-    # боевые
-    "initiative",
-    "attack",
-    "counterattack",
-    "steps",
-    "defense",
-    "perm_armor",
-    "temp_armor",
-    "action_points",
-    "dodges",
-
-    # ресурсы
-    "hp",
-    "hp_max",
-    "hp_per_level",
-    "mana",
-    "mana_max",
-    "mana_per_level",
-    "energy",
-    "energy_max",
-    "energy_per_level",
-
-    "level_up_rules",
-)
-
-
-async def export_sheet(db: AsyncSession, character_id: int, user_id: int) -> dict | None:
-    ch = await get_character_for_user(db, character_id, user_id)
-    if not ch:
-        return None
-
-    items = await list_items(db, character_id)
-    spells = await list_spells(db, character_id)
-    abilities = await list_abilities(db, character_id)
-    states = await list_states(db, character_id)
-    equipment = await get_or_create_equipment(db, character_id)
-
-    return {
-        "character": _model_to_dict(ch, CHARACTER_EXPORT_FIELDS),
-        "items": [_model_to_dict(i, ("id", "name", "description", "stats")) for i in items],
-        "spells": [_model_to_dict(s, ("id", "name", "description", "range", "duration", "cost")) for s in spells],
-        "abilities": [_model_to_dict(a, ("id", "name", "description", "range", "duration", "cost")) for a in abilities],
-        "states": [_model_to_dict(st, ("id", "name", "hp_cost", "duration", "is_active")) for st in states],
-        "equipment": _model_to_dict(
-            equipment,
-            (
-                "head",
-                "armor",
-                "back",
-                "hands",
-                "legs",
-                "feet",
-                "weapon1",
-                "weapon2",
-                "belt",
-                "ring1",
-                "ring2",
-                "ring3",
-                "ring4",
-                "jewelry",
-            ),
-        ),
-    }
-
-
-async def import_sheet(db: AsyncSession, user_id: int, payload: dict) -> Character:
-    # создаём персонажа
-    ch_data = payload.get("character") or {}
-    name = (payload.get("new_name") or ch_data.get("name") or "Новый персонаж")[:100]
-    ch = Character(owner_user_id=user_id, name=name)
-
-    # переносим поля персонажа
-    for field in CHARACTER_EXPORT_FIELDS:
-        if field == "id":
-            continue
-        if field in ch_data and ch_data[field] is not None:
-            setattr(ch, field, ch_data[field])
-
-    db.add(ch)
-    await db.commit()
-    await db.refresh(ch)
-
-    # инвентарь
-    for it in payload.get("items") or []:
-        db.add(Item(character_id=ch.id, name=it.get("name", ""), description=it.get("description", ""), stats=it.get("stats", "")))
-
-    # заклинания
-    for sp in payload.get("spells") or []:
-        db.add(Spell(character_id=ch.id, name=sp.get("name", ""), description=sp.get("description", ""), range=sp.get("range", ""), duration=sp.get("duration", ""), cost=sp.get("cost", "")))
-
-    # умения
-    for ab in payload.get("abilities") or []:
-        db.add(Ability(character_id=ch.id, name=ab.get("name", ""), description=ab.get("description", ""), range=ab.get("range", ""), duration=ab.get("duration", ""), cost=ab.get("cost", "")))
-
-    # состояния
-    for st in payload.get("states") or []:
-        db.add(State(character_id=ch.id, name=st.get("name", ""), hp_cost=int(st.get("hp_cost") or 0), duration=st.get("duration", ""), is_active=bool(st.get("is_active", True))))
-
-    # экипировка
-    eq_payload = payload.get("equipment") or {}
-    eq = Equipment(character_id=ch.id)
-    for f in (
-        "head",
-        "armor",
-        "back",
-        "hands",
-        "legs",
-        "feet",
-        "weapon1",
-        "weapon2",
-        "belt",
-        "ring1",
-        "ring2",
-        "ring3",
-        "ring4",
-        "jewelry",
-    ):
-        if f in eq_payload and eq_payload[f] is not None:
-            setattr(eq, f, str(eq_payload[f]))
-    db.add(eq)
-
-    await db.commit()
-    await db.refresh(ch)
-    return ch
-
-
-# =========================
 # TEMPLATES
 # =========================
 
@@ -541,38 +335,305 @@ async def list_templates(db: AsyncSession, user_id: int) -> list[SheetTemplate]:
 
 
 async def create_template(db: AsyncSession, user_id: int, name: str, config: dict) -> SheetTemplate:
-    t = SheetTemplate(owner_user_id=user_id, name=name, config_json=json.dumps(config or {}, ensure_ascii=False))
-    db.add(t)
+    tpl = SheetTemplate(owner_user_id=user_id, name=name, config_json=json.dumps(config, ensure_ascii=False))
+    db.add(tpl)
     await db.commit()
-    await db.refresh(t)
-    return t
+    await db.refresh(tpl)
+    return tpl
 
 
 async def delete_template(db: AsyncSession, user_id: int, template_id: int) -> bool:
     q = await db.execute(select(SheetTemplate).where(SheetTemplate.id == template_id, SheetTemplate.owner_user_id == user_id))
-    t = q.scalar_one_or_none()
-    if not t:
+    tpl = q.scalar_one_or_none()
+    if not tpl:
         return False
-    await db.delete(t)
+    await db.delete(tpl)
     await db.commit()
     return True
 
 
-async def get_template_for_user(db: AsyncSession, user_id: int, template_id: int) -> SheetTemplate | None:
-    q = await db.execute(select(SheetTemplate).where(SheetTemplate.id == template_id, SheetTemplate.owner_user_id == user_id))
-    return q.scalar_one_or_none()
+def _tpl_defaults(config: dict) -> dict:
+    defaults: dict = {}
+    for sec in config.get("custom_sections", []) or []:
+        for field in sec.get("fields", []) or []:
+            key = str(field.get("key", "")).strip()
+            if not key:
+                continue
+            if "default" in field:
+                defaults[key] = field.get("default")
+            else:
+                defaults[key] = "" if field.get("type") in ("text", "textarea") else 0
+    return defaults
 
 
-async def create_character_from_template(db: AsyncSession, user_id: int, template_id: int, name: str) -> Character | None:
-    t = await get_template_for_user(db, user_id, template_id)
-    if not t:
+async def apply_template_to_character(db: AsyncSession, character_id: int, user_id: int, template_id: int) -> Character | None:
+    ch = await get_character_for_user(db, character_id, user_id)
+    if not ch:
         return None
 
-    cfg = _safe_json_loads(t.config_json)
-    # пока шаблон влияет только на name/поля по умолчанию — вкладки обрабатывает фронт.
-    ch = await create_character(db, user_id, name)
-    defaults = cfg.get("character_defaults") if isinstance(cfg, dict) else None
-    if isinstance(defaults, dict):
-        upd = CharacterUpdate(**defaults)
-        await update_character(db, ch.id, user_id, upd)
+    q = await db.execute(select(SheetTemplate).where(SheetTemplate.id == template_id, SheetTemplate.owner_user_id == user_id))
+    tpl = q.scalar_one_or_none()
+    if not tpl:
+        return None
+
+    try:
+        config = json.loads(tpl.config_json or "{}")
+    except Exception:
+        config = {}
+
+    try:
+        cur = json.loads(ch.custom_values or "{}")
+        if not isinstance(cur, dict):
+            cur = {}
+    except Exception:
+        cur = {}
+
+    for k, v in _tpl_defaults(config).items():
+        cur.setdefault(k, v)
+
+    ch.template_id = tpl.id
+    ch.custom_values = json.dumps(cur, ensure_ascii=False)
+
+    await db.commit()
+    await db.refresh(ch)
     return ch
+
+
+async def update_custom_values(db: AsyncSession, character_id: int, user_id: int, values: dict) -> bool:
+    ch = await get_character_for_user(db, character_id, user_id)
+    if not ch:
+        return False
+    try:
+        cur = json.loads(ch.custom_values or "{}")
+        if not isinstance(cur, dict):
+            cur = {}
+    except Exception:
+        cur = {}
+
+    for k, v in (values or {}).items():
+        cur[str(k)] = v
+
+    ch.custom_values = json.dumps(cur, ensure_ascii=False)
+    await db.commit()
+    return True
+
+
+# =========================
+# SHEET (one-call)
+# =========================
+
+async def get_sheet(db: AsyncSession, character_id: int, user_id: int) -> dict | None:
+    ch = await get_character_for_user(db, character_id, user_id)
+    if not ch:
+        return None
+
+    items = await list_items(db, character_id)
+    spells = await list_spells(db, character_id)
+    abilities = await list_abilities(db, character_id)
+    states = await list_states(db, character_id)
+    eq = await get_or_create_equipment(db, character_id)
+
+    tpl = None
+    config = None
+    if ch.template_id:
+        q = await db.execute(select(SheetTemplate).where(SheetTemplate.id == ch.template_id))
+        tpl = q.scalar_one_or_none()
+        if tpl:
+            try:
+                config = json.loads(tpl.config_json or "{}")
+            except Exception:
+                config = {}
+
+    try:
+        custom = json.loads(ch.custom_values or "{}")
+        if not isinstance(custom, dict):
+            custom = {}
+    except Exception:
+        custom = {}
+
+    return {
+        "character": ch,
+        "items": items,
+        "spells": spells,
+        "abilities": abilities,
+        "states": states,
+        "equipment": eq,
+        "template": {"id": tpl.id, "name": tpl.name, "config": config} if tpl else None,
+        "custom_values": custom,
+    }
+
+
+# =========================
+# IMPORT / EXPORT
+# =========================
+
+async def export_character(db: AsyncSession, character_id: int, user_id: int) -> dict | None:
+    sheet = await get_sheet(db, character_id, user_id)
+    if not sheet:
+        return None
+
+    ch = sheet["character"]
+    data = {
+        "character": {
+            "name": ch.name,
+            "race": ch.race,
+            "gender": ch.gender,
+            "klass": ch.klass,
+            "level": ch.level,
+            "xp": ch.xp,
+
+            "hp": ch.hp,
+            "mana": ch.mana,
+            "energy": ch.energy,
+            "hp_max": ch.hp_max,
+            "mana_max": ch.mana_max,
+            "energy_max": ch.energy_max,
+            "hp_per_level": ch.hp_per_level,
+            "mana_per_level": ch.mana_per_level,
+            "energy_per_level": ch.energy_per_level,
+
+            # include all numeric stats present on model
+            "aggression_kindness": ch.aggression_kindness,
+            "intellect": ch.intellect,
+            "fearlessness": ch.fearlessness,
+            "humor": ch.humor,
+            "emotionality": ch.emotionality,
+            "sociability": ch.sociability,
+            "responsibility": ch.responsibility,
+            "intimidation": ch.intimidation,
+            "attentiveness": ch.attentiveness,
+            "learnability": ch.learnability,
+            "luck": ch.luck,
+            "stealth": ch.stealth,
+
+            "initiative": ch.initiative,
+            "attack": ch.attack,
+            "counterattack": ch.counterattack,
+            "steps": ch.steps,
+            "defense": ch.defense,
+            "perm_armor": ch.perm_armor,
+            "temp_armor": ch.temp_armor,
+            "action_points": ch.action_points,
+            "dodges": ch.dodges,
+
+            "level_up_rules": ch.level_up_rules,
+        },
+        "items": [
+            {"name": i.name, "description": i.description, "stats": i.stats}
+            for i in sheet["items"]
+        ],
+        "spells": [
+            {"name": s.name, "description": s.description, "range": s.range, "duration": s.duration, "cost": s.cost}
+            for s in sheet["spells"]
+        ],
+        "abilities": [
+            {"name": a.name, "description": a.description, "range": a.range, "duration": a.duration, "cost": a.cost}
+            for a in sheet["abilities"]
+        ],
+        "states": [
+            {"name": st.name, "hp_cost": st.hp_cost, "duration": st.duration, "is_active": st.is_active}
+            for st in sheet["states"]
+        ],
+        "equipment": {
+            "head": sheet["equipment"].head,
+            "armor": sheet["equipment"].armor,
+            "back": sheet["equipment"].back,
+            "hands": sheet["equipment"].hands,
+            "legs": sheet["equipment"].legs,
+            "feet": sheet["equipment"].feet,
+            "weapon1": sheet["equipment"].weapon1,
+            "weapon2": sheet["equipment"].weapon2,
+            "belt": sheet["equipment"].belt,
+            "ring1": sheet["equipment"].ring1,
+            "ring2": sheet["equipment"].ring2,
+            "ring3": sheet["equipment"].ring3,
+            "ring4": sheet["equipment"].ring4,
+            "jewelry": sheet["equipment"].jewelry,
+        },
+        "custom_values": sheet["custom_values"],
+    }
+
+    if sheet["template"]:
+        data["template"] = sheet["template"]
+
+    return data
+
+
+async def import_character(db: AsyncSession, user_id: int, payload: dict) -> Character:
+    template_id = None
+
+    tpl = payload.get("template")
+    if isinstance(tpl, dict) and tpl.get("config"):
+        name = str(tpl.get("name") or "Template")
+        tpl_obj = await create_template(db, user_id, name=name, config=tpl.get("config") or {})
+        template_id = tpl_obj.id
+
+    ch_data = payload.get("character") or {}
+    name = str(ch_data.get("name") or "Character")
+    ch = await create_character(db, user_id, name)
+
+    # set fields on character
+    for key, value in ch_data.items():
+        if hasattr(ch, key) and value is not None:
+            setattr(ch, key, value)
+
+    # set template + custom values
+    if template_id:
+        ch.template_id = template_id
+
+    if isinstance(payload.get("custom_values"), dict):
+        ch.custom_values = json.dumps(payload.get("custom_values"), ensure_ascii=False)
+
+    await db.commit()
+    await db.refresh(ch)
+
+    # equipment
+    if isinstance(payload.get("equipment"), dict):
+        await update_equipment(db, ch.id, payload.get("equipment") or {})
+
+    # items
+    for i in payload.get("items") or []:
+        if isinstance(i, dict) and i.get("name"):
+            await add_item(db, ch.id, i.get("name"), i.get("description", ""), i.get("stats", ""))
+
+    # spells
+    for s in payload.get("spells") or []:
+        if isinstance(s, dict) and s.get("name"):
+            await add_spell(db, ch.id, {
+                "name": s.get("name"),
+                "description": s.get("description", ""),
+                "range": s.get("range", ""),
+                "duration": s.get("duration", ""),
+                "cost": s.get("cost", ""),
+            })
+
+    for a in payload.get("abilities") or []:
+        if isinstance(a, dict) and a.get("name"):
+            await add_ability(db, ch.id, {
+                "name": a.get("name"),
+                "description": a.get("description", ""),
+                "range": a.get("range", ""),
+                "duration": a.get("duration", ""),
+                "cost": a.get("cost", ""),
+            })
+
+    for st in payload.get("states") or []:
+        if isinstance(st, dict) and st.get("name"):
+            await add_state(db, ch.id, {
+                "name": st.get("name"),
+                "hp_cost": int(st.get("hp_cost", 0) or 0),
+                "duration": st.get("duration", ""),
+                "is_active": bool(st.get("is_active", True)),
+            })
+
+    return ch
+
+
+# Backward-compatible aliases
+
+async def export_sheet(db: AsyncSession, character_id: int, user_id: int) -> dict | None:
+    return await export_character(db, character_id, user_id)
+
+
+async def import_sheet(db: AsyncSession, user_id: int, payload: dict) -> Character:
+    return await import_character(db, user_id, payload)

@@ -106,7 +106,13 @@ async function renderTemplatesModal() {
           <button class="btn btn-sm btn-outline-danger" data-act="delete">Удалить</button>
         </div>
       `;
-      row.querySelector("button[data-act='apply']").addEventListener("click", () => {
+      row.querySelector("button[data-act='apply']").addEventListener("click", async () => {
+        // apply to current character (server) if selected, so template is attached to sheet
+        const id = currentChId();
+        if (id) {
+          await api(`/characters/${id}/apply-template`, { method: 'POST', body: JSON.stringify({ template_id: t.id }) });
+          await loadSheet(false);
+        }
         setActiveTemplateId(t.id);
         renderTemplatesModal();
       });
@@ -127,10 +133,29 @@ async function renderTemplatesModal() {
 el("btnCreateTpl")?.addEventListener("click", async () => {
   const name = el("tplName").value.trim();
   if (!name) return alert("Название шаблона обязательно");
+
   const tabs = DEFAULT_TABS.filter((t) => document.getElementById(`tpl_tab_${t}`)?.checked);
   if (tabs.length === 0) return alert("Выбери хотя бы одну вкладку");
-  await api(`/templates`, { method: "POST", body: JSON.stringify({ name, config: { tabs, version: 1 } }) });
+
+  let config = { tabs, version: 1 };
+
+  // Optional: JSON that contains {custom_sections:[...]} or any other keys
+  const raw = document.getElementById("tplCustomSections")?.value?.trim();
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") {
+        config = { ...config, ...parsed };
+      }
+    } catch {
+      return alert("JSON в ‘Кастомные поля’ не распарсился. Оставь пустым или проверь скобки/кавычки.");
+    }
+  }
+
+  await api(`/templates`, { method: "POST", body: JSON.stringify({ name, config }) });
   el("tplName").value = "";
+  const tcs = document.getElementById("tplCustomSections");
+  if (tcs) tcs.value = "";
   await loadTemplates();
   await renderTemplatesModal();
 });
@@ -525,6 +550,101 @@ el("btnSaveEquip").addEventListener("click", async () => {
   await loadSheet(false);
 });
 
+// CUSTOM FIELDS (from template)
+function renderCustomFields() {
+  const root = el("customRoot");
+  if (!root) return;
+  root.innerHTML = "";
+
+  const config = state.sheet?.template?.config || {};
+  const sections = Array.isArray(config.custom_sections) ? config.custom_sections : [];
+  const values = state.sheet?.custom_values || {};
+
+  if (!sections.length) {
+    root.innerHTML = `<div class="muted">В этом шаблоне нет кастомных полей. Создай/выбери шаблон и добавь custom_sections.</div>`;
+    return;
+  }
+
+  sections.forEach((sec) => {
+    const title = sec.title || sec.name || "Раздел";
+    const card = document.createElement("div");
+    card.className = "card card-soft mb-3";
+    const fields = Array.isArray(sec.fields) ? sec.fields : [];
+    card.innerHTML = `
+      <div class="card-body">
+        <div class="section-title">${escapeHtml(title)}</div>
+        <div class="grid-2" data-custom-grid></div>
+      </div>
+    `;
+
+    const grid = card.querySelector("[data-custom-grid]");
+    fields.forEach((f) => {
+      const key = String(f.key || "").trim();
+      if (!key) return;
+      const label = f.label || key;
+      const type = (f.type || "text").toLowerCase();
+      const val = values[key] ?? f.default ?? (type === "number" ? 0 : "");
+
+      const wrap = document.createElement("div");
+      if (type === "textarea") {
+        wrap.innerHTML = `
+          <label class="form-label">${escapeHtml(label)}</label>
+          <textarea class="form-control" rows="3" data-ckey="${escapeHtml(key)}" data-ctype="textarea">${escapeHtml(val)}</textarea>
+        `;
+      } else if (type === "number") {
+        wrap.innerHTML = `
+          <label class="form-label">${escapeHtml(label)}</label>
+          <input class="form-control" type="number" data-ckey="${escapeHtml(key)}" data-ctype="number" value="${escapeHtml(val)}" />
+        `;
+      } else if (type === "checkbox") {
+        const checked = Boolean(val) ? "checked" : "";
+        wrap.innerHTML = `
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" data-ckey="${escapeHtml(key)}" data-ctype="checkbox" id="ck_${escapeHtml(key)}" ${checked}>
+            <label class="form-check-label" for="ck_${escapeHtml(key)}">${escapeHtml(label)}</label>
+          </div>
+        `;
+      } else {
+        wrap.innerHTML = `
+          <label class="form-label">${escapeHtml(label)}</label>
+          <input class="form-control" data-ckey="${escapeHtml(key)}" data-ctype="text" value="${escapeHtml(val)}" />
+        `;
+      }
+      grid.appendChild(wrap);
+    });
+
+    root.appendChild(card);
+  });
+}
+
+function readCustomFields() {
+  const root = el("customRoot");
+  const values = {};
+  if (!root) return values;
+  root.querySelectorAll("[data-ckey]").forEach((node) => {
+    const key = node.getAttribute("data-ckey");
+    const type = node.getAttribute("data-ctype");
+    if (!key) return;
+    if (type === "checkbox") {
+      values[key] = Boolean(node.checked);
+    } else if (type === "number") {
+      const n = intOrNull(node.value);
+      values[key] = n === null ? 0 : n;
+    } else {
+      values[key] = node.value ?? "";
+    }
+  });
+  return values;
+}
+
+el("btnSaveCustom")?.addEventListener("click", async () => {
+  const id = currentChId();
+  if (!id) return;
+  await api(`/characters/${id}/custom`, { method: "PATCH", body: JSON.stringify({ values: readCustomFields() }) });
+  setStatus("Сохранено ✅");
+  await loadSheet(false);
+});
+
 // INVENTORY / SPELLS / ABILITIES / STATES
 el("btnAddItem").addEventListener("click", () => {
   openModal(
@@ -675,6 +795,12 @@ async function loadSheet(showStatus = true) {
   if (showStatus) setStatus("Загрузка…");
   state.sheet = await api(`/characters/${id}/sheet`);
 
+  // template attached to character (server). If absent, keep UI template from localStorage
+  if (state.sheet?.template?.id) setActiveTemplateId(Number(state.sheet.template.id));
+  else if (state.activeTemplateId == null) setActiveTemplateId(loadActiveTemplateId());
+  else applyTemplateToUI();
+
+
   const ch = state.sheet.character;
   fillInput("f_name", ch.name);
   fillInput("f_race", ch.race);
@@ -701,6 +827,8 @@ async function loadSheet(showStatus = true) {
   fillStatInputs("statsCombat", ch);
 
   fillEquip(state.sheet.equipment);
+
+  renderCustomFields();
 
   renderList("invList", state.sheet.items, async (it) => {
     await api(`/characters/${id}/items/${it.id}`, { method: "DELETE" });
