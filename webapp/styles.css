@@ -1004,3 +1004,106 @@ header.topbar .btn{
   padding: 4px 10px !important;
   font-size: 12px !important;
 }
+
+/* =========================
+   RESOURCES: fit big numbers
+   ========================= */
+
+/* цифры выглядят ровнее и лучше в полях */
+.stepper input{
+  font-variant-numeric: tabular-nums;
+}
+
+/* делаем кнопки чуть уже */
+.stepper .step-btn{
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 40px !important;
+  font-size: 16px !important;
+}
+
+/* "/" совсем узкий */
+.stepper .input-group-text{
+  width: 16px !important;
+  min-width: 16px !important;
+  border-radius: 10px !important;
+}
+
+/* текущие/макс поля — не могут быть слишком узкими */
+.stepper .form-control{
+  min-width: 56px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  font-size: 15px !important;
+}
+
+/* если совсем узко — уменьшаем шрифт */
+@media (max-width: 380px){
+  .stepper .form-control{ font-size: 14px !important; min-width: 52px !important; }
+  .stepper .step-btn{ width: 34px !important; min-width: 34px !important; }
+}
+
+/* если экран узкий — ресурсы в 1 колонку (самый надёжный вариант) */
+@media (max-width: 420px){
+  .resources-grid{
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+/* =========================
+   RESOURCES (Android style)
+   ========================= */
+
+.resource {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.resource-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.resource-main .form-control {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.resource-max .form-control {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* кнопки - / + */
+.step-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  padding: 0;
+  font-size: 18px;
+}
+
+/* +lvl строка */
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.hint input.mini {
+  width: 60px;
+  text-align: center;
+}
+
+/* на маленьких экранах — ресурсы в колонку */
+@media (max-width: 420px) {
+  .col-4 {
+    width: 100%;
+  }
+}
