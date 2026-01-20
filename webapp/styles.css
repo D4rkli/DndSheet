@@ -429,35 +429,45 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 }
 
 /* =========================
-   TABS (Android-style, compact)
+   TABS (scroll like before)
    ========================= */
 
 #tabs.nav{
   display: flex;
+  flex-wrap: nowrap;          /* 🔥 запрещаем перенос строк */
   gap: 8px;
-  overflow-x: auto;
+  overflow-x: auto;           /* 🔥 включаем горизонтальный скролл */
+  -webkit-overflow-scrolling: touch;
+
   padding: 6px 0;
+
+  /* чтобы скролл был “плавный” и без прыжков */
+  scroll-snap-type: x proximity;
+}
+
+#tabs.nav::-webkit-scrollbar{
+  height: 0;                  /* прячем полоску на мобилках */
 }
 
 #tabs .nav-link{
+  flex: 0 0 auto;             /* 🔥 каждый таб не сжимается и не переносится */
+  white-space: nowrap;
+
   display: inline-flex;
   align-items: center;
   gap: 6px;
 
   padding: 8px 14px;
-  border-radius: 14px;
+  border-radius: 999px;
 
   font-size: 13px;
   line-height: 1;
-  white-space: nowrap;
+
+  scroll-snap-align: start;
 
   color: #9bb6ff;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
-}
-
-#tabs .nav-link i{
-  font-size: 14px;
 }
 
 #tabs .nav-link.active{
