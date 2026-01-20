@@ -36,7 +36,104 @@ const state = {
   characters: [],
   chId: null,
   sheet: null,
+  templates: [],
+  activeTemplateId: null,
 };
+
+const DEFAULT_TABS = ["main", "stats", "inv", "spells", "abilities", "states", "equip"];
+
+function loadActiveTemplateId() {
+  const raw = localStorage.getItem("activeTemplateId");
+  const id = raw ? Number(raw) : null;
+  return Number.isFinite(id) ? id : null;
+}
+
+function setActiveTemplateId(id) {
+  state.activeTemplateId = id;
+  if (id) localStorage.setItem("activeTemplateId", String(id));
+  else localStorage.removeItem("activeTemplateId");
+  applyTemplateToUI();
+}
+
+function activeTabs() {
+  const tpl = state.templates.find((t) => t.id === state.activeTemplateId);
+  const tabs = tpl?.config?.tabs;
+  return Array.isArray(tabs) && tabs.length ? tabs : DEFAULT_TABS;
+}
+
+function applyTemplateToUI() {
+  const allowed = new Set(activeTabs());
+  document.querySelectorAll("#tabs .nav-link").forEach((b) => {
+    const tab = b.dataset.tab;
+    const show = allowed.has(tab);
+    b.closest("li")?.classList.toggle("d-none", !show);
+  });
+  // если текущая вкладка скрыта — прыгнем в main
+  const cur = document.querySelector("#tabs .nav-link.active")?.dataset?.tab;
+  if (cur && !allowed.has(cur)) {
+    tabSwitch("main");
+  }
+}
+
+function tabsCheckboxesHtml(checkedTabs) {
+  const checked = new Set(checkedTabs || DEFAULT_TABS);
+  return DEFAULT_TABS
+    .map(
+      (t) =>
+        `<div class="form-check">
+          <input class="form-check-input" type="checkbox" id="tpl_tab_${t}" ${checked.has(t) ? "checked" : ""}>
+          <label class="form-check-label" for="tpl_tab_${t}">${t}</label>
+        </div>`
+    )
+    .join("");
+}
+
+async function renderTemplatesModal() {
+  // список
+  const root = el("templatesList");
+  root.innerHTML = "";
+  if (!state.templates || state.templates.length === 0) {
+    root.innerHTML = `<div class="muted">Шаблонов нет. Создай ниже.</div>`;
+  } else {
+    state.templates.forEach((t) => {
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `
+        <div class="item-title">${escapeHtml(t.name)}</div>
+        <div class="item-sub">Вкладки: ${(t.config?.tabs || DEFAULT_TABS).join(", ")}</div>
+        <div class="item-actions d-flex gap-2">
+          <button class="btn btn-sm ${t.id === state.activeTemplateId ? "btn-light" : "btn-outline-light"}" data-act="apply">${t.id === state.activeTemplateId ? "Активен" : "Применить"}</button>
+          <button class="btn btn-sm btn-outline-danger" data-act="delete">Удалить</button>
+        </div>
+      `;
+      row.querySelector("button[data-act='apply']").addEventListener("click", () => {
+        setActiveTemplateId(t.id);
+        renderTemplatesModal();
+      });
+      row.querySelector("button[data-act='delete']").addEventListener("click", async () => {
+        if (!confirm(`Удалить шаблон ‘${t.name}’?`)) return;
+        await api(`/templates/${t.id}`, { method: "DELETE" });
+        await loadTemplates();
+        await renderTemplatesModal();
+      });
+      root.appendChild(row);
+    });
+  }
+
+  // чекбоксы вкладок для создания
+  el("tplTabs").innerHTML = tabsCheckboxesHtml(DEFAULT_TABS);
+}
+
+el("btnCreateTpl")?.addEventListener("click", async () => {
+  const name = el("tplName").value.trim();
+  if (!name) return alert("Название шаблона обязательно");
+  const tabs = DEFAULT_TABS.filter((t) => document.getElementById(`tpl_tab_${t}`)?.checked);
+  if (tabs.length === 0) return alert("Выбери хотя бы одну вкладку");
+  await api(`/templates`, { method: "POST", body: JSON.stringify({ name, config: { tabs, version: 1 } }) });
+  el("tplName").value = "";
+  await loadTemplates();
+  await renderTemplatesModal();
+});
 
 function setStatus(text) {
   el("status").textContent = text;
@@ -134,6 +231,37 @@ const modalEl = el("editModal");
 const modal = new bootstrap.Modal(modalEl);
 let modalOnSave = null;
 
+// JSON modal (import/export)
+const jsonModalEl = el("jsonModal");
+const jsonModal = jsonModalEl ? new bootstrap.Modal(jsonModalEl) : null;
+let jsonOnAction = null;
+
+function openJsonModal({ title, label, value, hint, extraHtml, actionText, onAction }) {
+  if (!jsonModal) return;
+  el("jsonModalTitle").textContent = title;
+  el("jsonModalLabel").textContent = label || "Данные";
+  el("jsonTextarea").value = value ?? "";
+  el("jsonHint").textContent = hint ?? "";
+  el("jsonExtra").innerHTML = extraHtml ?? "";
+  el("jsonActionBtn").textContent = actionText || "Ок";
+  jsonOnAction = onAction;
+  jsonModal.show();
+}
+
+el("jsonActionBtn")?.addEventListener("click", async () => {
+  if (!jsonOnAction) return;
+  try {
+    await jsonOnAction();
+    jsonModal.hide();
+  } catch (e) {
+    alert(e.message);
+  }
+});
+
+// Templates modal
+const templatesModalEl = el("templatesModal");
+const templatesModal = templatesModalEl ? new bootstrap.Modal(templatesModalEl) : null;
+
 function openModal(title, bodyHtml, onSave) {
   el("modalTitle").textContent = title;
   el("modalBody").innerHTML = bodyHtml;
@@ -159,22 +287,110 @@ document.querySelectorAll("#tabs .nav-link").forEach((btn) => {
 
 el("btnSync").addEventListener("click", () => loadSheet());
 
+el("btnExport")?.addEventListener("click", async () => {
+  const id = currentChId();
+  if (!id) return;
+  const data = await api(`/characters/${id}/export`);
+  const json = JSON.stringify(data, null, 2);
+  openJsonModal({
+    title: "Экспорт персонажа",
+    label: "JSON (можно скопировать / сохранить)",
+    value: json,
+    hint: "Совет: храни в заметках или кидай другу — потом можно импортировать.",
+    extraHtml: `
+      <div class="d-flex gap-2">
+        <button id="btnDownloadJson" class="btn btn-sm btn-outline-light">Скачать .json</button>
+      </div>
+    `,
+    actionText: "Закрыть",
+    onAction: async () => {},
+  });
+
+  // скачивание
+  setTimeout(() => {
+    const b = document.getElementById("btnDownloadJson");
+    if (!b) return;
+    b.addEventListener("click", () => {
+      const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(state.sheet?.character?.name || "character").replaceAll(" ", "_")}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+  }, 0);
+});
+
+el("btnImport")?.addEventListener("click", async () => {
+  openJsonModal({
+    title: "Импорт персонажа",
+    label: "Вставь JSON",
+    value: "",
+    hint: "Вставь JSON из Экспорта и нажми ‘Импортировать’.",
+    extraHtml: `
+      <label class="form-label mt-2">Новое имя (необязательно)</label>
+      <input id="importNewName" class="form-control" placeholder="Оставь пустым чтобы взять имя из JSON" />
+    `,
+    actionText: "Импортировать",
+    onAction: async () => {
+      const raw = el("jsonTextarea").value.trim();
+      if (!raw) throw new Error("Вставь JSON");
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        throw new Error("JSON не распарсился — проверь скобки/кавычки");
+      }
+      const newName = document.getElementById("importNewName")?.value?.trim();
+      if (newName) parsed.new_name = newName;
+      await api(`/characters/import`, { method: "POST", body: JSON.stringify(parsed) });
+      await loadCharacters();
+      await loadSheet();
+      setStatus("Импортировано ✅");
+    },
+  });
+});
+
+el("btnTemplates")?.addEventListener("click", () => {
+  if (!templatesModal) return;
+  renderTemplatesModal();
+  templatesModal.show();
+});
+
 el("characterSelect").addEventListener("change", async (e) => {
   state.chId = Number(e.target.value);
   await loadSheet();
 });
 
 el("btnNew").addEventListener("click", () => {
+  const options = [
+    `<option value="">Без шаблона</option>`,
+    ...state.templates.map((t) => `<option value="${t.id}">${escapeHtml(t.name)}</option>`),
+  ].join("");
   openModal(
     "Новый персонаж",
     `
       <label class="form-label">Имя</label>
       <input id="newName" class="form-control" placeholder="Напр. Элвин" />
+      <div class="mt-2">
+        <label class="form-label">Создать по шаблону</label>
+        <select id="newTpl" class="form-select">${options}</select>
+      </div>
     `,
     async () => {
       const name = document.getElementById("newName").value.trim();
       if (!name) throw new Error("Введите имя");
-      await api(`/characters`, { method: "POST", body: JSON.stringify({ name }) });
+      const tplId = document.getElementById("newTpl").value;
+      if (tplId) {
+        await api(`/templates/${tplId}/create-character`, { method: "POST", body: JSON.stringify({ name }) });
+        // автоматически применим этот шаблон к интерфейсу
+        setActiveTemplateId(Number(tplId));
+      } else {
+        await api(`/characters`, { method: "POST", body: JSON.stringify({ name }) });
+      }
       await loadCharacters();
     }
   );
@@ -421,6 +637,17 @@ async function loadMe() {
   state.me = await api("/me");
 }
 
+async function loadTemplates() {
+  state.templates = await api("/templates");
+  state.activeTemplateId = loadActiveTemplateId();
+  // если шаблон удалили — сброс
+  if (state.activeTemplateId && !state.templates.find((t) => t.id === state.activeTemplateId)) {
+    state.activeTemplateId = null;
+    localStorage.removeItem("activeTemplateId");
+  }
+  applyTemplateToUI();
+}
+
 async function loadCharacters() {
   state.characters = await api("/characters");
   const sel = el("characterSelect");
@@ -522,6 +749,7 @@ async function loadSheet(showStatus = true) {
 async function boot() {
   try {
     await loadMe();
+    await loadTemplates();
     await loadCharacters();
     if (state.characters.length === 0) setStatus("Персонажей нет. Создай нового 👆");
     await loadSheet();

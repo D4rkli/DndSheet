@@ -557,3 +557,102 @@ async def get_full_sheet(
         "states": states,
         "equipment": equipment,
     }
+
+
+# =========================
+# EXPORT / IMPORT
+# =========================
+
+@router.get("/characters/{ch_id}/export")
+async def export_character_sheet(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    data = await crud.export_sheet(db, ch_id, u.id)
+    if not data:
+        raise HTTPException(404, "Character not found")
+    return data
+
+
+@router.post("/characters/import")
+async def import_character_sheet(
+    body: schemas.SheetImportIn,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.import_sheet(db, u.id, body.model_dump())
+    return {"status": "ok", "character_id": ch.id}
+
+
+# =========================
+# TEMPLATES
+# =========================
+
+@router.get("/templates")
+async def list_templates(
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    templates = await crud.list_templates(db, u.id)
+    return [
+        {
+            "id": t.id,
+            "name": t.name,
+            "config": json.loads(t.config_json or "{}"),
+        }
+        for t in templates
+    ]
+
+
+@router.post("/templates")
+async def create_template(
+    body: schemas.SheetTemplateCreate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    t = await crud.create_template(db, u.id, body.name, body.config)
+    return {"status": "ok", "template_id": t.id}
+
+
+@router.delete("/templates/{template_id}")
+async def delete_template(
+    template_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ok = await crud.delete_template(db, u.id, template_id)
+    if not ok:
+        raise HTTPException(404, "Template not found")
+    return {"status": "ok"}
+
+
+@router.post("/templates/{template_id}/create-character")
+async def create_character_from_template(
+    template_id: int,
+    body: schemas.CharacterCreate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.create_character_from_template(db, u.id, template_id, body.name)
+    if not ch:
+        raise HTTPException(404, "Template not found")
+    return {"status": "ok", "character_id": ch.id}

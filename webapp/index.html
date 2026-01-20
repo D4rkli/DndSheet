@@ -18,7 +18,12 @@
         <div class="app-title">🧙 Лист персонажа</div>
         <div id="status" class="muted">Подключение…</div>
       </div>
-      <button id="btnSync" class="btn btn-sm btn-outline-light">Синхр.</button>
+      <div class="d-flex gap-2">
+        <button id="btnExport" class="btn btn-sm btn-outline-light">Экспорт</button>
+        <button id="btnImport" class="btn btn-sm btn-outline-light">Импорт</button>
+        <button id="btnSync" class="btn btn-sm btn-outline-light">Синхр.</button>
+        <button id="btnTemplates" class="btn btn-sm btn-light">Шаблоны</button>
+      </div>
     </div>
 
     <div class="mt-2 d-flex gap-2">
@@ -221,6 +226,55 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
         <button type="button" class="btn btn-primary" id="modalSave">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JSON MODAL (Export / Import) -->
+<div class="modal fade" id="jsonModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="jsonModalTitle">JSON</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label" id="jsonModalLabel">Данные</label>
+        <textarea id="jsonTextarea" class="form-control" rows="10" placeholder="Вставь JSON сюда..."></textarea>
+        <div class="hint mt-2" id="jsonHint"></div>
+        <div class="mt-2" id="jsonExtra"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
+        <button type="button" class="btn btn-primary" id="jsonActionBtn">Ок</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPLATES MODAL -->
+<div class="modal fade" id="templatesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Шаблоны</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="section-title">Список</div>
+        <div id="templatesList"></div>
+        <hr class="hr-soft" />
+        <div class="section-title">Создать шаблон интерфейса</div>
+        <label class="form-label">Название</label>
+        <input id="tplName" class="form-control" placeholder="Напр. D&D базовый" />
+        <div class="hint mt-2">Что попадёт в шаблон: какие вкладки показывать в WebApp (интерфейс).
+          Сами данные персонажа в шаблон не копируются.</div>
+        <div class="mt-2" id="tplTabs"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
+        <button type="button" class="btn btn-primary" id="btnCreateTpl">Создать</button>
       </div>
     </div>
   </div>

@@ -147,3 +147,26 @@ class Equipment(Base):
     jewelry: Mapped[str] = mapped_column(String(120), default="")
 
     character: Mapped["Character"] = relationship(back_populates="equipment")
+
+
+class SheetTemplate(Base):
+    """Шаблон листа персонажа.
+
+    config_json хранит JSON-строку с настройками вкладок/полей.
+    Минимальный формат (можно расширять):
+      {
+        "tabs": ["main","stats","inv","spells","abilities","states","equip"],
+        "notes": "...",
+        "version": 1
+      }
+    """
+
+    __tablename__ = "sheet_templates"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+
+    name: Mapped[str] = mapped_column(String(120))
+    config_json: Mapped[str] = mapped_column(Text, default="{}")
+
+    owner: Mapped["User"] = relationship()

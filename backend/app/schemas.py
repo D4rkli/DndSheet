@@ -1,6 +1,6 @@
 # app/schemas.py
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any, Dict
 
 class CharacterCreate(BaseModel):
     name: str
@@ -93,3 +93,31 @@ class EquipmentUpdate(BaseModel):
     ring3: Optional[str] = None
     ring4: Optional[str] = None
     jewelry: Optional[str] = None
+
+
+class SheetTemplateCreate(BaseModel):
+    name: str
+    # произвольная конфигурация (вкладки, поля, версия и т.п.)
+    config: Dict[str, Any] = {}
+
+
+class SheetTemplateOut(BaseModel):
+    id: int
+    name: str
+    config: Dict[str, Any] = {}
+
+
+class SheetExportOut(BaseModel):
+    """Полный экспорт листа в JSON."""
+    character: Dict[str, Any]
+    items: list[Dict[str, Any]]
+    spells: list[Dict[str, Any]]
+    abilities: list[Dict[str, Any]]
+    states: list[Dict[str, Any]]
+    equipment: Optional[Dict[str, Any]] = None
+
+
+class SheetImportIn(SheetExportOut):
+    # при импорте можно переименовать
+    new_name: Optional[str] = None
+
