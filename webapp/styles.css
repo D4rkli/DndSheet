@@ -493,20 +493,27 @@ input:focus, textarea:focus, select:focus {
 /* =========================
    Steppers (-/+)
    ========================= */
-.stepper .step-btn{
-  min-width: 34px;
-  border-radius: 12px !important;
-  border: 1px solid rgba(255,255,255,.14) !important;
-  background: rgba(255,255,255,.06) !important;
-  color: rgba(255,255,255,.92) !important;
-  font-weight: 900;
+.stepper{
+  align-items: stretch;
 }
 
-.stepper .input-group-text{
-  border: 1px solid rgba(255,255,255,.14) !important;
-  background: rgba(255,255,255,.06) !important;
-  color: rgba(255,255,255,.65) !important;
+.stepper .step-btn{
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px !important;
 }
+
+.stepper .form-control{
+  height: 38px;
+}
+.stepper .input-group-text{
+  height: 38px;
+  display: flex;
+  align-items: center;
+}
+
 
 /* =========================
    FAB menu + animations
@@ -594,4 +601,23 @@ input:focus, textarea:focus, select:focus {
 }
 #tabs .nav-link:active{
   transform: translateY(1px);
+}
+
+/* ===== Sticky tabs: fix overlay/scroll issues ===== */
+.sticky-tabs{
+  position: sticky;
+  top: 140px;              /* подгонишь, но это почти точно для твоего хедера */
+  z-index: 50;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 18px;
+
+  background: rgba(10, 14, 26, .92);   /* ВАЖНО: фон, чтобы не было "прозрачного налёта" */
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+/* чтобы контент начинался ниже табов и не прятался под ними */
+.tab-content{
+  padding-top: 10px;
 }
