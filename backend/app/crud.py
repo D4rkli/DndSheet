@@ -9,6 +9,7 @@ from .models import (
     Spell,
     Ability,
     State,
+    Equipment,
 )
 
 # =========================
