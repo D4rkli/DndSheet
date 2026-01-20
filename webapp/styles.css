@@ -318,3 +318,107 @@ input:focus, textarea:focus, select:focus {
 .modal-header .btn-close:hover {
   opacity: 1;
 }
+
+/* =========================
+   ANDROID-LIKE UI PATCH
+   (tabs tiles + compact lists)
+   ========================= */
+
+/* таб-панель держим липкой, как сейчас */
+.sticky-tabs{
+  top: 84px;
+  padding: 10px;
+}
+
+/* превращаем табы в плиточную сетку */
+#tabs.nav{
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+/* плитка таба */
+#tabs .nav-link{
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border-radius: 14px !important;
+  padding: 12px 10px !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+
+  background: rgba(255,255,255,.06) !important;
+  color: rgba(170,205,255,.95) !important;
+
+  font-weight: 800;
+  letter-spacing: .02em;
+
+  box-shadow: 0 10px 25px rgba(0,0,0,.20);
+}
+
+#tabs .nav-link i{
+  font-size: 18px;
+  opacity: .95;
+}
+
+#tabs .nav-link span{
+  font-size: 12px;
+}
+
+/* активная плитка */
+#tabs .nav-link.active{
+  background: rgba(80,145,255,.95) !important;
+  border-color: rgba(80,145,255,.95) !important;
+  color: #fff !important;
+}
+
+/* на узких экранах 3 колонки */
+@media (max-width: 420px){
+  #tabs.nav{ grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ===== Компактные карточки в списках ===== */
+.list{
+  display: grid;
+  gap: 10px;
+}
+
+.item{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.item-title{
+  font-weight: 900;
+  font-size: 14px;
+  color: rgba(255,255,255,.95);
+}
+
+.item-sub{
+  margin-top: 4px;
+  color: rgba(255,255,255,.66);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+.item-actions{
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.item-actions .btn{
+  border-radius: 12px !important;
+}
+
+.line-clamp{
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

@@ -218,7 +218,7 @@ function fillStatInputs(containerId, source) {
   });
 }
 
-function renderList(containerId, rows, onDelete) {
+function renderList(containerId, rows, onDelete, opts = {}) {
   const root = el(containerId);
   root.innerHTML = "";
   if (!rows || rows.length === 0) {
@@ -226,17 +226,30 @@ function renderList(containerId, rows, onDelete) {
     return;
   }
 
+  const icon = opts.icon || "bi-dot";
+  const showLineClamp = opts.clamp ?? false;
+
   rows.forEach((r) => {
     const card = document.createElement("div");
     card.className = "item";
-    const sub = r.sub || r.description || "";
+
+    const title = escapeHtml(r.title || r.name || "");
+    const sub = escapeHtml(r.sub || r.description || "");
+
     card.innerHTML = `
-      <div class="item-title">${escapeHtml(r.title || r.name || "")}</div>
-      <div class="item-sub">${escapeHtml(sub)}</div>
-      <div class="item-actions">
-        <button class="btn btn-sm btn-outline-light" data-act="delete">Удалить</button>
+      <div class="d-flex align-items-start justify-content-between gap-2">
+        <div class="min-w-0">
+          <div class="item-title">
+            <i class="bi ${icon} me-2"></i>${title}
+          </div>
+          <div class="item-sub ${showLineClamp ? "line-clamp" : ""}">${sub}</div>
+        </div>
+        <button class="btn btn-sm btn-outline-light" data-act="delete" title="Удалить">
+          <i class="bi bi-trash3"></i>
+        </button>
       </div>
     `;
+
     card.querySelector("button[data-act='delete']").addEventListener("click", () => onDelete(r));
     root.appendChild(card);
   });
@@ -833,7 +846,8 @@ async function loadSheet(showStatus = true) {
   renderList("invList", state.sheet.items, async (it) => {
     await api(`/characters/${id}/items/${it.id}`, { method: "DELETE" });
     await loadSheet(false);
-  });
+  }, { icon: "bi-backpack", clamp: true });
+
 
   renderList(
     "spellsList",
@@ -844,19 +858,8 @@ async function loadSheet(showStatus = true) {
     async (s) => {
       await api(`/characters/${id}/spells/${s.id}`, { method: "DELETE" });
       await loadSheet(false);
-    }
-  );
-
-  renderList(
-    "abilitiesList",
-    state.sheet.abilities.map((a) => ({
-      ...a,
-      sub: [a.range, a.duration, a.cost].filter(Boolean).join(" · ") + (a.description ? `\n${a.description}` : ""),
-    })),
-    async (a) => {
-      await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
-      await loadSheet(false);
-    }
+    },
+    { icon: "bi-stars", clamp: true }
   );
 
   renderList(
@@ -868,7 +871,21 @@ async function loadSheet(showStatus = true) {
     async (s) => {
       await api(`/characters/${id}/states/${s.id}`, { method: "DELETE" });
       await loadSheet(false);
-    }
+    },
+    { icon: "bi-activity", clamp: true }
+  );
+
+  renderList(
+    "statesList",
+    state.sheet.states.map((s) => ({
+      ...s,
+      sub: `${s.is_active ? "Активно" : "Неактивно"}${s.duration ? ` · ${s.duration}` : ""}${s.hp_cost ? ` · HP ${s.hp_cost}` : ""}`,
+    })),
+    async (s) => {
+      await api(`/characters/${id}/states/${s.id}`, { method: "DELETE" });
+      await loadSheet(false);
+    },
+    { icon: "bi-activity", clamp: true }
   );
 
   setStatus("Ок ✅");
