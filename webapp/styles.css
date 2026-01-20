@@ -700,3 +700,65 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
   border-radius: 14px !important;
   font-weight: 700;
 }
+
+/* =========================
+   RESOURCES STEPPERS: make ровно и красиво
+   ========================= */
+
+.stepper{
+  align-items: stretch !important;
+}
+
+.stepper .step-btn{
+  width: 42px !important;          /* одинаковая ширина */
+  min-width: 42px !important;
+  height: 40px !important;         /* одинаковая высота */
+  padding: 0 !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border-radius: 12px !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  background: rgba(255,255,255,.06) !important;
+  color: rgba(255,255,255,.92) !important;
+
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.stepper .form-control{
+  height: 40px !important;         /* высота как у кнопок */
+  border-radius: 12px !important;
+  background: rgba(255,255,255,.07) !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.92) !important;
+}
+
+.stepper .input-group-text{
+  width: 22px !important;          /* фикс ширины для "/" */
+  min-width: 22px !important;
+  height: 40px !important;
+  padding: 0 !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border-radius: 10px !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  background: rgba(255,255,255,.06) !important;
+  color: rgba(255,255,255,.65) !important;
+}
+
+/* расстояния внутри input-group на мобильных */
+.stepper > *{
+  margin: 0 !important;
+}
+
+/* чуть мягче при нажатии */
+.stepper .step-btn:active{
+  transform: translateY(1px);
+}
