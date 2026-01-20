@@ -67,6 +67,7 @@ function applyTemplateToUI() {
     const tab = b.dataset.tab;
     const show = allowed.has(tab);
     b.closest("li")?.classList.toggle("d-none", !show);
+    updateFab();
   });
   // если текущая вкладка скрыта — прыгнем в main
   const cur = document.querySelector("#tabs .nav-link.active")?.dataset?.tab;
@@ -227,30 +228,53 @@ function renderList(containerId, rows, onDelete, opts = {}) {
   }
 
   const icon = opts.icon || "bi-dot";
-  const showLineClamp = opts.clamp ?? false;
-
   rows.forEach((r) => {
     const card = document.createElement("div");
     card.className = "item";
 
     const title = escapeHtml(r.title || r.name || "");
-    const sub = escapeHtml(r.sub || r.description || "");
+    const preview = escapeHtml(r.preview || "");
+    const details = escapeHtml(r.details || r.description || "");
 
     card.innerHTML = `
-      <div class="d-flex align-items-start justify-content-between gap-2">
+      <div class="item-head">
         <div class="min-w-0">
           <div class="item-title">
-            <i class="bi ${icon} me-2"></i>${title}
+            <i class="bi ${icon}"></i>
+            <span>${title}</span>
           </div>
-          <div class="item-sub ${showLineClamp ? "line-clamp" : ""}">${sub}</div>
+          ${preview ? `<div class="item-sub">${preview}</div>` : ``}
         </div>
-        <button class="btn btn-sm btn-outline-light" data-act="delete" title="Удалить">
-          <i class="bi bi-trash3"></i>
-        </button>
+
+        <div class="d-flex align-items-center gap-2 item-actions">
+          <i class="bi bi-chevron-down item-caret"></i>
+          <button class="btn btn-sm btn-outline-light" data-act="delete" title="Удалить">
+            <i class="bi bi-trash3"></i>
+          </button>
+        </div>
       </div>
+
+      <div class="item-details d-none">${details}</div>
     `;
 
-    card.querySelector("button[data-act='delete']").addEventListener("click", () => onDelete(r));
+    // раскрытие по тапу по карточке (кроме кнопки delete)
+    card.addEventListener("click", (e) => {
+      const del = e.target.closest("button[data-act='delete']");
+      if (del) return;
+
+      const d = card.querySelector(".item-details");
+      const caret = card.querySelector(".item-caret");
+      const isHidden = d.classList.contains("d-none");
+      d.classList.toggle("d-none");
+      caret.classList.toggle("bi-chevron-down", isHidden);
+      caret.classList.toggle("bi-chevron-up", !isHidden);
+    });
+
+    card.querySelector("button[data-act='delete']").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await onDelete(r);
+    });
+
     root.appendChild(card);
   });
 }
@@ -630,6 +654,35 @@ function renderCustomFields() {
   });
 }
 
+function getActiveTabKey() {
+  const btn = document.querySelector("#tabs .nav-link.active");
+  return btn ? btn.dataset.tab : "main";
+}
+
+function updateFab() {
+  const fab = el("fabAdd");
+  const tab = getActiveTabKey();
+
+  // показываем FAB только там, где есть "добавить"
+  const map = {
+    inv: { text: "Предмет", icon: "bi-backpack", onClick: () => el("btnAddItem")?.click() },
+    spells: { text: "Заклинание", icon: "bi-stars", onClick: () => openSpellModal("spell") },
+    abilities: { text: "Умение", icon: "bi-lightning-charge", onClick: () => openSpellModal("ability") },
+    states: { text: "Состояние", icon: "bi-activity", onClick: () => el("btnAddState")?.click() },
+  };
+
+  const cfg = map[tab];
+  if (!cfg) {
+    fab.classList.add("d-none");
+    fab.onclick = null;
+    return;
+  }
+
+  fab.classList.remove("d-none");
+  fab.innerHTML = `<i class="bi bi-plus-lg"></i>`;
+  fab.onclick = cfg.onClick;
+}
+
 function readCustomFields() {
   const root = el("customRoot");
   const values = {};
@@ -656,6 +709,7 @@ el("btnSaveCustom")?.addEventListener("click", async () => {
   await api(`/characters/${id}/custom`, { method: "PATCH", body: JSON.stringify({ values: readCustomFields() }) });
   setStatus("Сохранено ✅");
   await loadSheet(false);
+  updateFab();
 });
 
 // INVENTORY / SPELLS / ABILITIES / STATES

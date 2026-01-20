@@ -33,6 +33,12 @@
     </div>
   </header>
 
+    <!-- FAB (+) -->
+  <button id="fabAdd" class="fab d-none" type="button" aria-label="Добавить">
+    <i class="bi bi-plus-lg"></i>
+  </button>
+
+
   <main class="content">
     <ul class="nav nav-pills small sticky-tabs" id="tabs">
       <li class="nav-item"><button class="nav-link active" data-tab="main"><i class="bi bi-person-badge"></i><span>Основное</span></button></li>
@@ -60,7 +66,7 @@
             </div>
             <div class="col-6">
               <label class="form-label">Класс</label>
-              <input id="f_klass" class="form-control" placeholder="Рейнджер" />
+              <input id="f_klass" class="form-control" placeholder="Плут" />
             </div>
             <div class="col-6">
               <label class="form-label">Пол</label>
@@ -83,8 +89,10 @@
 
             <div class="col-4">
               <label class="form-label">HP</label>
-              <div class="input-group input-group-sm">
-                <input id="f_hp" type="number" class="form-control" />
+              <div class="input-group input-group-sm stepper">
+                <button class="btn step-btn" type="button" data-step="-1" data-target="f_hp">-</button>
+                <input id="f_hp" type="number" class="form-control text-center" />
+                <button class="btn step-btn" type="button" data-step="1" data-target="f_hp">+</button>
                 <span class="input-group-text">/</span>
                 <input id="f_hp_max" type="number" class="form-control" />
               </div>
@@ -93,8 +101,10 @@
 
             <div class="col-4">
               <label class="form-label">Мана</label>
-              <div class="input-group input-group-sm">
-                <input id="f_mana" type="number" class="form-control" />
+              <div class="input-group input-group-sm stepper">
+                <button class="btn step-btn" type="button" data-step="-1" data-target="f_mana">-</button>
+                <input id="f_mana" type="number" class="form-control text-center" />
+                <button class="btn step-btn" type="button" data-step="1" data-target="f_mana">+</button>
                 <span class="input-group-text">/</span>
                 <input id="f_mana_max" type="number" class="form-control" />
               </div>
@@ -103,8 +113,10 @@
 
             <div class="col-4">
               <label class="form-label">Энергия</label>
-              <div class="input-group input-group-sm">
-                <input id="f_energy" type="number" class="form-control" />
+              <div class="input-group input-group-sm stepper">
+                <button class="btn step-btn" type="button" data-step="-1" data-target="f_energy">-</button>
+                <input id="f_energy" type="number" class="form-control text-center" />
+                <button class="btn step-btn" type="button" data-step="1" data-target="f_energy">+</button>
                 <span class="input-group-text">/</span>
                 <input id="f_energy_max" type="number" class="form-control" />
               </div>
