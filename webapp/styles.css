@@ -621,3 +621,82 @@ input:focus, textarea:focus, select:focus {
 .tab-content{
   padding-top: 10px;
 }
+
+/* =========================
+   Tabs: stop sticky overlay + compact tiles
+   ========================= */
+
+/* 1) убираем липкость, чтобы не наезжало на контент */
+.sticky-tabs{
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+
+  padding: 8px !important;
+  margin-top: 8px !important;
+
+  background: transparent !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* 2) сетка табов компактнее */
+#tabs.nav{
+  gap: 8px !important;
+  grid-template-columns: repeat(3, 1fr) !important; /* 3 колонки как на твоих скринах */
+}
+
+/* 3) сами плитки меньше */
+#tabs .nav-link{
+  padding: 10px 8px !important;
+  min-height: 74px;
+  border-radius: 14px !important;
+
+  /* меньше "воздуха" */
+  gap: 5px !important;
+}
+
+#tabs .nav-link i{
+  font-size: 16px !important;
+}
+
+#tabs .nav-link span{
+  font-size: 12px !important;
+  line-height: 1.1;
+}
+
+/* 4) чтобы блок табов не казался огромной карточкой */
+#tabs{
+  margin-bottom: 10px;
+}
+
+/* =========================
+   Header buttons compact
+   ========================= */
+
+header.topbar .btn{
+  padding: 6px 10px !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  line-height: 1.1;
+}
+
+/* чтобы они не ломали строку — пусть скроллятся по горизонтали */
+header.topbar .d-flex.gap-2{
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+header.topbar .d-flex.gap-2::-webkit-scrollbar{
+  height: 0;
+}
+
+#btnNew{
+  padding: 8px 12px !important;
+  border-radius: 14px !important;
+  font-weight: 700;
+}

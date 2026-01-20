@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
 
     BASE_URL: str = "http://127.0.0.1:8000"
-    WEBAPP_URL: str = "http://127.0.0.1:8000/webapp/?v=99"
+    WEBAPP_URL: str = "http://127.0.0.1:8000/webapp/?v=100"
     SQLITE_PATH: str = "sqlite+aiosqlite:///./dnd._v2.sqlite3"
     DM_USER_IDS: str = ""
 
