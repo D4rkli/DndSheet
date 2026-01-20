@@ -15,16 +15,6 @@ body {
   margin: 0 auto;
 }
 
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding: 14px 14px 10px;
-  backdrop-filter: blur(10px);
-  background: rgba(11, 16, 32, 0.82);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
 .app-title {
   font-weight: 700;
   letter-spacing: 0.2px;
@@ -57,17 +47,6 @@ body {
 
 .hr-soft {
   border-color: rgba(255, 255, 255, 0.10);
-}
-
-.sticky-tabs {
-  position: sticky;
-  top: 84px;
-  z-index: 9;
-  background: rgba(11, 16, 32, 0.82);
-  padding: 8px 6px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  margin-bottom: 12px;
 }
 
 .nav-pills .nav-link {
@@ -124,35 +103,6 @@ body {
   gap: 10px;
 }
 
-.list {
-  display: grid;
-  gap: 10px;
-}
-
-.item {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 14px;
-  padding: 10px 10px;
-}
-
-.item-title {
-  font-weight: 700;
-}
-
-.item-sub {
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 2px;
-  white-space: pre-wrap;
-}
-
-.item-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
 .btn {
   border-radius: 14px;
 }
@@ -174,12 +124,6 @@ body {
   color: #ffffff;
 }
 
-.modal-content {
-  background: #0f1730;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 18px;
-}
-
 .modal-header,
 .modal-footer {
   border-color: rgba(255, 255, 255, 0.10);
@@ -189,70 +133,6 @@ body {
   .grid-2 {
     grid-template-columns: 1fr;
   }
-}
-
-/* === READABILITY PATCH === */
-
-/* базовый цвет текста */
-:root{
-  --txt: rgba(255,255,255,.92);
-  --muted: rgba(255,255,255,.68);
-  --hint: rgba(255,255,255,.55);
-
-  --card: rgba(15, 20, 35, .70);
-  --stroke: rgba(255,255,255,.12);
-}
-
-/* карточки/блоки */
-.card, .panel, .box, .section, .sheet, .wrap {
-  color: var(--txt);
-}
-
-/* заголовки секций типа "РЕСУРСЫ" */
-h2, h3, .section-title {
-  color: var(--txt) !important;
-  letter-spacing: .06em;
-}
-
-/* ЛЕЙБЛЫ полей: "Имя", "Раса", ... */
-label, .label, .field-label {
-  color: var(--muted) !important;
-  font-weight: 600;
-  text-shadow: 0 1px 0 rgba(0,0,0,.35);
-}
-
-/* плейсхолдеры */
-input::placeholder, textarea::placeholder {
-  color: rgba(255,255,255,.45) !important;
-}
-
-/* инпуты: чуть темнее чем фон + нормальная рамка */
-input, textarea, select {
-  background: rgba(255,255,255,.06) !important;
-  color: rgba(255,255,255,.93) !important;
-  border: 1px solid var(--stroke) !important;
-  border-radius: 12px;
-  outline: none;
-}
-
-/* фокус — чтобы было видно куда ты кликаешь */
-input:focus, textarea:focus, select:focus {
-  border-color: rgba(120,170,255,.55) !important;
-  box-shadow: 0 0 0 3px rgba(120,170,255,.18) !important;
-}
-
-/* табы/кнопки — чуть ярче */
-.tab, .tabs button, .tab-btn {
-  color: rgba(170,205,255,.95) !important;
-  border: 1px solid rgba(255,255,255,.12) !important;
-  background: rgba(0,0,0,.18) !important;
-}
-
-.tab.active, .tabs button.active, .tab-btn.active {
-  background: rgba(80,145,255,.95) !important;
-  color: rgba(255,255,255,.98) !important;
-  border-color: rgba(80,145,255,.95) !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
 
 /* ===============================
@@ -320,109 +200,6 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* =========================
-   ANDROID-LIKE UI PATCH
-   (tabs tiles + compact lists)
-   ========================= */
-
-/* таб-панель держим липкой, как сейчас */
-.sticky-tabs{
-  top: 84px;
-  padding: 10px;
-}
-
-/* превращаем табы в плиточную сетку */
-#tabs.nav{
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-/* плитка таба */
-#tabs .nav-link{
-  display: flex !important;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-
-  border-radius: 14px !important;
-  padding: 12px 10px !important;
-  border: 1px solid rgba(255,255,255,.12) !important;
-
-  background: rgba(255,255,255,.06) !important;
-  color: rgba(170,205,255,.95) !important;
-
-  font-weight: 800;
-  letter-spacing: .02em;
-
-  box-shadow: 0 10px 25px rgba(0,0,0,.20);
-}
-
-#tabs .nav-link i{
-  font-size: 18px;
-  opacity: .95;
-}
-
-#tabs .nav-link span{
-  font-size: 12px;
-}
-
-/* активная плитка */
-#tabs .nav-link.active{
-  background: rgba(80,145,255,.95) !important;
-  border-color: rgba(80,145,255,.95) !important;
-  color: #fff !important;
-}
-
-/* на узких экранах 3 колонки */
-@media (max-width: 420px){
-  #tabs.nav{ grid-template-columns: repeat(3, 1fr); }
-}
-
-/* ===== Компактные карточки в списках ===== */
-.list{
-  display: grid;
-  gap: 10px;
-}
-
-.item{
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 14px;
-  padding: 12px;
-}
-
-.item-title{
-  font-weight: 900;
-  font-size: 14px;
-  color: rgba(255,255,255,.95);
-}
-
-.item-sub{
-  margin-top: 4px;
-  color: rgba(255,255,255,.66);
-  font-size: 12px;
-  line-height: 1.35;
-  white-space: pre-wrap;
-}
-
-.item-actions{
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.item-actions .btn{
-  border-radius: 12px !important;
-}
-
-.line-clamp{
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-/* =========================
    FAB (+)
    ========================= */
 .fab{
@@ -451,69 +228,6 @@ input:focus, textarea:focus, select:focus {
 .fab:active{
   transform: translateY(1px);
 }
-
-/* =========================
-   Expandable cards in lists
-   ========================= */
-.item{
-  cursor: pointer;
-}
-
-.item-head{
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.item-title{
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.item-caret{
-  opacity: .65;
-  margin-left: auto;
-}
-
-.item-details{
-  margin-top: 10px;
-  color: rgba(255,255,255,.70);
-  font-size: 12px;
-  white-space: pre-wrap;
-  line-height: 1.35;
-}
-
-/* чтобы кнопка удаления не наследовала курсор/клик карточки */
-.item-actions button{
-  cursor: pointer;
-}
-
-/* =========================
-   Steppers (-/+)
-   ========================= */
-.stepper{
-  align-items: stretch;
-}
-
-.stepper .step-btn{
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 10px !important;
-}
-
-.stepper .form-control{
-  height: 38px;
-}
-.stepper .input-group-text{
-  height: 38px;
-  display: flex;
-  align-items: center;
-}
-
 
 /* =========================
    FAB menu + animations
@@ -583,95 +297,10 @@ input:focus, textarea:focus, select:focus {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* лёгкая анимация карточек */
-.item{
-  transition: transform .12s ease, background .2s ease, border-color .2s ease;
-}
-.item:hover{
-  transform: translateY(-1px);
-  border-color: rgba(255,255,255,.18);
-}
-.item:active{
-  transform: translateY(0);
-}
-
-/* анимация табов плиток */
-#tabs .nav-link{
-  transition: transform .12s ease, background .2s ease, border-color .2s ease;
-}
-#tabs .nav-link:active{
-  transform: translateY(1px);
-}
-
-/* ===== Sticky tabs: fix overlay/scroll issues ===== */
-.sticky-tabs{
-  position: sticky;
-  top: 140px;              /* подгонишь, но это почти точно для твоего хедера */
-  z-index: 50;
-  margin-top: 8px;
-  padding: 10px;
-  border-radius: 18px;
-
-  background: rgba(10, 14, 26, .92);   /* ВАЖНО: фон, чтобы не было "прозрачного налёта" */
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,.10);
-}
-
 /* чтобы контент начинался ниже табов и не прятался под ними */
 .tab-content{
   padding-top: 10px;
 }
-
-/* =========================
-   Tabs: stop sticky overlay + compact tiles
-   ========================= */
-
-/* 1) убираем липкость, чтобы не наезжало на контент */
-.sticky-tabs{
-  position: static !important;
-  top: auto !important;
-  z-index: auto !important;
-
-  padding: 8px !important;
-  margin-top: 8px !important;
-
-  background: transparent !important;
-  border: none !important;
-  backdrop-filter: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-
-/* 2) сетка табов компактнее */
-#tabs.nav{
-  gap: 8px !important;
-  grid-template-columns: repeat(3, 1fr) !important; /* 3 колонки как на твоих скринах */
-}
-
-/* 3) сами плитки меньше */
-#tabs .nav-link{
-  padding: 10px 8px !important;
-  min-height: 74px;
-  border-radius: 14px !important;
-
-  /* меньше "воздуха" */
-  gap: 5px !important;
-}
-
-#tabs .nav-link i{
-  font-size: 16px !important;
-}
-
-#tabs .nav-link span{
-  font-size: 12px !important;
-  line-height: 1.1;
-}
-
-/* 4) чтобы блок табов не казался огромной карточкой */
-#tabs{
-  margin-bottom: 10px;
-}
-
 /* =========================
    Header buttons compact
    ========================= */
@@ -699,250 +328,6 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
   padding: 8px 12px !important;
   border-radius: 14px !important;
   font-weight: 700;
-}
-
-/* =========================
-   RESOURCES STEPPERS: make ровно и красиво
-   ========================= */
-
-.stepper{
-  align-items: stretch !important;
-}
-
-.stepper .step-btn{
-  width: 42px !important;          /* одинаковая ширина */
-  min-width: 42px !important;
-  height: 40px !important;         /* одинаковая высота */
-  padding: 0 !important;
-
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-
-  border-radius: 12px !important;
-  border: 1px solid rgba(255,255,255,.14) !important;
-  background: rgba(255,255,255,.06) !important;
-  color: rgba(255,255,255,.92) !important;
-
-  font-weight: 900;
-  font-size: 18px;
-  line-height: 1;
-}
-
-.stepper .form-control{
-  height: 40px !important;         /* высота как у кнопок */
-  border-radius: 12px !important;
-  background: rgba(255,255,255,.07) !important;
-  border: 1px solid rgba(255,255,255,.14) !important;
-  color: rgba(255,255,255,.92) !important;
-}
-
-.stepper .input-group-text{
-  width: 22px !important;          /* фикс ширины для "/" */
-  min-width: 22px !important;
-  height: 40px !important;
-  padding: 0 !important;
-
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-
-  border-radius: 10px !important;
-  border: 1px solid rgba(255,255,255,.14) !important;
-  background: rgba(255,255,255,.06) !important;
-  color: rgba(255,255,255,.65) !important;
-}
-
-/* расстояния внутри input-group на мобильных */
-.stepper > *{
-  margin: 0 !important;
-}
-
-/* чуть мягче при нажатии */
-.stepper .step-btn:active{
-  transform: translateY(1px);
-}
-
-/* =========================
-   TAB TILES: compact + equal
-   ========================= */
-
-/* сетка — ровная, одинаковые ячейки */
-#tabs.nav{
-  grid-template-columns: repeat(3, 1fr) !important;
-  gap: 10px !important;
-}
-
-/* плитка — одинаковая высота, меньше воздуха */
-#tabs .nav-link{
-  min-height: 68px !important;
-  padding: 8px 8px !important;
-  border-radius: 14px !important;
-
-  display: flex !important;
-  flex-direction: row !important;      /* иконка слева, текст справа */
-  justify-content: center !important;
-  align-items: center !important;
-  gap: 8px !important;
-
-  text-align: left !important;
-}
-
-/* иконки меньше и ровнее */
-#tabs .nav-link i{
-  font-size: 16px !important;
-  line-height: 1 !important;
-  margin: 0 !important;
-}
-
-/* текст компактнее */
-#tabs .nav-link span{
-  font-size: 13px !important;
-  line-height: 1.05 !important;
-  font-weight: 800 !important;
-}
-
-/* активная плитка — без “раздувания” */
-#tabs .nav-link.active{
-  transform: none !important;
-}
-
-/* =========================
-   HEADER: compact
-   ========================= */
-
-.topbar{
-  padding-top: 10px !important;
-  padding-bottom: 10px !important;
-}
-
-.app-title{
-  font-size: 18px !important;
-  line-height: 1.1 !important;
-  margin-bottom: 2px !important;
-}
-
-#status.muted{
-  font-size: 12px !important;
-  line-height: 1.1 !important;
-}
-
-/* кнопки в шапке чуть меньше */
-header.topbar .btn{
-  padding: 6px 10px !important;
-  font-size: 13px !important;
-  border-radius: 12px !important;
-}
-
-/* =========================
-   TABS: one-row scroll (Android-like)
-   ========================= */
-
-/* контейнер табов превращаем в горизонтальную ленту */
-#tabs.nav{
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  gap: 10px !important;
-
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
-  -webkit-overflow-scrolling: touch;
-
-  padding: 8px 2px !important;
-  margin: 10px 0 12px !important;
-}
-
-/* прячем скроллбар */
-#tabs.nav::-webkit-scrollbar{ height: 0; }
-#tabs.nav{ scrollbar-width: none; }
-
-/* каждая вкладка — компактная “пилюля” */
-#tabs .nav-item{
-  flex: 0 0 auto;
-}
-
-#tabs .nav-link{
-  display: inline-flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-
-  padding: 10px 14px !important;
-  min-height: 44px !important;
-  border-radius: 999px !important;        /* pill */
-
-  border: 1px solid rgba(255,255,255,.12) !important;
-  background: rgba(255,255,255,.06) !important;
-  color: rgba(170,205,255,.95) !important;
-
-  font-weight: 800;
-  white-space: nowrap;                    /* важно */
-}
-
-/* активная */
-#tabs .nav-link.active{
-  background: rgba(80,145,255,.95) !important;
-  border-color: rgba(80,145,255,.95) !important;
-  color: #fff !important;
-}
-
-/* иконки */
-#tabs .nav-link i{
-  font-size: 16px !important;
-  line-height: 1 !important;
-}
-
-/* текст */
-#tabs .nav-link span{
-  font-size: 13px !important;
-  line-height: 1.05 !important;
-}
-
-/* =========================
-   HEADER compact (default)
-   ========================= */
-
-.topbar{
-  padding: 8px 12px !important;
-}
-
-.app-title{
-  font-size: 16px !important;
-  line-height: 1.1 !important;
-  margin-bottom: 2px !important;
-}
-
-#status.muted{
-  font-size: 11px !important;
-  line-height: 1.1 !important;
-}
-
-/* кнопки в хедере компактнее */
-header.topbar .btn{
-  padding: 5px 10px !important;
-  font-size: 12px !important;
-  border-radius: 12px !important;
-}
-
-/* селект персонажа + кнопка Новый */
-#characterSelect,
-#btnNew{
-  height: 36px !important;
-  font-size: 13px !important;
-}
-
-/* =========================
-   HEADER sticky
-   ========================= */
-
-.topbar{
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(10, 14, 26, .95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255,255,255,.08);
 }
 
 /* =========================
@@ -1043,67 +428,114 @@ header.topbar .btn{
   .stepper .step-btn{ width: 34px !important; min-width: 34px !important; }
 }
 
-/* если экран узкий — ресурсы в 1 колонку (самый надёжный вариант) */
-@media (max-width: 420px){
-  .resources-grid{
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
+/* =========================
+   TABS (Android-style, compact)
+   ========================= */
+
+#tabs.nav{
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px 0;
+}
+
+#tabs .nav-link{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 8px 14px;
+  border-radius: 14px;
+
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+
+  color: #9bb6ff;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+#tabs .nav-link i{
+  font-size: 14px;
+}
+
+#tabs .nav-link.active{
+  background: #4f8cff;
+  color: #fff;
+  border-color: transparent;
 }
 
 /* =========================
-   RESOURCES (Android style)
+   LIST ITEMS (final)
    ========================= */
 
-.resource {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.list{
+  display: grid;
+  gap: 10px;
 }
 
-.resource-main {
+.item{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+
+  transition: transform .12s ease, background .2s ease, border-color .2s ease;
+}
+
+.item:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,.18);
+}
+.item:active{
+  transform: translateY(0);
+}
+
+.item-head{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.item-title{
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.resource-main .form-control {
-  flex: 1;
-  text-align: center;
-  font-size: 16px;
-  font-variant-numeric: tabular-nums;
-}
-
-.resource-max .form-control {
+  gap: 8px;
+  font-weight: 900;
   font-size: 14px;
-  opacity: 0.9;
+  color: rgba(255,255,255,.95);
 }
 
-/* кнопки - / + */
-.step-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  padding: 0;
-  font-size: 18px;
-}
-
-/* +lvl строка */
-.hint {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.item-sub{
+  margin-top: 4px;
+  color: rgba(255,255,255,.66);
   font-size: 12px;
+  line-height: 1.35;
+  white-space: pre-wrap;
 }
 
-.hint input.mini {
-  width: 60px;
-  text-align: center;
+.item-caret{
+  opacity: .65;
+  margin-left: auto;
 }
 
-/* на маленьких экранах — ресурсы в колонку */
-@media (max-width: 420px) {
-  .col-4 {
-    width: 100%;
-  }
+.item-details{
+  margin-top: 10px;
+  color: rgba(255,255,255,.70);
+  font-size: 12px;
+  white-space: pre-wrap;
+  line-height: 1.35;
+}
+
+.item-actions{
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.item-actions button{
+  cursor: pointer;
 }

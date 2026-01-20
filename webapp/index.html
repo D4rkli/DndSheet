@@ -99,10 +99,10 @@
 
           <hr class="hr-soft" />
 
-          <div class="row g-2">
+          <div class="row g-2 resources-grid">
             <div class="col-12"><div class="section-title">Ресурсы</div></div>
 
-            <div class="col-4">
+            <div class="col-12 col-md-4">
               <label class="form-label">HP</label>
               <div class="resource">
                 <div class="resource-main">
@@ -117,13 +117,13 @@
               </div>
 
 
-            <div class="col-4">
+            <div class="col-12 col-md-4">
               <label class="form-label">Мана</label>
               <div class="resource">
                 <div class="resource-main">
-                  <button class="btn step-btn" type="button" data-target="f_hp" data-step="-1">−</button>
+                  <button class="btn step-btn" data-target="f_mana" data-step="-1">−</button>
                   <input id="f_mana" type="number" class="form-control text-center" />
-                  <button class="btn step-btn" type="button" data-target="f_hp" data-step="1">+</button>
+                  <button class="btn step-btn" data-target="f_mana" data-step="1">+</button>
                 </div>
 
                 <div class="resource-max">
@@ -131,13 +131,13 @@
                 </div>
               </div>
 
-            <div class="col-4">
+            <div class="col-12 col-md-4">
               <label class="form-label">Энергия</label>
               <div class="resource">
                 <div class="resource-main">
-                  <button class="btn step-btn" type="button" data-target="f_hp" data-step="-1">−</button>
+                  <button class="btn step-btn" data-target="f_energy" data-step="-1">−</button>
                   <input id="f_energy" type="number" class="form-control text-center" />
-                  <button class="btn step-btn" type="button" data-target="f_hp" data-step="1">+</button>
+                  <button class="btn step-btn" data-target="f_energy" data-step="1">+</button>
                 </div>
 
                 <div class="resource-max">
@@ -160,7 +160,7 @@
           </div>
         </div>
       </div>
-    </section>
+      </section>
 
     <!-- STATS -->
     <section class="tab d-none" id="tab-stats">
