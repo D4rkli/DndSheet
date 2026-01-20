@@ -1080,3 +1080,26 @@ document.addEventListener("click", (e) => {
 document.addEventListener("DOMContentLoaded", () => {
   wireFabMenu();
 });
+
+// =========================
+// Collapsing header on scroll
+// =========================
+(function () {
+  const header = document.querySelector(".topbar");
+  if (!header) return;
+
+  let lastScroll = 0;
+  const threshold = 40; // через сколько px схлопывать
+
+  window.addEventListener("scroll", () => {
+    const current = window.scrollY;
+
+    if (current > threshold && current > lastScroll) {
+      header.classList.add("is-collapsed");
+    } else if (current < threshold) {
+      header.classList.remove("is-collapsed");
+    }
+
+    lastScroll = current;
+  }, { passive: true });
+})();

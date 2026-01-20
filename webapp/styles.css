@@ -898,3 +898,109 @@ header.topbar .btn{
   font-size: 13px !important;
   line-height: 1.05 !important;
 }
+
+/* =========================
+   HEADER compact (default)
+   ========================= */
+
+.topbar{
+  padding: 8px 12px !important;
+}
+
+.app-title{
+  font-size: 16px !important;
+  line-height: 1.1 !important;
+  margin-bottom: 2px !important;
+}
+
+#status.muted{
+  font-size: 11px !important;
+  line-height: 1.1 !important;
+}
+
+/* кнопки в хедере компактнее */
+header.topbar .btn{
+  padding: 5px 10px !important;
+  font-size: 12px !important;
+  border-radius: 12px !important;
+}
+
+/* селект персонажа + кнопка Новый */
+#characterSelect,
+#btnNew{
+  height: 36px !important;
+  font-size: 13px !important;
+}
+
+/* =========================
+   HEADER sticky
+   ========================= */
+
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10, 14, 26, .95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+/* =========================
+   COLLAPSING HEADER
+   ========================= */
+
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 120;
+
+  background: rgba(10, 14, 26, .96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+
+  transition:
+    padding .2s ease,
+    background .2s ease;
+}
+
+/* состояние "сжат" */
+.topbar.is-collapsed{
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+/* заголовок */
+.app-title{
+  transition:
+    font-size .2s ease,
+    opacity .2s ease,
+    transform .2s ease;
+}
+
+/* подпись под заголовком */
+#status.muted{
+  transition:
+    opacity .2s ease,
+    transform .2s ease,
+    height .2s ease,
+    margin .2s ease;
+}
+
+/* при сжатии */
+.topbar.is-collapsed .app-title{
+  font-size: 15px !important;
+}
+
+.topbar.is-collapsed #status.muted{
+  opacity: 0;
+  height: 0;
+  margin: 0;
+  transform: translateY(-4px);
+  overflow: hidden;
+}
+
+/* кнопки в шапке чуть компактнее при сжатии */
+.topbar.is-collapsed .btn{
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+}
