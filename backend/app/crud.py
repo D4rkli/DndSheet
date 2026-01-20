@@ -10,6 +10,7 @@ from .models import (
     Ability,
     State,
     Equipment,
+    SheetTemplate,
 )
 
 # =========================
