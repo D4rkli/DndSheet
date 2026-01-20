@@ -17,6 +17,10 @@ async def on_startup():
 def root():
     return RedirectResponse(url="/webapp/")
 
+@app.get("/")
+def health():
+    return {"status": "ok"}
+
 app.include_router(router, prefix="/api")
 
 # Раздаём webapp (папка рядом с backend/)
