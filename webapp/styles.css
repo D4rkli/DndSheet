@@ -255,3 +255,66 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
 
+/* ===============================
+   FIX: labels & modals readability
+   =============================== */
+
+/* ===== МОДАЛКИ ===== */
+.modal-content {
+  background: #0f1423 !important; /* тёмный фон */
+  color: rgba(255,255,255,.92) !important;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+/* Заголовки модалок */
+.modal-title {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+/* ЛЕЙБЛЫ (Название, Описание, Дальность и т.д.) */
+.modal .form-label {
+  color: rgba(255,255,255,.80) !important;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* Поля ввода */
+.modal .form-control,
+.modal textarea,
+.modal select {
+  background: rgba(255,255,255,.08) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,.18) !important;
+  border-radius: 12px;
+}
+
+/* Плейсхолдер */
+.modal .form-control::placeholder,
+.modal textarea::placeholder {
+  color: rgba(255,255,255,.45) !important;
+}
+
+/* Фокус */
+.modal .form-control:focus,
+.modal textarea:focus,
+.modal select:focus {
+  border-color: #5b8cff !important;
+  box-shadow: 0 0 0 3px rgba(91,140,255,.25) !important;
+}
+
+/* Подсказки */
+.modal .hint,
+.modal .form-text {
+  color: rgba(255,255,255,.55) !important;
+}
+
+/* Крестик */
+.modal-header .btn-close {
+  filter: invert(1);
+  opacity: .85;
+}
+.modal-header .btn-close:hover {
+  opacity: 1;
+}
