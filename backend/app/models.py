@@ -165,15 +165,3 @@ class Equipment(Base):
 
     character: Mapped["Character"] = relationship(back_populates="equipment")
 
-class SheetTemplate(Base):
-    __tablename__ = "sheet_templates"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
-
-    name: Mapped[str] = mapped_column(String(120))
-    # JSON string: tabs + custom_sections definitions
-    config_json: Mapped[str] = mapped_column(Text, default="{}")
-
-    owner: Mapped["User"] = relationship(back_populates="templates")
-    characters: Mapped[list["Character"]] = relationship(back_populates="template")
