@@ -1016,7 +1016,7 @@ async function loadSheet(showStatus = true) {
     "spellsList",
     state.sheet.spells.map((s) => ({
       ...s,
-      sub: [s.range, s.duration, s.cost].filter(Boolean).join(" · ") + (s.description ? `\n${s.description}` : ""),
+      prewiew: [s.range, s.duration, s.cost].filter(Boolean).join(" · ") + (s.description ? `\n${s.description}` : ""),
     })),
     async (s) => {
       await api(`/characters/${id}/spells/${s.id}`, { method: "DELETE" });
@@ -1029,20 +1029,7 @@ async function loadSheet(showStatus = true) {
     "statesList",
     state.sheet.states.map((s) => ({
       ...s,
-      sub: `${s.is_active ? "Активно" : "Неактивно"}${s.duration ? ` · ${s.duration}` : ""}${s.hp_cost ? ` · HP ${s.hp_cost}` : ""}`,
-    })),
-    async (s) => {
-      await api(`/characters/${id}/states/${s.id}`, { method: "DELETE" });
-      await loadSheet(false);
-    },
-    { icon: "bi-activity", clamp: true }
-  );
-
-  renderList(
-    "statesList",
-    state.sheet.states.map((s) => ({
-      ...s,
-      sub: `${s.is_active ? "Активно" : "Неактивно"}${s.duration ? ` · ${s.duration}` : ""}${s.hp_cost ? ` · HP ${s.hp_cost}` : ""}`,
+      prewiew: `${s.is_active ? "Активно" : "Неактивно"}${s.duration ? ` · ${s.duration}` : ""}${s.hp_cost ? ` · HP ${s.hp_cost}` : ""}`,
     })),
     async (s) => {
       await api(`/characters/${id}/states/${s.id}`, { method: "DELETE" });
