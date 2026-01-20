@@ -507,3 +507,91 @@ input:focus, textarea:focus, select:focus {
   background: rgba(255,255,255,.06) !important;
   color: rgba(255,255,255,.65) !important;
 }
+
+/* =========================
+   FAB menu + animations
+   ========================= */
+
+.fab{
+  transition: transform .12s ease, box-shadow .2s ease, filter .2s ease;
+  will-change: transform;
+}
+.fab:hover{ filter: brightness(1.05); }
+.fab:active{ transform: translateY(1px) scale(.98); }
+
+/* контейнер меню */
+.fab-menu{
+  position: fixed;
+  right: 18px;
+  bottom: 86px;
+  z-index: 1000;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(15, 20, 35, .92);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 24px 70px rgba(0,0,0,.45);
+
+  transform-origin: bottom right;
+  animation: fabMenuIn .14s ease-out;
+}
+
+/* элементы меню */
+.fab-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: 220px;
+  padding: 10px 12px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+  text-align: left;
+  font-weight: 700;
+}
+
+.fab-item i{
+  font-size: 18px;
+  color: rgba(170,205,255,.95);
+}
+
+.fab-item:hover{
+  background: rgba(255,255,255,.10);
+}
+
+.fab-item:active{
+  transform: translateY(1px);
+}
+
+/* появление меню */
+@keyframes fabMenuIn{
+  from { opacity: 0; transform: translateY(6px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* лёгкая анимация карточек */
+.item{
+  transition: transform .12s ease, background .2s ease, border-color .2s ease;
+}
+.item:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,.18);
+}
+.item:active{
+  transform: translateY(0);
+}
+
+/* анимация табов плиток */
+#tabs .nav-link{
+  transition: transform .12s ease, background .2s ease, border-color .2s ease;
+}
+#tabs .nav-link:active{
+  transform: translateY(1px);
+}

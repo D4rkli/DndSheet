@@ -683,6 +683,115 @@ function updateFab() {
   fab.onclick = cfg.onClick;
 }
 
+function showFabMenu(show) {
+  const m = document.getElementById("fabMenu");
+  if (!m) return;
+  m.classList.toggle("d-none", !show);
+}
+
+function toggleFabMenu() {
+  const m = document.getElementById("fabMenu");
+  if (!m) return;
+  m.classList.toggle("d-none");
+}
+
+function wireFabMenu() {
+  const fab = document.getElementById("fabAdd");
+  const menu = document.getElementById("fabMenu");
+  if (!fab || !menu) return;
+
+  // клики по пунктам меню
+  menu.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    showFabMenu(false);
+
+    // вызываем то, что у тебя точно есть:
+    if (action === "add-spell") return openSpellModal("spell");
+    if (action === "add-ability") return openSpellModal("ability");
+
+    // а вот это попробуем дернуть через существующие кнопки (если есть)
+    if (action === "add-item") return document.getElementById("btnAddItem")?.click();
+    if (action === "add-state") return document.getElementById("btnAddState")?.click();
+  });
+
+  // обычный тап по FAB: действие по вкладке (как у тебя уже было)
+  // долгий тап/ПК-правый клик: открыть меню
+
+  let pressTimer = null;
+  let longPressed = false;
+
+  const startPress = () => {
+    longPressed = false;
+    pressTimer = window.setTimeout(() => {
+      longPressed = true;
+      showFabMenu(true);
+    }, 420);
+  };
+
+  const cancelPress = () => {
+    if (pressTimer) window.clearTimeout(pressTimer);
+    pressTimer = null;
+  };
+
+  // touch
+  fab.addEventListener("touchstart", (e) => {
+    startPress();
+  }, { passive: true });
+
+  fab.addEventListener("touchend", (e) => {
+    cancelPress();
+  });
+
+  // mouse
+  fab.addEventListener("mousedown", (e) => {
+    if (e.button === 2) return; // right click handled below
+    startPress();
+  });
+  fab.addEventListener("mouseup", (e) => cancelPress());
+  fab.addEventListener("mouseleave", (e) => cancelPress());
+
+  // правый клик как альтернатива long-press на ПК
+  fab.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    showFabMenu(true);
+  });
+
+  // клик по FAB
+  fab.addEventListener("click", (e) => {
+    // если был long press — не выполняем действие вкладки
+    if (longPressed) return;
+
+    // если меню открыто — закрыть
+    if (!menu.classList.contains("d-none")) {
+      showFabMenu(false);
+      return;
+    }
+
+    // иначе — обычное действие по активной вкладке
+    const tab = getActiveTabKey();
+    if (tab === "spells") return openSpellModal("spell");
+    if (tab === "abilities") return openSpellModal("ability");
+    if (tab === "inv") return document.getElementById("btnAddItem")?.click();
+    if (tab === "states") return document.getElementById("btnAddState")?.click();
+  });
+
+  // клик вне меню закрывает его
+  document.addEventListener("click", (e) => {
+    if (menu.classList.contains("d-none")) return;
+    const inMenu = e.target.closest("#fabMenu");
+    const inFab = e.target.closest("#fabAdd");
+    if (!inMenu && !inFab) showFabMenu(false);
+  });
+
+  // ESC закрывает меню
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") showFabMenu(false);
+  });
+}
+
 function readCustomFields() {
   const root = el("customRoot");
   const values = {};
@@ -979,4 +1088,8 @@ document.addEventListener("click", (e) => {
 
   // чтобы UI и логика реагировали
   input.dispatchEvent(new Event("input", { bubbles: true }));
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  wireFabMenu();
 });
