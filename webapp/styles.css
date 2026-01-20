@@ -190,3 +190,68 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* === READABILITY PATCH === */
+
+/* базовый цвет текста */
+:root{
+  --txt: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.68);
+  --hint: rgba(255,255,255,.55);
+
+  --card: rgba(15, 20, 35, .70);
+  --stroke: rgba(255,255,255,.12);
+}
+
+/* карточки/блоки */
+.card, .panel, .box, .section, .sheet, .wrap {
+  color: var(--txt);
+}
+
+/* заголовки секций типа "РЕСУРСЫ" */
+h2, h3, .section-title {
+  color: var(--txt) !important;
+  letter-spacing: .06em;
+}
+
+/* ЛЕЙБЛЫ полей: "Имя", "Раса", ... */
+label, .label, .field-label {
+  color: var(--muted) !important;
+  font-weight: 600;
+  text-shadow: 0 1px 0 rgba(0,0,0,.35);
+}
+
+/* плейсхолдеры */
+input::placeholder, textarea::placeholder {
+  color: rgba(255,255,255,.45) !important;
+}
+
+/* инпуты: чуть темнее чем фон + нормальная рамка */
+input, textarea, select {
+  background: rgba(255,255,255,.06) !important;
+  color: rgba(255,255,255,.93) !important;
+  border: 1px solid var(--stroke) !important;
+  border-radius: 12px;
+  outline: none;
+}
+
+/* фокус — чтобы было видно куда ты кликаешь */
+input:focus, textarea:focus, select:focus {
+  border-color: rgba(120,170,255,.55) !important;
+  box-shadow: 0 0 0 3px rgba(120,170,255,.18) !important;
+}
+
+/* табы/кнопки — чуть ярче */
+.tab, .tabs button, .tab-btn {
+  color: rgba(170,205,255,.95) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  background: rgba(0,0,0,.18) !important;
+}
+
+.tab.active, .tabs button.active, .tab-btn.active {
+  background: rgba(80,145,255,.95) !important;
+  color: rgba(255,255,255,.98) !important;
+  border-color: rgba(80,145,255,.95) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
