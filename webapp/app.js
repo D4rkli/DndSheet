@@ -166,7 +166,22 @@ function setStatus(text) {
 }
 
 function currentChId() {
-  return state.chId;
+  const v = document.getElementById("characterSelect")?.value;
+
+  // пусто/нет/“null”
+  if (!v || v === "null" || v === "undefined") return null;
+
+  const id = Number(v);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+
+function requireCharacterId() {
+  const id = currentChId();
+  if (!id) {
+    alert("Сначала выбери персонажа в списке или создай нового 🙂");
+    return null;
+  }
+  return id;
 }
 
 function intOrNull(v) {
@@ -660,6 +675,13 @@ function getActiveTabKey() {
 }
 
 function updateFab() {
+  const id = currentChId();
+    if (!id) {
+      // если персонажа нет — FAB скрываем
+      const fab = document.getElementById("fabAdd");
+      if (fab) fab.classList.add("d-none");
+      return;
+    }
   const fab = el("fabAdd");
   const tab = getActiveTabKey();
 
@@ -834,7 +856,9 @@ el("btnAddItem").addEventListener("click", () => {
       <textarea id="m_stats" class="form-control" rows="2" placeholder="Напр. +2 AC, 1d6"></textarea>
     `,
     async () => {
-      const id = currentChId();
+      const id = requireCharacterId();
+      if (!id) return;
+
       await api(`/characters/${id}/items`, {
         method: "POST",
         body: JSON.stringify({
@@ -875,7 +899,9 @@ function openSpellModal(kind) {
       <input id="m_cost" class="form-control" />
     `,
     async () => {
-      const id = currentChId();
+      const id = requireCharacterId();
+      if (!id) return;
+
       const payload = {
         name: document.getElementById("m_name").value,
         description: document.getElementById("m_desc").value,
@@ -915,7 +941,8 @@ document.getElementById("btnAddState").addEventListener("click", () => {
       </div>
     `,
     async () => {
-      const id = currentChId();
+      const id = requireCharacterId();
+      if (!id) return;
       const payload = {
         name: document.getElementById("m_name").value,
         hp_cost: intOrNull(document.getElementById("m_hp_cost").value) ?? 0,
