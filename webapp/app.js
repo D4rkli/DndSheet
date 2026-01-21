@@ -1084,9 +1084,7 @@ async function boot() {
 
 boot();
 
-// =========================
-// Steppers (- / +) handler
-// =========================
+// +/- для ресурсов (HP/Mana/Energy) — кнопки с data-target/data-step
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("button.step-btn");
   if (!btn) return;
@@ -1097,15 +1095,11 @@ document.addEventListener("click", (e) => {
   if (!input) return;
 
   const current = parseInt(input.value || "0", 10);
-  const next = Math.max(0, current + step);
-  input.value = String(next);
+  const next = current + step;
+  input.value = String(next < 0 ? 0 : next);
 
-  // чтобы UI и логика реагировали
+  // чтобы UI/валидации среагировали
   input.dispatchEvent(new Event("input", { bubbles: true }));
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  wireFabMenu();
 });
 
 // =========================

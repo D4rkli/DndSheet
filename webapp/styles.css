@@ -609,3 +609,54 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
   border: 1px solid rgba(255,255,255,.10) !important;
   color: rgba(255,255,255,.8) !important;
 }
+
+/* ===== RESOURCES STEPPER (HP/Mana/Energy) ===== */
+.resources-grid .form-label{
+  margin-bottom: 6px;
+}
+
+.stepper{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.stepper .num{
+  flex: 1 1 0;
+  min-width: 0;           /* ВАЖНО: чтобы числа не вылазили */
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.step-sep{
+  width: 14px;
+  min-width: 14px;
+  text-align: center;
+  opacity: .7;
+}
+
+.step-btn{
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  border-radius: 12px !important;
+}
+
+/* На очень узких экранах чуть ужмём */
+@media (max-width: 380px){
+  .step-btn{
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 38px !important;
+  }
+  .stepper{
+    gap: 6px;
+  }
+}

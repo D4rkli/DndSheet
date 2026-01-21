@@ -104,46 +104,60 @@
 
             <div class="col-12 col-md-4">
               <label class="form-label">HP</label>
-              <div class="resource">
-                <div class="resource-main">
-                  <button class="btn step-btn" type="button" data-target="f_hp" data-step="-1">−</button>
-                  <input id="f_hp" type="number" class="form-control text-center" />
-                  <button class="btn step-btn" type="button" data-target="f_hp" data-step="1">+</button>
-                </div>
 
-                <div class="resource-max">
-                  <input id="f_hp_max" type="number" class="form-control" placeholder="Макс" />
-                </div>
+              <div class="stepper">
+                <button class="btn btn-outline-light step-btn" type="button" data-target="f_hp" data-step="-1">−</button>
+
+                <input id="f_hp" type="number" class="form-control form-control-sm num" inputmode="numeric" />
+
+                <span class="step-sep">/</span>
+
+                <input id="f_hp_max" type="number" class="form-control form-control-sm num" inputmode="numeric" />
+
+                <button class="btn btn-outline-light step-btn" type="button" data-target="f_hp" data-step="+1">+</button>
               </div>
 
+              <div class="hint">+lvl <input id="f_hp_per_level" type="number" class="mini" inputmode="numeric" /></div>
+            </div>
 
+            <!-- Мана -->
             <div class="col-12 col-md-4">
               <label class="form-label">Мана</label>
-              <div class="resource">
-                <div class="resource-main">
-                  <button class="btn step-btn" data-target="f_mana" data-step="-1">−</button>
-                  <input id="f_mana" type="number" class="form-control text-center" />
-                  <button class="btn step-btn" data-target="f_mana" data-step="1">+</button>
-                </div>
 
-                <div class="resource-max">
-                  <input id="f_mana_max" type="number" class="form-control" placeholder="Макс" />
-                </div>
+              <div class="stepper">
+                <button class="btn btn-outline-light step-btn" type="button" data-target="f_mana" data-step="-1">−</button>
+
+                <input id="f_mana" type="number" class="form-control form-control-sm num" inputmode="numeric" />
+
+                <span class="step-sep">/</span>
+
+                <input id="f_mana_max" type="number" class="form-control form-control-sm num" inputmode="numeric" />
+
+                <button class="btn btn-outline-light step-btn" type="button" data-target="f_mana" data-step="+1">+</button>
               </div>
 
+              <div class="hint">+lvl <input id="f_mana_per_level" type="number" class="mini" inputmode="numeric" /></div>
+            </div>
+
+            <!-- Энергия -->
             <div class="col-12 col-md-4">
               <label class="form-label">Энергия</label>
-              <div class="resource">
-                <div class="resource-main">
-                  <button class="btn step-btn" data-target="f_energy" data-step="-1">−</button>
-                  <input id="f_energy" type="number" class="form-control text-center" />
-                  <button class="btn step-btn" data-target="f_energy" data-step="1">+</button>
-                </div>
 
-                <div class="resource-max">
-                  <input id="f_energy_max" type="number" class="form-control" placeholder="Макс" />
-                </div>
+              <div class="stepper">
+                <button class="btn btn-outline-light step-btn" type="button" data-target="f_energy" data-step="-1">−</button>
+
+                <input id="f_energy" type="number" class="form-control form-control-sm num" inputmode="numeric" />
+
+                <span class="step-sep">/</span>
+
+                <input id="f_energy_max" type="number" class="form-control form-control-sm num" inputmode="numeric" />
+
+                <button class="btn btn-outline-light step-btn" type="button" data-target="f_energy" data-step="+1">+</button>
               </div>
+
+              <div class="hint">+lvl <input id="f_energy_per_level" type="number" class="mini" inputmode="numeric" /></div>
+            </div>
+          </div>
 
           <div class="d-grid mt-3">
             <button id="btnSaveMain" class="btn btn-primary">Сохранить</button>
