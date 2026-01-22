@@ -1195,7 +1195,7 @@ async function loadSheet(showStatus = true) {
     "statesList",
     state.sheet.states.map((s) => ({
       ...s,
-      prewiew: `${s.is_active ? "Активно" : "Неактивно"}${s.duration ? ` · ${s.duration}` : ""}${s.hp_cost ? ` · HP ${s.hp_cost}` : ""}`,
+      preview: `${s.is_active ? "Активно" : "Неактивно"}${s.duration ? ` · ${s.duration}` : ""}${s.hp_cost ? ` · HP ${s.hp_cost}` : ""}`,
     })),
     async (s) => {
       await api(`/characters/${id}/states/${s.id}`, { method: "DELETE" });
