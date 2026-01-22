@@ -40,7 +40,7 @@ const state = {
   activeTemplateId: null,
 };
 
-const DEFAULT_TABS = ["main", "stats", "inv", "spells", "abilities", "states", "equip"];
+const DEFAULT_TABS = ["main", "stats", "inv", "spells", "abilities","passive-abilities", "states", "equip"];
 
 function loadActiveTemplateId() {
   const raw = localStorage.getItem("activeTemplateId");
@@ -687,10 +687,35 @@ function updateFab() {
 
   // показываем FAB только там, где есть "добавить"
   const map = {
-    inv: { text: "Предмет", icon: "bi-backpack", onClick: () => el("btnAddItem")?.click() },
-    spells: { text: "Заклинание", icon: "bi-stars", onClick: () => openSpellModal("spell") },
-    abilities: { text: "Умение", icon: "bi-lightning-charge", onClick: () => openSpellModal("ability") },
-    states: { text: "Состояние", icon: "bi-activity", onClick: () => el("btnAddState")?.click() },
+    inv: {
+      text: "Предмет",
+      icon: "bi-backpack",
+      onClick: () => el("btnAddItem")?.click(),
+    },
+
+    spells: {
+      text: "Заклинание",
+      icon: "bi-stars",
+      onClick: () => openSpellModal("spell"),
+    },
+
+    "passive-abilities": {
+      text: "Пассивное умение",
+      icon: "bi-shield-check",
+      onClick: () => openSpellModal("passive"),
+    },
+
+    abilities: {
+      text: "Способность",
+      icon: "bi-lightning-fill",
+      onClick: () => openSpellModal("ability"),
+    },
+
+    states: {
+      text: "Состояние",
+      icon: "bi-activity",
+      onClick: () => el("btnAddState")?.click(),
+    },
   };
 
   const cfg = map[tab];
@@ -875,7 +900,8 @@ el("btnAddItem").addEventListener("click", () => {
 function openSpellModal(kind) {
   const labels = {
     spell: "Заклинание",
-    ability: "Умение",
+    ability: "Способность",
+    passive: "Пассивное умение",
   };
   const title = `Добавить ${labels[kind]}`;
   openModal(
