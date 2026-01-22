@@ -190,6 +190,103 @@ function intOrNull(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+function parseCost(costStr, character) {
+  // character: { level, hp, hp_max, mana, mana_max, energy, energy_max }
+  const level = Number(character?.level || 1);
+
+  const norm = String(costStr || "")
+    .toLowerCase()
+    .replaceAll("мана", "mana")
+    .replaceAll("хп", "hp")
+    .replaceAll("здоровье", "hp")
+    .replaceAll("энергия", "energy")
+    .replaceAll("энер", "energy")
+    .replaceAll(" ", "");
+
+  if (!norm) return { hp: 0, mana: 0, energy: 0 };
+
+  const result = { hp: 0, mana: 0, energy: 0 };
+
+  // делим по запятым/точкам с запятой/переносам
+  const parts = norm.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean);
+
+  for (const p of parts) {
+    // ожидаем что-то типа:
+    // mana5, mana:5, mana=5, hp10%, energy1/2, mana1x, energy2x
+    const m = p.match(/^(hp|mana|energy)([:=+-])?(.+)$/);
+    if (!m) continue;
+
+    const res = m[1]; // hp|mana|energy
+    let expr = m[3];  // всё после ресурса
+
+    // знак (если юзер пишет hp-5)
+    let sign = 1;
+    if (m[2] === "-") sign = -1;
+
+    // база для % и дробей: от MAX (это самое логичное)
+    const maxBase = Number(character?.[`${res}_max`] ?? 0) || 0;
+
+    let value = 0;
+
+    // 10%
+    const perc = expr.match(/^(\d+(?:\.\d+)?)%$/);
+    if (perc) {
+      const k = Number(perc[1]) / 100;
+      value = Math.round(maxBase * k);
+    }
+    // 1/2, 1/3
+    else if (expr.match(/^\d+\/\d+$/)) {
+      const [a, b] = expr.split("/").map(Number);
+      if (b !== 0) value = Math.round(maxBase * (a / b));
+    }
+    // 1x, 2x, 0.5x
+    else if (expr.match(/^\d+(?:\.\d+)?x$/)) {
+      const k = Number(expr.replace("x", ""));
+      value = Math.round(k * level);
+    }
+    // просто число
+    else if (expr.match(/^\d+(?:\.\d+)?$/)) {
+      value = Math.round(Number(expr));
+    }
+    // если написали типа "x" (тоже уровень)
+    else if (expr === "x") {
+      value = level;
+    } else {
+      // не распарсили — игнор
+      continue;
+    }
+
+    result[res] += sign * value;
+  }
+
+  return result;
+}
+
+async function applyCostToCharacter(costStr) {
+  const id = requireCharacterId();
+  if (!id) return;
+
+  const ch = state.sheet?.character;
+  if (!ch) return;
+
+  const delta = parseCost(costStr, ch);
+  if (!delta.hp && !delta.mana && !delta.energy) {
+    return alert("Не смогла понять стоимость. Пример: mana 5, energy 1, hp 10% или mana 1/2");
+  }
+
+  // списываем: current - cost
+  const next = {
+    hp: Math.max(0, (Number(ch.hp) || 0) - (Number(delta.hp) || 0)),
+    mana: Math.max(0, (Number(ch.mana) || 0) - (Number(delta.mana) || 0)),
+    energy: Math.max(0, (Number(ch.energy) || 0) - (Number(delta.energy) || 0)),
+  };
+
+  // можно добавить проверку "хватает ли ресурса" (я пока просто кламплю до 0)
+  await api(`/characters/${id}`, { method: "PATCH", body: JSON.stringify(next) });
+  await loadSheet(false);
+  setStatus("Использовано ✅");
+}
+
 function fillInput(id, value) {
   const node = el(id);
   if (!node) return;
@@ -263,6 +360,11 @@ function renderList(containerId, rows, onDelete, opts = {}) {
 
         <div class="d-flex align-items-center gap-2 item-actions">
           <i class="bi bi-chevron-down item-caret"></i>
+           ${opts.onUse ? `
+            <button class="btn btn-sm btn-outline-light" data-act="use" title="Использовать">
+              <i class="bi bi-play-fill"></i>
+            </button>
+          ` : ``}
           <button class="btn btn-sm btn-outline-light" data-act="delete" title="Удалить">
             <i class="bi bi-trash3"></i>
           </button>
@@ -271,6 +373,14 @@ function renderList(containerId, rows, onDelete, opts = {}) {
 
       <div class="item-details d-none">${details}</div>
     `;
+
+    const useBtn = card.querySelector("button[data-act='use']");
+    if (useBtn) {
+      useBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        await opts.onUse(r);
+      });
+    }
 
     // раскрытие по тапу по карточке (кроме кнопки delete)
     card.addEventListener("click", (e) => {
@@ -1069,13 +1179,16 @@ async function loadSheet(showStatus = true) {
     "spellsList",
     state.sheet.spells.map((s) => ({
       ...s,
-      prewiew: [s.range, s.duration, s.cost].filter(Boolean).join(" · ") + (s.description ? `\n${s.description}` : ""),
+      preview: [s.range, s.duration, s.cost].filter(Boolean).join(" · "),
     })),
     async (s) => {
       await api(`/characters/${id}/spells/${s.id}`, { method: "DELETE" });
       await loadSheet(false);
     },
-    { icon: "bi-stars", clamp: true }
+    {
+      icon: "bi-stars",
+      onUse: async (s) => applyCostToCharacter(s.cost),
+    }
   );
 
   renderList(
@@ -1089,6 +1202,22 @@ async function loadSheet(showStatus = true) {
       await loadSheet(false);
     },
     { icon: "bi-activity", clamp: true }
+  );
+
+  renderList(
+    "abilitiesList",
+    state.sheet.abilities.map((a) => ({
+      ...a,
+      preview: [a.range, a.duration, a.cost].filter(Boolean).join(" · "),
+    })),
+    async (a) => {
+      await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
+      await loadSheet(false);
+    },
+    {
+      icon: "bi-lightning-fill",
+      onUse: async (a) => applyCostToCharacter(a.cost),
+    }
   );
 
   setStatus("Ок ✅");
