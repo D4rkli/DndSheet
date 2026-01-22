@@ -191,75 +191,105 @@ function intOrNull(v) {
 }
 
 function parseCost(costStr, character) {
-  // character: { level, hp, hp_max, mana, mana_max, energy, energy_max }
   const level = Number(character?.level || 1);
 
-  const norm = String(costStr || "")
+  // нормализуем (оставим пробелы только как разделители позже)
+  const raw = String(costStr || "")
     .toLowerCase()
     .replaceAll("мана", "mana")
     .replaceAll("хп", "hp")
     .replaceAll("здоровье", "hp")
     .replaceAll("энергия", "energy")
     .replaceAll("энер", "energy")
-    .replaceAll(" ", "");
-
-  if (!norm) return { hp: 0, mana: 0, energy: 0 };
+    .trim();
 
   const result = { hp: 0, mana: 0, energy: 0 };
+  if (!raw) return result;
 
-  // делим по запятым/точкам с запятой/переносам
-  const parts = norm.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean);
+  // режем по запятым/; / переносам
+  const parts = raw.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
 
-  for (const p of parts) {
-    // ожидаем что-то типа:
-    // mana5, mana:5, mana=5, hp10%, energy1/2, mana1x, energy2x
-    const m = p.match(/^(hp|mana|energy)([:=+-])?(.+)$/);
+  for (const part of parts) {
+    // поддержка форматов:
+    // "hp:3x-5", "mana=10%", "energy 1/2", "hp-5", "mana5"
+    const m = part.match(/^(hp|mana|energy)\s*([:=])?\s*(.+)$/);
     if (!m) continue;
 
-    const res = m[1]; // hp|mana|energy
-    let expr = m[3];  // всё после ресурса
+    const res = m[1];
+    const expr = m[3];
 
-    // знак (если юзер пишет hp-5)
-    let sign = 1;
-    if (m[2] === "-") sign = -1;
-
-    // база для % и дробей: от MAX (это самое логичное)
-    const maxBase = Number(character?.[`${res}_max`] ?? 0) || 0;
-
-    let value = 0;
-
-    // 10%
-    const perc = expr.match(/^(\d+(?:\.\d+)?)%$/);
-    if (perc) {
-      const k = Number(perc[1]) / 100;
-      value = Math.round(maxBase * k);
-    }
-    // 1/2, 1/3
-    else if (expr.match(/^\d+\/\d+$/)) {
-      const [a, b] = expr.split("/").map(Number);
-      if (b !== 0) value = Math.round(maxBase * (a / b));
-    }
-    // 1x, 2x, 0.5x
-    else if (expr.match(/^\d+(?:\.\d+)?x$/)) {
-      const k = Number(expr.replace("x", ""));
-      value = Math.round(k * level);
-    }
-    // просто число
-    else if (expr.match(/^\d+(?:\.\d+)?$/)) {
-      value = Math.round(Number(expr));
-    }
-    // если написали типа "x" (тоже уровень)
-    else if (expr === "x") {
-      value = level;
-    } else {
-      // не распарсили — игнор
-      continue;
-    }
-
-    result[res] += sign * value;
+    const value = evalCostExpr(res, expr, character, level);
+    if (Number.isFinite(value)) result[res] += value;
   }
 
   return result;
+}
+
+function evalCostExpr(res, expr, character, level) {
+  // считаем % и дроби от MAX (как и раньше)
+  const maxBase = Number(character?.[`${res}_max`] ?? 0) || 0;
+
+  // убираем пробелы, чтобы "3x - 5" работало
+  const s = String(expr || "").toLowerCase().replaceAll(" ", "");
+  if (!s) return 0;
+
+  // разбиваем выражение на термы с +/-
+  // пример: "3x-5+10%" -> ["+3x","-5","+10%"]
+  const tokens = s.match(/[+-]?[^+-]+/g) || [];
+  let total = 0;
+
+  for (let t of tokens) {
+    if (!t) continue;
+
+    let sign = 1;
+    if (t[0] === "+") t = t.slice(1);
+    else if (t[0] === "-") { sign = -1; t = t.slice(1); }
+
+    if (!t) continue;
+
+    let val = null;
+
+    // 10%
+    const perc = t.match(/^(\d+(?:\.\d+)?)%$/);
+    if (perc) {
+      val = Math.round(maxBase * (Number(perc[1]) / 100));
+    }
+    // 1/2
+    else if (t.match(/^\d+\/\d+$/)) {
+      const [a, b] = t.split("/").map(Number);
+      if (b !== 0) val = Math.round(maxBase * (a / b));
+    }
+    // 3x / 0.5x
+    else if (t.match(/^\d+(?:\.\d+)?x$/)) {
+      val = Math.round(Number(t.replace("x", "")) * level);
+    }
+    // x
+    else if (t === "x") {
+      val = level;
+    }
+    // просто число
+    else if (t.match(/^\d+(?:\.\d+)?$/)) {
+      val = Math.round(Number(t));
+    }
+
+    if (val === null) continue;
+    total += sign * val;
+  }
+
+  return total;
+}
+
+
+function buildCostString({ hp, mana, energy }) {
+  const parts = [];
+  const push = (k, v) => {
+    const s = String(v || "").trim();
+    if (s) parts.push(`${k}:${s}`);
+  };
+  push("hp", hp);
+  push("mana", mana);
+  push("energy", energy);
+  return parts.join(", ");
 }
 
 async function applyCostToCharacter(costStr) {
@@ -1032,8 +1062,24 @@ function openSpellModal(kind) {
           <input id="m_duration" class="form-control" />
         </div>
       </div>
-      <label class="form-label mt-2">Цена/стоимость</label>
-      <input id="m_cost" class="form-control" />
+      <div class="row g-2 mt-2">
+        <div class="col-4">
+          <label class="form-label">HP</label>
+          <input id="m_cost_hp" class="form-control" placeholder="напр. 3x-5, 10%, 1/2" />
+        </div>
+        <div class="col-4">
+          <label class="form-label">Мана</label>
+          <input id="m_cost_mana" class="form-control" placeholder="напр. 5, 2x, 10%" />
+        </div>
+        <div class="col-4">
+          <label class="form-label">Энергия</label>
+          <input id="m_cost_energy" class="form-control" placeholder="напр. 1, 1/2, x" />
+        </div>
+      </div>
+      
+      <div class="hint mt-2">
+        Формулы: x = уровень. Примеры: HP = 3x-5, Мана = 10%, Энергия = 1/2
+      </div>
     `,
     async () => {
       const id = requireCharacterId();
@@ -1044,7 +1090,11 @@ function openSpellModal(kind) {
         description: document.getElementById("m_desc").value,
         range: document.getElementById("m_range").value,
         duration: document.getElementById("m_duration").value,
-        cost: document.getElementById("m_cost").value,
+        cost: buildCostString({
+          hp: document.getElementById("m_cost_hp").value,
+          mana: document.getElementById("m_cost_mana").value,
+          energy: document.getElementById("m_cost_energy").value,
+        }),
       };
       const path = kind === "spell" ? `/characters/${id}/spells` : `/characters/${id}/abilities`;
       await api(path, { method: "POST", body: JSON.stringify(payload) });
