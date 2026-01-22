@@ -868,6 +868,7 @@ function wireFabMenu() {
     // вызываем то, что у тебя точно есть:
     if (action === "add-spell") return openSpellModal("spell");
     if (action === "add-ability") return openSpellModal("ability");
+    if (action === "add-passive") return openSpellModal("passive");
 
     // а вот это попробуем дернуть через существующие кнопки (если есть)
     if (action === "add-item") return document.getElementById("btnAddItem")?.click();
@@ -1054,6 +1055,8 @@ function openSpellModal(kind) {
 
 document.getElementById("btnAddSpell").addEventListener("click", () => openSpellModal("spell"));
 document.getElementById("btnAddAbility").addEventListener("click", () => openSpellModal("ability"));
+document.getElementById("btnAddPassiveAbility").addEventListener("click", () => openSpellModal("passive"));
+
 
 document.getElementById("btnAddState").addEventListener("click", () => {
   openModal(
@@ -1204,9 +1207,34 @@ async function loadSheet(showStatus = true) {
     { icon: "bi-activity", clamp: true }
   );
 
+    const passive = state.sheet.abilities.filter(a =>
+    (a.cost || "").toLowerCase().includes("passive")
+  );
+
+  const active = state.sheet.abilities.filter(a =>
+    !(a.cost || "").toLowerCase().includes("passive")
+  );
+
+  // Пассивные умения
+  renderList(
+    "passiveAbilitiesList",
+    passive.map(a => ({
+      ...a,
+      preview: [a.range, a.duration, a.cost].filter(Boolean).join(" · "),
+    })),
+    async (a) => {
+      await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
+      await loadSheet(false);
+    },
+    {
+      icon: "bi-shield-check",
+    }
+  );
+
+  // Активные способности
   renderList(
     "abilitiesList",
-    state.sheet.abilities.map((a) => ({
+    active.map(a => ({
       ...a,
       preview: [a.range, a.duration, a.cost].filter(Boolean).join(" · "),
     })),
