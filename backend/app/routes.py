@@ -163,8 +163,8 @@ async def add_item(
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
-    it = await crud.add_item(db, ch_id, body.name, body.description, body.stats)
-    return {"id": it.id}
+    it = await crud.add_item(db, ch_id, body.name, body.description, body.stats, body.qty)
+    return {"id": it.id, "name": it.name, "description": it.description, "stats": it.stats, "qty": it.qty}
 
 @router.get("/characters/{ch_id}/items")
 async def list_items(
@@ -191,6 +191,7 @@ async def list_items(
             "name": i.name,
             "description": i.description,
             "stats": i.stats,
+            "qty": i.qty,
         }
         for i in items
     ]
@@ -219,6 +220,31 @@ async def delete_item(
         raise HTTPException(404, "Item not found")
 
     return {"status": "deleted"}
+
+@router.patch("/characters/{ch_id}/items/{item_id}")
+async def patch_item(
+    ch_id: int,
+    item_id: int,
+    data: schemas.ItemUpdate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+    ch = await crud.get_character_for_user(db, ch_id, u.id)
+    if not ch:
+        raise HTTPException(status_code=404, detail="Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(status_code=403, detail="No access")
+
+    obj = await crud.update_item(db, ch_id, item_id, data)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    return {"id": obj.id, "name": obj.name, "description": obj.description, "stats": obj.stats, "qty": obj.qty}
+
 
 
 # =========================
@@ -420,6 +446,83 @@ async def list_states(
         for s in states
     ]
 
+@router.patch("/characters/{ch_id}/spells/{spell_id}")
+async def patch_spell(
+    ch_id: int,
+    spell_id: int,
+    data: schemas.SpellUpdate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    obj = await crud.update_spell(db, ch_id, spell_id, data)
+    if not obj:
+        raise HTTPException(404, "Spell not found")
+
+    return {"id": obj.id, "name": obj.name, "description": obj.description, "range": obj.range, "duration": obj.duration, "cost": obj.cost}
+
+
+@router.patch("/characters/{ch_id}/abilities/{ability_id}")
+async def patch_ability(
+    ch_id: int,
+    ability_id: int,
+    data: schemas.AbilityUpdate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    obj = await crud.update_ability(db, ch_id, ability_id, data)
+    if not obj:
+        raise HTTPException(404, "Ability not found")
+
+    return {"id": obj.id, "name": obj.name, "description": obj.description, "range": obj.range, "duration": obj.duration, "cost": obj.cost}
+
+
+@router.patch("/characters/{ch_id}/states/{state_id}")
+async def patch_state(
+    ch_id: int,
+    state_id: int,
+    data: schemas.StateUpdate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    obj = await crud.update_state(db, ch_id, state_id, data)
+    if not obj:
+        raise HTTPException(404, "State not found")
+
+    return {"id": obj.id, "name": obj.name, "hp_cost": obj.hp_cost, "duration": obj.duration, "is_active": obj.is_active}
+
 
 @router.post("/characters/{ch_id}/states")
 async def add_state(
@@ -603,7 +706,13 @@ async def get_full_sheet(
             "template_id": character.template_id,
         },
         "items": [
-            {"id": i.id, "name": i.name, "description": i.description, "stats": i.stats}
+            {
+                "id": i.id,
+                "name": i.name,
+                "description": i.description,
+                "stats": i.stats,
+                "qty": i.qty,   # ← ОБЯЗАТЕЛЬНО
+            }
             for i in sheet["items"]
         ],
         "spells": [

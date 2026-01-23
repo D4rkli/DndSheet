@@ -120,6 +120,7 @@ class Item(Base):
     name: Mapped[str] = mapped_column(String(120))
     description: Mapped[str] = mapped_column(Text, default="")
     stats: Mapped[str] = mapped_column(Text, default="")  # можно JSON-строкой
+    qty: Mapped[int] = mapped_column(Integer, default=1)
 
     character: Mapped["Character"] = relationship(back_populates="items")
 

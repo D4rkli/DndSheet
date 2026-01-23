@@ -17,7 +17,7 @@ async def on_startup():
 def root():
     return RedirectResponse(url="/webapp/")
 
-@app.get("/")
+@app.get("/health")
 def health():
     return {"status": "ok"}
 

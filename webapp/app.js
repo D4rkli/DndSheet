@@ -40,7 +40,7 @@ const state = {
   activeTemplateId: null,
 };
 
-const DEFAULT_TABS = ["main", "stats", "inv", "spells", "abilities","passive-abilities", "states", "equip"];
+const DEFAULT_TABS = ["main", "stats", "inv", "spells", "abilities", "states", "equip"];
 
 function loadActiveTemplateId() {
   const raw = localStorage.getItem("activeTemplateId");
@@ -190,133 +190,6 @@ function intOrNull(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-function parseCost(costStr, character) {
-  const level = Number(character?.level || 1);
-
-  // нормализуем (оставим пробелы только как разделители позже)
-  const raw = String(costStr || "")
-    .toLowerCase()
-    .replaceAll("мана", "mana")
-    .replaceAll("хп", "hp")
-    .replaceAll("здоровье", "hp")
-    .replaceAll("энергия", "energy")
-    .replaceAll("энер", "energy")
-    .trim();
-
-  const result = { hp: 0, mana: 0, energy: 0 };
-  if (!raw) return result;
-
-  // режем по запятым/; / переносам
-  const parts = raw.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
-
-  for (const part of parts) {
-    // поддержка форматов:
-    // "hp:3x-5", "mana=10%", "energy 1/2", "hp-5", "mana5"
-    const m = part.match(/^(hp|mana|energy)\s*([:=])?\s*(.+)$/);
-    if (!m) continue;
-
-    const res = m[1];
-    const expr = m[3];
-
-    const value = evalCostExpr(res, expr, character, level);
-    if (Number.isFinite(value)) result[res] += value;
-  }
-
-  return result;
-}
-
-function evalCostExpr(res, expr, character, level) {
-  // считаем % и дроби от MAX (как и раньше)
-  const maxBase = Number(character?.[`${res}_max`] ?? 0) || 0;
-
-  // убираем пробелы, чтобы "3x - 5" работало
-  const s = String(expr || "").toLowerCase().replaceAll(" ", "");
-  if (!s) return 0;
-
-  // разбиваем выражение на термы с +/-
-  // пример: "3x-5+10%" -> ["+3x","-5","+10%"]
-  const tokens = s.match(/[+-]?[^+-]+/g) || [];
-  let total = 0;
-
-  for (let t of tokens) {
-    if (!t) continue;
-
-    let sign = 1;
-    if (t[0] === "+") t = t.slice(1);
-    else if (t[0] === "-") { sign = -1; t = t.slice(1); }
-
-    if (!t) continue;
-
-    let val = null;
-
-    // 10%
-    const perc = t.match(/^(\d+(?:\.\d+)?)%$/);
-    if (perc) {
-      val = Math.round(maxBase * (Number(perc[1]) / 100));
-    }
-    // 1/2
-    else if (t.match(/^\d+\/\d+$/)) {
-      const [a, b] = t.split("/").map(Number);
-      if (b !== 0) val = Math.round(maxBase * (a / b));
-    }
-    // 3x / 0.5x
-    else if (t.match(/^\d+(?:\.\d+)?x$/)) {
-      val = Math.round(Number(t.replace("x", "")) * level);
-    }
-    // x
-    else if (t === "x") {
-      val = level;
-    }
-    // просто число
-    else if (t.match(/^\d+(?:\.\d+)?$/)) {
-      val = Math.round(Number(t));
-    }
-
-    if (val === null) continue;
-    total += sign * val;
-  }
-
-  return total;
-}
-
-
-function buildCostString({ hp, mana, energy }) {
-  const parts = [];
-  const push = (k, v) => {
-    const s = String(v || "").trim();
-    if (s) parts.push(`${k}:${s}`);
-  };
-  push("hp", hp);
-  push("mana", mana);
-  push("energy", energy);
-  return parts.join(", ");
-}
-
-async function applyCostToCharacter(costStr) {
-  const id = requireCharacterId();
-  if (!id) return;
-
-  const ch = state.sheet?.character;
-  if (!ch) return;
-
-  const delta = parseCost(costStr, ch);
-  if (!delta.hp && !delta.mana && !delta.energy) {
-    return alert("Не смогла понять стоимость. Пример: mana 5, energy 1, hp 10% или mana 1/2");
-  }
-
-  // списываем: current - cost
-  const next = {
-    hp: Math.max(0, (Number(ch.hp) || 0) - (Number(delta.hp) || 0)),
-    mana: Math.max(0, (Number(ch.mana) || 0) - (Number(delta.mana) || 0)),
-    energy: Math.max(0, (Number(ch.energy) || 0) - (Number(delta.energy) || 0)),
-  };
-
-  // можно добавить проверку "хватает ли ресурса" (я пока просто кламплю до 0)
-  await api(`/characters/${id}`, { method: "PATCH", body: JSON.stringify(next) });
-  await loadSheet(false);
-  setStatus("Использовано ✅");
-}
-
 function fillInput(id, value) {
   const node = el(id);
   if (!node) return;
@@ -390,11 +263,6 @@ function renderList(containerId, rows, onDelete, opts = {}) {
 
         <div class="d-flex align-items-center gap-2 item-actions">
           <i class="bi bi-chevron-down item-caret"></i>
-           ${opts.onUse ? `
-            <button class="btn btn-sm btn-outline-light" data-act="use" title="Использовать">
-              <i class="bi bi-play-fill"></i>
-            </button>
-          ` : ``}
           <button class="btn btn-sm btn-outline-light" data-act="delete" title="Удалить">
             <i class="bi bi-trash3"></i>
           </button>
@@ -403,14 +271,6 @@ function renderList(containerId, rows, onDelete, opts = {}) {
 
       <div class="item-details d-none">${details}</div>
     `;
-
-    const useBtn = card.querySelector("button[data-act='use']");
-    if (useBtn) {
-      useBtn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        await opts.onUse(r);
-      });
-    }
 
     // раскрытие по тапу по карточке (кроме кнопки delete)
     card.addEventListener("click", (e) => {
@@ -827,35 +687,10 @@ function updateFab() {
 
   // показываем FAB только там, где есть "добавить"
   const map = {
-    inv: {
-      text: "Предмет",
-      icon: "bi-backpack",
-      onClick: () => el("btnAddItem")?.click(),
-    },
-
-    spells: {
-      text: "Заклинание",
-      icon: "bi-stars",
-      onClick: () => openSpellModal("spell"),
-    },
-
-    "passive-abilities": {
-      text: "Пассивное умение",
-      icon: "bi-shield-check",
-      onClick: () => openSpellModal("passive"),
-    },
-
-    abilities: {
-      text: "Способность",
-      icon: "bi-lightning-fill",
-      onClick: () => openSpellModal("ability"),
-    },
-
-    states: {
-      text: "Состояние",
-      icon: "bi-activity",
-      onClick: () => el("btnAddState")?.click(),
-    },
+    inv: { text: "Предмет", icon: "bi-backpack", onClick: () => el("btnAddItem")?.click() },
+    spells: { text: "Заклинание", icon: "bi-stars", onClick: () => openSpellModal("spell") },
+    abilities: { text: "Умение", icon: "bi-lightning-charge", onClick: () => openSpellModal("ability") },
+    states: { text: "Состояние", icon: "bi-activity", onClick: () => el("btnAddState")?.click() },
   };
 
   const cfg = map[tab];
@@ -898,7 +733,6 @@ function wireFabMenu() {
     // вызываем то, что у тебя точно есть:
     if (action === "add-spell") return openSpellModal("spell");
     if (action === "add-ability") return openSpellModal("ability");
-    if (action === "add-passive") return openSpellModal("passive");
 
     // а вот это попробуем дернуть через существующие кнопки (если есть)
     if (action === "add-item") return document.getElementById("btnAddItem")?.click();
@@ -1010,14 +844,26 @@ el("btnSaveCustom")?.addEventListener("click", async () => {
 });
 
 // INVENTORY / SPELLS / ABILITIES / STATES
-el("btnAddItem").addEventListener("click", () => {
+function openItemModal(existing = null) {
+  const isEdit = !!existing;
+  const title = isEdit ? "Редактировать предмет" : "Добавить предмет";
+
   openModal(
-    "Добавить предмет",
+    title,
     `
       <label class="form-label">Название</label>
       <input id="m_name" class="form-control" />
+
+      <div class="row g-2 mt-2">
+        <div class="col-6">
+          <label class="form-label">Количество</label>
+          <input id="m_qty" type="number" class="form-control" value="1" min="0" />
+        </div>
+      </div>
+
       <label class="form-label mt-2">Описание</label>
       <textarea id="m_desc" class="form-control" rows="3"></textarea>
+
       <label class="form-label mt-2">Статы (по желанию)</label>
       <textarea id="m_stats" class="form-control" rows="2" placeholder="Напр. +2 AC, 1d6"></textarea>
     `,
@@ -1025,26 +871,40 @@ el("btnAddItem").addEventListener("click", () => {
       const id = requireCharacterId();
       if (!id) return;
 
-      await api(`/characters/${id}/items`, {
-        method: "POST",
-        body: JSON.stringify({
-          name: document.getElementById("m_name").value,
-          description: document.getElementById("m_desc").value,
-          stats: document.getElementById("m_stats").value,
-        }),
-      });
+      const payload = {
+        name: document.getElementById("m_name").value,
+        description: document.getElementById("m_desc").value,
+        stats: document.getElementById("m_stats").value,
+        qty: intOrNull(document.getElementById("m_qty").value) ?? 1,
+      };
+
+      const base = `/characters/${id}/items`;
+      const path = isEdit ? `${base}/${existing.id}` : base;
+      const method = isEdit ? "PATCH" : "POST";
+
+      await api(path, { method, body: JSON.stringify(payload) });
       await loadSheet(false);
     }
   );
-});
 
-function openSpellModal(kind) {
+  if (existing) {
+    document.getElementById("m_name").value = existing.name || "";
+    document.getElementById("m_desc").value = existing.description || "";
+    document.getElementById("m_stats").value = existing.stats || "";
+    document.getElementById("m_qty").value = String(existing.qty ?? 1);
+  }
+}
+
+function openSpellModal(kind, existing = null) {
   const labels = {
     spell: "Заклинание",
     ability: "Способность",
     passive: "Пассивное умение",
   };
-  const title = `Добавить ${labels[kind]}`;
+
+  const isEdit = !!existing;
+  const title = `${isEdit ? "Редактировать" : "Добавить"} ${labels[kind] || ""}`.trim();
+
   openModal(
     title,
     `
@@ -1076,7 +936,7 @@ function openSpellModal(kind) {
           <input id="m_cost_energy" class="form-control" placeholder="напр. 1, 1/2, x" />
         </div>
       </div>
-      
+
       <div class="hint mt-2">
         Формулы: x = уровень. Примеры: HP = 3x-5, Мана = 10%, Энергия = 1/2
       </div>
@@ -1096,21 +956,35 @@ function openSpellModal(kind) {
           energy: document.getElementById("m_cost_energy").value,
         }),
       };
-      const path = kind === "spell" ? `/characters/${id}/spells` : `/characters/${id}/abilities`;
-      await api(path, { method: "POST", body: JSON.stringify(payload) });
+
+      const base = kind === "spell" ? `/characters/${id}/spells` : `/characters/${id}/abilities`;
+      const path = isEdit ? `${base}/${existing.id}` : base;
+      const method = isEdit ? "PATCH" : "POST";
+
+      await api(path, { method, body: JSON.stringify(payload) });
       await loadSheet(false);
     }
   );
+
+  if (existing) {
+    document.getElementById("m_name").value = existing.name || "";
+    document.getElementById("m_desc").value = existing.description || "";
+    document.getElementById("m_range").value = existing.range || "";
+    document.getElementById("m_duration").value = existing.duration || "";
+
+    const parts = parseCostParts(existing.cost || "");
+    document.getElementById("m_cost_hp").value = parts.hp || "";
+    document.getElementById("m_cost_mana").value = parts.mana || "";
+    document.getElementById("m_cost_energy").value = parts.energy || "";
+  }
 }
 
-document.getElementById("btnAddSpell").addEventListener("click", () => openSpellModal("spell"));
-document.getElementById("btnAddAbility").addEventListener("click", () => openSpellModal("ability"));
-document.getElementById("btnAddPassiveAbility").addEventListener("click", () => openSpellModal("passive"));
+function openStateModal(existing = null) {
+  const isEdit = !!existing;
+  const title = isEdit ? "Редактировать состояние" : "Добавить состояние";
 
-
-document.getElementById("btnAddState").addEventListener("click", () => {
   openModal(
-    "Добавить состояние",
+    title,
     `
       <label class="form-label">Название</label>
       <input id="m_name" class="form-control" />
@@ -1132,17 +1006,36 @@ document.getElementById("btnAddState").addEventListener("click", () => {
     async () => {
       const id = requireCharacterId();
       if (!id) return;
+
       const payload = {
         name: document.getElementById("m_name").value,
         hp_cost: intOrNull(document.getElementById("m_hp_cost").value) ?? 0,
         duration: document.getElementById("m_duration").value,
         is_active: document.getElementById("m_active").checked,
       };
-      await api(`/characters/${id}/states`, { method: "POST", body: JSON.stringify(payload) });
+
+      const base = `/characters/${id}/states`;
+      const path = isEdit ? `${base}/${existing.id}` : base;
+      const method = isEdit ? "PATCH" : "POST";
+
+      await api(path, { method, body: JSON.stringify(payload) });
       await loadSheet(false);
     }
   );
-});
+
+  if (existing) {
+    document.getElementById("m_name").value = existing.name || "";
+    document.getElementById("m_hp_cost").value = String(existing.hp_cost ?? 0);
+    document.getElementById("m_duration").value = existing.duration || "";
+    document.getElementById("m_active").checked = !!existing.is_active;
+  }
+}
+
+el("btnAddItem")?.addEventListener("click", () => openItemModal());
+document.getElementById("btnAddSpell")?.addEventListener("click", () => openSpellModal("spell"));
+document.getElementById("btnAddAbility")?.addEventListener("click", () => openSpellModal("ability"));
+document.getElementById("btnAddPassiveAbility")?.addEventListener("click", () => openSpellModal("passive"));
+document.getElementById("btnAddState")?.addEventListener("click", () => openStateModal());
 
 // ===== Loaders
 async function loadMe() {
@@ -1222,15 +1115,28 @@ async function loadSheet(showStatus = true) {
 
   renderCustomFields();
 
-  renderList("invList", state.sheet.items, async (it) => {
-    await api(`/characters/${id}/items/${it.id}`, { method: "DELETE" });
-    await loadSheet(false);
-  }, { icon: "bi-backpack", clamp: true });
+  // Inventory (with qty)
+  renderList(
+    "invList",
+    (state.sheet.items || []).map((it) => ({
+      ...it,
+      preview: `${(it.qty ?? 1) > 1 ? `x${it.qty}` : ""}${it.stats ? `${(it.qty ?? 1) > 1 ? " · " : ""}${it.stats}` : ""}`.trim(),
+    })),
+    async (it) => {
+      await api(`/characters/${id}/items/${it.id}`, { method: "DELETE" });
+      await loadSheet(false);
+    },
+    {
+      icon: "bi-backpack",
+      clamp: true,
+      onEdit: (it) => openItemModal(it),
+    }
+  );
 
-
+  // Spells
   renderList(
     "spellsList",
-    state.sheet.spells.map((s) => ({
+    (state.sheet.spells || []).map((s) => ({
       ...s,
       preview: [s.range, s.duration, s.cost].filter(Boolean).join(" · "),
     })),
@@ -1240,13 +1146,16 @@ async function loadSheet(showStatus = true) {
     },
     {
       icon: "bi-stars",
+      clamp: true,
       onUse: async (s) => applyCostToCharacter(s.cost),
+      onEdit: (s) => openSpellModal("spell", s),
     }
   );
 
+  // States
   renderList(
     "statesList",
-    state.sheet.states.map((s) => ({
+    (state.sheet.states || []).map((s) => ({
       ...s,
       preview: `${s.is_active ? "Активно" : "Неактивно"}${s.duration ? ` · ${s.duration}` : ""}${s.hp_cost ? ` · HP ${s.hp_cost}` : ""}`,
     })),
@@ -1254,49 +1163,56 @@ async function loadSheet(showStatus = true) {
       await api(`/characters/${id}/states/${s.id}`, { method: "DELETE" });
       await loadSheet(false);
     },
-    { icon: "bi-activity", clamp: true }
-  );
-
-    const passive = state.sheet.abilities.filter(a =>
-    (a.cost || "").toLowerCase().includes("passive")
-  );
-
-  const active = state.sheet.abilities.filter(a =>
-    !(a.cost || "").toLowerCase().includes("passive")
-  );
-
-  // Пассивные умения
-  renderList(
-    "passiveAbilitiesList",
-    passive.map(a => ({
-      ...a,
-      preview: [a.range, a.duration, a.cost].filter(Boolean).join(" · "),
-    })),
-    async (a) => {
-      await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
-      await loadSheet(false);
-    },
     {
-      icon: "bi-shield-check",
+      icon: "bi-activity",
+      clamp: true,
+      onEdit: (s) => openStateModal(s),
     }
   );
 
-  // Активные способности
-  renderList(
-    "abilitiesList",
-    active.map(a => ({
-      ...a,
-      preview: [a.range, a.duration, a.cost].filter(Boolean).join(" · "),
-    })),
-    async (a) => {
-      await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
-      await loadSheet(false);
-    },
-    {
-      icon: "bi-lightning-fill",
-      onUse: async (a) => applyCostToCharacter(a.cost),
-    }
-  );
+  // Abilities (optional split into passive/active if the containers exist)
+  const allAbilities = state.sheet.abilities || [];
+  const passive = allAbilities.filter((a) => (a.cost || "").toLowerCase().includes("passive"));
+  const active = allAbilities.filter((a) => !(a.cost || "").toLowerCase().includes("passive"));
+
+  if (el("passiveAbilitiesList")) {
+    renderList(
+      "passiveAbilitiesList",
+      passive.map((a) => ({
+        ...a,
+        preview: [a.range, a.duration, a.cost].filter(Boolean).join(" · "),
+      })),
+      async (a) => {
+        await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
+        await loadSheet(false);
+      },
+      {
+        icon: "bi-shield-check",
+        clamp: true,
+        onEdit: (a) => openSpellModal("passive", a),
+      }
+    );
+  }
+
+  if (el("abilitiesList")) {
+    renderList(
+      "abilitiesList",
+      active.map((a) => ({
+        ...a,
+        preview: [a.range, a.duration, a.cost].filter(Boolean).join(" · "),
+      })),
+      async (a) => {
+        await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
+        await loadSheet(false);
+      },
+      {
+        icon: "bi-lightning-fill",
+        clamp: true,
+        onUse: async (a) => applyCostToCharacter(a.cost),
+        onEdit: (a) => openSpellModal("ability", a),
+      }
+    );
+  }
 
   setStatus("Ок ✅");
 }
@@ -1367,4 +1283,3 @@ window.addEventListener("scroll", () => {
     topbar.classList.remove("is-collapsed");
   }
 });
-

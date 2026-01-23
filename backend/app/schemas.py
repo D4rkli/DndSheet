@@ -57,6 +57,13 @@ class ItemCreate(BaseModel):
     name: str
     description: str = ""
     stats: str = ""
+    qty: int = 1
+
+class ItemUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    stats: Optional[str] = None
+    qty: Optional[int] = None
 
 
 class SpellCreate(BaseModel):
@@ -77,6 +84,21 @@ class StateCreate(BaseModel):
     duration: str = ""
     is_active: bool = True
 
+class SpellUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    range: Optional[str] = None
+    duration: Optional[str] = None
+    cost: Optional[str] = None
+
+class AbilityUpdate(SpellUpdate):
+    pass
+
+class StateUpdate(BaseModel):
+    name: Optional[str] = None
+    hp_cost: Optional[int] = None
+    duration: Optional[str] = None
+    is_active: Optional[bool] = None
 
 class EquipmentUpdate(BaseModel):
     head: Optional[str] = None

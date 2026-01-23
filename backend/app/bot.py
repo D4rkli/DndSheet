@@ -14,7 +14,7 @@ async def start(message: Message):
                 KeyboardButton(
                     text="🧙 Открыть лист персонажа",
                     web_app=WebAppInfo(
-                        url="https://dnd-bot-backend.onrender.com/webapp?=2"
+                        url="https://dnd-bot-backend.onrender.com/webapp/?v=106"
                     )
                 )
             ]

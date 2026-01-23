@@ -165,12 +165,14 @@ async def add_item(
     name: str,
     description: str,
     stats: str | None = None,
+    qty: int = 1,
 ) -> Item:
     it = Item(
         character_id=character_id,
         name=name,
         description=description,
         stats=stats,
+        qty=qty,
     )
     db.add(it)
     await db.commit()
@@ -194,6 +196,19 @@ async def delete_item(
     await db.commit()
     return True
 
+async def update_item(db, ch_id: int, item_id: int, data):
+    item = await db.get(Item, item_id)
+    if not item or item.character_id != ch_id:
+        return None
+
+    for field in ["name", "description", "stats", "qty"]:
+        v = getattr(data, field, None)
+        if v is not None:
+            setattr(item, field, v)
+
+    await db.commit()
+    await db.refresh(item)
+    return item
 
 # =========================
 # SPELLS
@@ -326,6 +341,41 @@ async def delete_state(db: AsyncSession, state_id: int) -> bool:
     await db.commit()
     return True
 
+async def update_spell(db, ch_id: int, spell_id: int, data):
+    obj = await db.get(Spell, spell_id)
+    if not obj or obj.character_id != ch_id:
+        return None
+    for f in ["name","description","range","duration","cost"]:
+        v = getattr(data, f, None)
+        if v is not None:
+            setattr(obj, f, v)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
+
+async def update_ability(db, ch_id: int, ability_id: int, data):
+    obj = await db.get(Ability, ability_id)
+    if not obj or obj.character_id != ch_id:
+        return None
+    for f in ["name","description","range","duration","cost"]:
+        v = getattr(data, f, None)
+        if v is not None:
+            setattr(obj, f, v)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
+
+async def update_state(db, ch_id: int, state_id: int, data):
+    obj = await db.get(State, state_id)
+    if not obj or obj.character_id != ch_id:
+        return None
+    for f in ["name","hp_cost","duration","is_active"]:
+        v = getattr(data, f, None)
+        if v is not None:
+            setattr(obj, f, v)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
 
 # =========================
 # TEMPLATES
