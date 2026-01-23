@@ -7,9 +7,9 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="styles.css?v=106" />
+  <link rel="stylesheet" href="styles.css?v=105" />
 
-  <script src="https://telegram.org/js/telegram-web-app.js?v=106"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js?v=105"></script>
 </head>
 <body>
 <div class="wrap">
@@ -43,11 +43,8 @@
     <button class="fab-item" type="button" data-action="add-spell">
       <i class="bi bi-stars"></i><span>Заклинание</span>
     </button>
-    <button class="fab-item" type="button" data-action="add-passive">
-      <i class="bi bi-shield-check"></i><span>Пассивное умение</span>
-    </button>
     <button class="fab-item" type="button" data-action="add-ability">
-      <i class="bi bi-lightning-charge"></i><span>Способность</span>
+      <i class="bi bi-lightning-charge"></i><span>Пасивки</span>
     </button>
     <button class="fab-item" type="button" data-action="add-item">
       <i class="bi bi-backpack"></i><span>Предмет</span>
@@ -63,7 +60,7 @@
       <li class="nav-item"><button class="nav-link" data-tab="stats"><i class="bi bi-bar-chart"></i><span>Статы</span></button></li>
       <li class="nav-item"><button class="nav-link" data-tab="inv"><i class="bi bi-backpack"></i><span>Инв.</span></button></li>
       <li class="nav-item"><button class="nav-link" data-tab="spells"><i class="bi bi-stars"></i><span>Закл.</span></button></li>
-      <li class="nav-item"><button class="nav-link" data-tab="abilities"><i class="bi bi-lightning-fill"></i><span>Способ.</span></button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="abilities"><i class="bi bi-lightning-fill"><span>Способ.</span></i></button></li>
       <li class="nav-item"><button class="nav-link" data-tab="passive-abilities"><i class="bi bi-lightning-charge"></i><span>Пассив.</span></button></li>
       <li class="nav-item"><button class="nav-link" data-tab="states"><i class="bi bi-activity"></i><span>Сост.</span></button></li>
       <li class="nav-item"><button class="nav-link" data-tab="equip"><i class="bi bi-shield"></i><span>Экип.</span></button></li>
@@ -104,17 +101,35 @@
               <input id="f_xp" type="number" class="form-control" min="0" />
             </div>
 
-            <div class="col-4">
-              <label class="form-label">Золото</label>
-              <input id="f_gold" type="number" class="form-control" min="0" />
-            </div>
-            <div class="col-4">
-              <label class="form-label">Серебро</label>
-              <input id="f_silver" type="number" class="form-control" min="0" />
-            </div>
-            <div class="col-4">
-              <label class="form-label">Медь</label>
-              <input id="f_copper" type="number" class="form-control" min="0" />
+            <div class="col-12">
+              <div class="money-wrap">
+                <div class="money-title">Кошелёк</div>
+                <div class="money-grid">
+                  <div class="money-field">
+                    <label class="form-label">Золото</label>
+                    <div class="money-input">
+                      <span class="coin-badge coin-gold"><i class="bi bi-coin"></i></span>
+                      <input id="f_gold" type="number" class="form-control" min="0" inputmode="numeric" />
+                    </div>
+                  </div>
+                  <div class="money-field">
+                    <label class="form-label">Серебро</label>
+                    <div class="money-input">
+                      <span class="coin-badge coin-silver"><i class="bi bi-coin"></i></span>
+                      <input id="f_silver" type="number" class="form-control" min="0" inputmode="numeric" />
+                    </div>
+                  </div>
+                  <div class="money-field">
+                    <label class="form-label">Медь</label>
+                    <div class="money-input">
+                      <span class="coin-badge coin-copper"><i class="bi bi-coin"></i></span>
+                      <input id="f_copper" type="number" class="form-control" min="0" inputmode="numeric" />
+                    </div>
+                  </div>
+                </div>
+                <div id="moneyPreview" class="money-preview muted">—</div>
+                <div class="hint">Автоконвертация: 10 🟤 = 1 ⚪, 10 ⚪ = 1 🟡</div>
+              </div>
             </div>
           </div>
 

@@ -200,6 +200,85 @@ function intOrNull(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+function parseIntSafe(v) {
+  const n = parseInt(String(v ?? "").trim() || "0", 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function coinsToCp({ gold = 0, silver = 0, copper = 0 }) {
+  return gold * 100 + silver * 10 + copper;
+}
+
+function cpToCoins(totalCp) {
+  const cp = Math.max(0, parseIntSafe(totalCp));
+  const gold = Math.floor(cp / 100);
+  const rem1 = cp % 100;
+  const silver = Math.floor(rem1 / 10);
+  const copper = rem1 % 10;
+  return { gold, silver, copper };
+}
+
+function normalizeCoinsFromInputs(writeBack = true) {
+  const gold = parseIntSafe(el("f_gold")?.value);
+  const silver = parseIntSafe(el("f_silver")?.value);
+  const copper = parseIntSafe(el("f_copper")?.value);
+  const normalized = cpToCoins(coinsToCp({ gold, silver, copper }));
+
+  if (writeBack) {
+    if (el("f_gold")) el("f_gold").value = String(normalized.gold);
+    if (el("f_silver")) el("f_silver").value = String(normalized.silver);
+    if (el("f_copper")) el("f_copper").value = String(normalized.copper);
+  }
+
+  updateMoneyPreview(normalized);
+  return normalized;
+}
+
+function updateMoneyPreview(coins) {
+  const node = el("moneyPreview");
+  if (!node) return;
+  const { gold = 0, silver = 0, copper = 0 } = coins || {};
+  const totalCp = coinsToCp({ gold, silver, copper });
+  const totalGp = (totalCp / 100).toFixed(2);
+  node.innerHTML = `
+    <span class="coin-chip coin-gold"><i class="bi bi-coin"></i> ${gold} <span class="coin-unit">GP</span></span>
+    <span class="coin-chip coin-silver"><i class="bi bi-coin"></i> ${silver} <span class="coin-unit">SP</span></span>
+    <span class="coin-chip coin-copper"><i class="bi bi-coin"></i> ${copper} <span class="coin-unit">CP</span></span>
+    <span class="coin-total">≈ ${totalGp} gp</span>
+  `;
+}
+
+function wireMoneyInputs() {
+  const g = el("f_gold");
+  const s = el("f_silver");
+  const c = el("f_copper");
+  if (!g || !s || !c) return;
+
+  // на вводе — только обновляем превью (без writeBack, чтобы курсор не прыгал)
+  const onInput = () => normalizeCoinsFromInputs(false);
+  g.addEventListener("input", onInput);
+  s.addEventListener("input", onInput);
+  c.addEventListener("input", onInput);
+
+  // на выходе из поля — нормализуем и записываем назад (carry)
+  const onBlur = () => normalizeCoinsFromInputs(true);
+  g.addEventListener("change", onBlur);
+  s.addEventListener("change", onBlur);
+  c.addEventListener("change", onBlur);
+  g.addEventListener("blur", onBlur);
+  s.addEventListener("blur", onBlur);
+  c.addEventListener("blur", onBlur);
+}
+
+function mapGenderToSelect(v) {
+  const raw = String(v ?? "").trim().toLowerCase();
+  if (!raw) return "";
+  if (["female", "f", "woman", "girl", "жен", "женщина", "ж"].some((x) => raw.startsWith(x))) return "female";
+  if (["male", "m", "man", "boy", "муж", "мужчина", "м"].some((x) => raw.startsWith(x))) return "male";
+  if (["none", "n/a", "не", "нет", "unspecified"].some((x) => raw.startsWith(x))) return "";
+  return raw;
+}
+
 function fillInput(id, value) {
   const node = el(id);
   if (!node) return;
