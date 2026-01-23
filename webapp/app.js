@@ -40,7 +40,17 @@ const state = {
   activeTemplateId: null,
 };
 
-const DEFAULT_TABS = ["main", "stats", "inv", "spells", "abilities", "passive-abilities", "states", "equip", "custom"];
+const DEFAULT_TABS = [
+  "main",
+  "stats",
+  "inv",
+  "spells",
+  "abilities",
+  "passive-abilities",
+  "states",
+  "equip",
+  "custom",
+];
 
 function loadActiveTemplateId() {
   const raw = localStorage.getItem("activeTemplateId");
@@ -58,11 +68,7 @@ function setActiveTemplateId(id) {
 function activeTabs() {
   const tpl = state.templates.find((t) => t.id === state.activeTemplateId);
   const tabs = tpl?.config?.tabs;
-  const base = Array.isArray(tabs) && tabs.length ? tabs.slice() : DEFAULT_TABS.slice();
-
-  // чтобы вкладка "Пассив." не пропадала из-за старых шаблонов
-  if (!base.includes("passive-abilities")) base.push("passive-abilities");
-  return base;
+  return Array.isArray(tabs) && tabs.length ? tabs : DEFAULT_TABS;
 }
 
 function applyTemplateToUI() {
@@ -267,19 +273,6 @@ function renderList(containerId, rows, onDelete, opts = {}) {
 
         <div class="d-flex align-items-center gap-2 item-actions">
           <i class="bi bi-chevron-down item-caret"></i>
-
-          ${opts.onUse ? `
-            <button class="btn btn-sm btn-outline-light" data-act="use" title="Использовать">
-              <i class="bi bi-play-fill"></i>
-            </button>
-          ` : ``}
-
-          ${opts.onEdit ? `
-            <button class="btn btn-sm btn-outline-light" data-act="edit" title="Редактировать">
-              <i class="bi bi-pencil"></i>
-            </button>
-          ` : ``}
-
           <button class="btn btn-sm btn-outline-light" data-act="delete" title="Удалить">
             <i class="bi bi-trash3"></i>
           </button>
@@ -289,9 +282,10 @@ function renderList(containerId, rows, onDelete, opts = {}) {
       <div class="item-details d-none">${details}</div>
     `;
 
-    // раскрытие по тапу по карточке (кроме кнопок действий)
+    // раскрытие по тапу по карточке (кроме кнопки delete)
     card.addEventListener("click", (e) => {
-      if (e.target.closest("button")) return;
+      const del = e.target.closest("button[data-act='delete']");
+      if (del) return;
 
       const d = card.querySelector(".item-details");
       const caret = card.querySelector(".item-caret");
@@ -301,22 +295,6 @@ function renderList(containerId, rows, onDelete, opts = {}) {
       caret.classList.toggle("bi-chevron-up", !isHidden);
     });
 
-    const useBtn = card.querySelector("button[data-act='use']");
-    if (useBtn && opts.onUse) {
-      useBtn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        await opts.onUse(r);
-      });
-    }
-
-    const editBtn = card.querySelector("button[data-act='edit']");
-    if (editBtn && opts.onEdit) {
-      editBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        opts.onEdit(r);
-      });
-    }
-
     card.querySelector("button[data-act='delete']").addEventListener("click", async (e) => {
       e.stopPropagation();
       await onDelete(r);
@@ -325,7 +303,6 @@ function renderList(containerId, rows, onDelete, opts = {}) {
     root.appendChild(card);
   });
 }
-
 
 function escapeHtml(s) {
   return String(s)
@@ -515,6 +492,10 @@ async function saveMain(extra = {}) {
     gender: el("f_gender").value.trim(),
     level: intOrNull(el("f_level").value),
     xp: intOrNull(el("f_xp").value),
+
+    gold: intOrNull(el("f_gold")?.value),
+    silver: intOrNull(el("f_silver")?.value),
+    copper: intOrNull(el("f_copper")?.value),
 
     hp: intOrNull(el("f_hp").value),
     hp_max: intOrNull(el("f_hp_max").value),
@@ -1127,6 +1108,10 @@ async function loadSheet(showStatus = true) {
   fillInput("f_level", ch.level);
   fillInput("f_xp", ch.xp);
 
+  fillInput("f_gold", ch.gold);
+  fillInput("f_silver", ch.silver);
+  fillInput("f_copper", ch.copper);
+
   fillInput("f_hp", ch.hp);
   fillInput("f_hp_max", ch.hp_max);
   fillInput("f_hp_per_level", ch.hp_per_level);
@@ -1316,3 +1301,4 @@ window.addEventListener("scroll", () => {
     topbar.classList.remove("is-collapsed");
   }
 });
+

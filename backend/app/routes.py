@@ -78,6 +78,10 @@ async def get_character(
         "level": ch.level,
         "xp": ch.xp,
 
+        "gold": getattr(ch, "gold", 0),
+        "silver": getattr(ch, "silver", 0),
+        "copper": getattr(ch, "copper", 0),
+
         # ресурсы
         "hp": ch.hp,
         "mana": ch.mana,

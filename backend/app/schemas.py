@@ -8,8 +8,15 @@ class CharacterCreate(BaseModel):
 class CharacterUpdate(BaseModel):
     name: Optional[str] = None
     race: Optional[str] = None
+    gender: Optional[str] = None
     klass: Optional[str] = None
     level: Optional[int] = None
+    xp: Optional[int] = None
+
+    # деньги
+    gold: Optional[int] = None
+    silver: Optional[int] = None
+    copper: Optional[int] = None
 
     # текущее
     hp: Optional[int] = None
@@ -58,6 +65,7 @@ class ItemCreate(BaseModel):
     description: str = ""
     stats: str = ""
     qty: int = 1
+
 
 class ItemUpdate(BaseModel):
     name: Optional[str] = None

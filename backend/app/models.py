@@ -30,6 +30,11 @@ class Character(Base):
     level: Mapped[int] = mapped_column(Integer, default=1)
     xp: Mapped[int] = mapped_column(Integer, default=0)
 
+    # Деньги
+    gold: Mapped[int] = mapped_column(Integer, default=0)
+    silver: Mapped[int] = mapped_column(Integer, default=0)
+    copper: Mapped[int] = mapped_column(Integer, default=0)
+
     # “Характер” (можно расширять)
     aggression_kindness: Mapped[int] = mapped_column(Integer, default=0)
     intellect: Mapped[int] = mapped_column(Integer, default=0)
