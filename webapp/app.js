@@ -40,7 +40,7 @@ const state = {
   activeTemplateId: null,
 };
 
-const DEFAULT_TABS = ["main", "stats", "inv", "spells", "abilities", "states", "equip"];
+const DEFAULT_TABS = ["main", "stats", "inv", "spells", "abilities", "passive-abilities", "states", "equip", "custom"];
 
 function loadActiveTemplateId() {
   const raw = localStorage.getItem("activeTemplateId");
@@ -58,7 +58,11 @@ function setActiveTemplateId(id) {
 function activeTabs() {
   const tpl = state.templates.find((t) => t.id === state.activeTemplateId);
   const tabs = tpl?.config?.tabs;
-  return Array.isArray(tabs) && tabs.length ? tabs : DEFAULT_TABS;
+  const base = Array.isArray(tabs) && tabs.length ? tabs.slice() : DEFAULT_TABS.slice();
+
+  // чтобы вкладка "Пассив." не пропадала из-за старых шаблонов
+  if (!base.includes("passive-abilities")) base.push("passive-abilities");
+  return base;
 }
 
 function applyTemplateToUI() {
@@ -263,6 +267,19 @@ function renderList(containerId, rows, onDelete, opts = {}) {
 
         <div class="d-flex align-items-center gap-2 item-actions">
           <i class="bi bi-chevron-down item-caret"></i>
+
+          ${opts.onUse ? `
+            <button class="btn btn-sm btn-outline-light" data-act="use" title="Использовать">
+              <i class="bi bi-play-fill"></i>
+            </button>
+          ` : ``}
+
+          ${opts.onEdit ? `
+            <button class="btn btn-sm btn-outline-light" data-act="edit" title="Редактировать">
+              <i class="bi bi-pencil"></i>
+            </button>
+          ` : ``}
+
           <button class="btn btn-sm btn-outline-light" data-act="delete" title="Удалить">
             <i class="bi bi-trash3"></i>
           </button>
@@ -272,10 +289,9 @@ function renderList(containerId, rows, onDelete, opts = {}) {
       <div class="item-details d-none">${details}</div>
     `;
 
-    // раскрытие по тапу по карточке (кроме кнопки delete)
+    // раскрытие по тапу по карточке (кроме кнопок действий)
     card.addEventListener("click", (e) => {
-      const del = e.target.closest("button[data-act='delete']");
-      if (del) return;
+      if (e.target.closest("button")) return;
 
       const d = card.querySelector(".item-details");
       const caret = card.querySelector(".item-caret");
@@ -285,6 +301,22 @@ function renderList(containerId, rows, onDelete, opts = {}) {
       caret.classList.toggle("bi-chevron-up", !isHidden);
     });
 
+    const useBtn = card.querySelector("button[data-act='use']");
+    if (useBtn && opts.onUse) {
+      useBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        await opts.onUse(r);
+      });
+    }
+
+    const editBtn = card.querySelector("button[data-act='edit']");
+    if (editBtn && opts.onEdit) {
+      editBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        opts.onEdit(r);
+      });
+    }
+
     card.querySelector("button[data-act='delete']").addEventListener("click", async (e) => {
       e.stopPropagation();
       await onDelete(r);
@@ -293,6 +325,7 @@ function renderList(containerId, rows, onDelete, opts = {}) {
     root.appendChild(card);
   });
 }
+
 
 function escapeHtml(s) {
   return String(s)
