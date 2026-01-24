@@ -933,13 +933,33 @@ function openEquipSlotModal(key, label) {
   document.getElementById("m_eq_info").value = cur.info || "";
 }
 
+(function buildEquip() {
+  const wrap = el("equipGrid");
+  wrap.innerHTML = "";
+  equipFields.forEach(({ key, label }) => {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <label class="form-label">${label}</label>
+      <input class="form-control" data-eq="${key}" />
+    `;
+    wrap.appendChild(div);
+  });
+})();
+
 function fillEquip(equipment) {
-  state.equipDraft = { ...(equipment || {}) };
-  renderEquipUI();
+  document.querySelectorAll("input[data-eq]").forEach((input) => {
+    const key = input.dataset.eq;
+    input.value = equipment?.[key] ?? "";
+  });
 }
 
 function readEquip() {
-  return { ...(state.equipDraft || {}) };
+  const payload = {};
+  document.querySelectorAll("input[data-eq]").forEach((input) => {
+    const key = input.dataset.eq;
+    payload[key] = input.value;
+  });
+  return payload;
 }
 
 el("btnSaveEquip").addEventListener("click", async () => {
