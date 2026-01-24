@@ -200,6 +200,115 @@ function intOrNull(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+function buildCostString({ hp, mana, energy }) {
+  const parts = [];
+  const push = (k, v) => {
+    const s = String(v || "").trim();
+    if (s) parts.push(`${k}:${s}`);
+  };
+  push("hp", hp);
+  push("mana", mana);
+  push("energy", energy);
+  return parts.join(", ");
+}
+
+function parseCostParts(costStr) {
+  const out = { hp: "", mana: "", energy: "" };
+  const raw = String(costStr || "").trim();
+  if (!raw) return out;
+
+  raw.split(/[,;\n]+/).map(x => x.trim()).filter(Boolean).forEach(part => {
+    const m = part.match(/^(hp|mana|energy)\s*[:=]?\s*(.+)$/i);
+    if (!m) return;
+    out[m[1].toLowerCase()] = m[2].trim();
+  });
+  return out;
+}
+
+function evalCostExpr(res, expr, character, level) {
+  const maxBase = Number(character?.[`${res}_max`] ?? 0) || 0;
+  const s = String(expr || "").toLowerCase().replaceAll(" ", "");
+  if (!s) return 0;
+
+  const tokens = s.match(/[+-]?[^+-]+/g) || [];
+  let total = 0;
+
+  for (let t of tokens) {
+    if (!t) continue;
+
+    let sign = 1;
+    if (t[0] === "+") t = t.slice(1);
+    else if (t[0] === "-") { sign = -1; t = t.slice(1); }
+
+    if (!t) continue;
+
+    let val = null;
+
+    const perc = t.match(/^(\d+(?:\.\d+)?)%$/);
+    if (perc) {
+      val = Math.round(maxBase * (Number(perc[1]) / 100));
+    } else if (t.match(/^\d+\/\d+$/)) {
+      const [a, b] = t.split("/").map(Number);
+      if (b !== 0) val = Math.round(maxBase * (a / b));
+    } else if (t.match(/^\d+(?:\.\d+)?x$/)) {
+      val = Math.round(Number(t.replace("x", "")) * level);
+    } else if (t === "x") {
+      val = level;
+    } else if (t.match(/^\d+(?:\.\d+)?$/)) {
+      val = Math.round(Number(t));
+    }
+
+    if (val === null) continue;
+    total += sign * val;
+  }
+
+  return total;
+}
+
+function parseCost(costStr, character) {
+  const level = Number(character?.level || 1);
+  const raw = String(costStr || "")
+    .toLowerCase()
+    .replaceAll("мана", "mana")
+    .replaceAll("хп", "hp")
+    .replaceAll("здоровье", "hp")
+    .replaceAll("энергия", "energy")
+    .replaceAll("энер", "energy")
+    .trim();
+
+  const result = { hp: 0, mana: 0, energy: 0 };
+  if (!raw) return result;
+
+  const parts = raw.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+
+  for (const part of parts) {
+    const m = part.match(/^(hp|mana|energy)\s*([:=])?\s*(.+)$/);
+    if (!m) continue;
+    const res = m[1];
+    const expr = m[3];
+    const value = evalCostExpr(res, expr, character, level);
+    if (Number.isFinite(value)) result[res] += value;
+  }
+
+  return result;
+}
+
+async function applyCostToCharacter(costStr) {
+  const id = currentChId();
+  if (!id || !state.sheet?.character) return;
+
+  const ch = state.sheet.character;
+  const delta = parseCost(costStr, ch);
+
+  const payload = {};
+  if (delta.hp) payload.hp = Math.max(0, (Number(ch.hp || 0) - delta.hp));
+  if (delta.mana) payload.mana = Math.max(0, (Number(ch.mana || 0) - delta.mana));
+  if (delta.energy) payload.energy = Math.max(0, (Number(ch.energy || 0) - delta.energy));
+
+  if (Object.keys(payload).length === 0) return;
+  await saveMain(payload);
+}
+
 function parseIntSafe(v) {
   const n = parseInt(String(v ?? "").trim() || "0", 10);
   return Number.isFinite(n) ? n : 0;
@@ -325,6 +434,7 @@ function fillStatInputs(containerId, source) {
 
 function renderList(containerId, rows, onDelete, opts = {}) {
   const root = el(containerId);
+  if (!root) return;
   root.innerHTML = "";
   if (!rows || rows.length === 0) {
     root.innerHTML = `<div class="muted">Пусто.</div>`;
@@ -352,6 +462,19 @@ function renderList(containerId, rows, onDelete, opts = {}) {
 
         <div class="d-flex align-items-center gap-2 item-actions">
           <i class="bi bi-chevron-down item-caret"></i>
+
+          ${opts.onUse ? `
+            <button class="btn btn-sm btn-outline-light" data-act="use" title="Использовать">
+              <i class="bi bi-play-fill"></i>
+            </button>
+          ` : ``}
+
+          ${opts.onEdit ? `
+            <button class="btn btn-sm btn-outline-light" data-act="edit" title="Редактировать">
+              <i class="bi bi-pencil"></i>
+            </button>
+          ` : ``}
+
           <button class="btn btn-sm btn-outline-light" data-act="delete" title="Удалить">
             <i class="bi bi-trash3"></i>
           </button>
@@ -363,8 +486,8 @@ function renderList(containerId, rows, onDelete, opts = {}) {
 
     // раскрытие по тапу по карточке (кроме кнопки delete)
     card.addEventListener("click", (e) => {
-      const del = e.target.closest("button[data-act='delete']");
-      if (del) return;
+      const actBtn = e.target.closest("button[data-act]");
+      if (actBtn) return;
 
       const d = card.querySelector(".item-details");
       const caret = card.querySelector(".item-caret");
@@ -374,9 +497,22 @@ function renderList(containerId, rows, onDelete, opts = {}) {
       caret.classList.toggle("bi-chevron-up", !isHidden);
     });
 
-    card.querySelector("button[data-act='delete']").addEventListener("click", async (e) => {
+    const delBtn = card.querySelector("button[data-act='delete']");
+    delBtn?.addEventListener("click", async (e) => {
       e.stopPropagation();
       await onDelete(r);
+    });
+
+    const useBtn = card.querySelector("button[data-act='use']");
+    useBtn?.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await opts.onUse(r);
+    });
+
+    const editBtn = card.querySelector("button[data-act='edit']");
+    editBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      opts.onEdit(r);
     });
 
     root.appendChild(card);
@@ -564,6 +700,9 @@ el("btnNew").addEventListener("click", () => {
 
 // MAIN save
 async function saveMain(extra = {}) {
+  // автоконвертация монет перед сохранением
+  const coins = normalizeCoinsFromInputs(true);
+
   const payload = {
     name: el("f_name").value.trim(),
     race: el("f_race").value.trim(),
@@ -572,9 +711,9 @@ async function saveMain(extra = {}) {
     level: intOrNull(el("f_level").value),
     xp: intOrNull(el("f_xp").value),
 
-    gold: intOrNull(el("f_gold")?.value),
-    silver: intOrNull(el("f_silver")?.value),
-    copper: intOrNull(el("f_copper")?.value),
+    gold: coins.gold,
+    silver: coins.silver,
+    copper: coins.copper,
 
     hp: intOrNull(el("f_hp").value),
     hp_max: intOrNull(el("f_hp_max").value),
@@ -659,33 +798,148 @@ const equipFields = [
   { key: "jewelry", label: "Украшения" },
 ];
 
-(function buildEquip() {
-  const wrap = el("equipGrid");
-  wrap.innerHTML = "";
-  equipFields.forEach(({ key, label }) => {
-    const div = document.createElement("div");
-    div.innerHTML = `
-      <label class="form-label">${label}</label>
-      <input class="form-control" data-eq="${key}" />
-    `;
-    wrap.appendChild(div);
-  });
-})();
+state.equipDraft = {};
 
-function fillEquip(equipment) {
-  document.querySelectorAll("input[data-eq]").forEach((input) => {
-    const key = input.dataset.eq;
-    input.value = equipment?.[key] ?? "";
+function parseEquipSlot(raw) {
+  const s = String(raw ?? "").trim();
+  if (!s) return { name: "", ac_bonus: 0, stats: "", info: "" };
+  if (s.startsWith("{") && s.endsWith("}")) {
+    try {
+      const o = JSON.parse(s);
+      if (o && typeof o === "object") {
+        return {
+          name: String(o.name ?? ""),
+          ac_bonus: Number(o.ac_bonus ?? 0) || 0,
+          stats: String(o.stats ?? ""),
+          info: String(o.info ?? ""),
+        };
+      }
+    } catch {}
+  }
+  return { name: s, ac_bonus: 0, stats: "", info: "" };
+}
+
+function serializeEquipSlot(slot) {
+  const name = String(slot?.name ?? "").trim();
+  const ac = Number(slot?.ac_bonus ?? 0) || 0;
+  const stats = String(slot?.stats ?? "").trim();
+  const info = String(slot?.info ?? "").trim();
+
+  // если только имя — храним как раньше (простая строка)
+  if (name && !ac && !stats && !info) return name;
+  // если всё пусто — пустая строка
+  if (!name && !ac && !stats && !info) return "";
+  // иначе — JSON
+  return JSON.stringify({ name, ac_bonus: ac, stats, info });
+}
+
+function equipArmorBonusTotal() {
+  let sum = 0;
+  equipFields.forEach(({ key }) => {
+    const slot = parseEquipSlot(state.equipDraft?.[key]);
+    sum += Number(slot.ac_bonus || 0);
+  });
+  return sum;
+}
+
+function renderEquipUI() {
+  const wrap = el("equipGrid");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+
+  const bonus = equipArmorBonusTotal();
+  const header = document.createElement("div");
+  header.className = "muted mb-2";
+  header.innerHTML = bonus ? `Бонус брони от экипировки: <b>+${bonus}</b>` : `Бонус брони от экипировки: <b>0</b>`;
+  wrap.appendChild(header);
+
+  equipFields.forEach(({ key, label }) => {
+    const raw = state.equipDraft?.[key] ?? "";
+    const slot = parseEquipSlot(raw);
+
+    const card = document.createElement("div");
+    card.className = "item";
+    const title = escapeHtml(slot.name || `—`);
+    const previewParts = [];
+    if (slot.ac_bonus) previewParts.push(`AC +${slot.ac_bonus}`);
+    if (slot.stats) previewParts.push(slot.stats);
+    const preview = escapeHtml(previewParts.join(" · "));
+    const details = escapeHtml(slot.info || "");
+
+    card.innerHTML = `
+      <div class="item-head">
+        <div class="min-w-0">
+          <div class="item-title"><i class="bi bi-shield"></i> <span>${escapeHtml(label)}:</span> <span>${title}</span></div>
+          ${preview ? `<div class="item-sub">${preview}</div>` : ``}
+        </div>
+        <div class="d-flex align-items-center gap-2 item-actions">
+          <button class="btn btn-sm btn-outline-light" data-act="edit" title="Редактировать слот">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-light" data-act="clear" title="Очистить слот">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+      ${details ? `<div class="item-details">${details}</div>` : ``}
+    `;
+
+    card.querySelector("button[data-act='edit']")?.addEventListener("click", () => openEquipSlotModal(key, label));
+    card.querySelector("button[data-act='clear']")?.addEventListener("click", async () => {
+      state.equipDraft[key] = "";
+      renderEquipUI();
+    });
+
+    wrap.appendChild(card);
   });
 }
 
+function openEquipSlotModal(key, label) {
+  const cur = parseEquipSlot(state.equipDraft?.[key]);
+
+  openModal(
+    `Экипировка: ${label}`,
+    `
+      <label class="form-label">Название</label>
+      <input id="m_eq_name" class="form-control" />
+
+      <div class="row g-2 mt-2">
+        <div class="col-4">
+          <label class="form-label">AC бонус</label>
+          <input id="m_eq_ac" type="number" class="form-control" value="0" />
+        </div>
+      </div>
+
+      <label class="form-label mt-2">Характеристика</label>
+      <input id="m_eq_stats" class="form-control" placeholder="Напр. +2 ловк, сопротивление огню" />
+
+      <label class="form-label mt-2">Доп. информация</label>
+      <textarea id="m_eq_info" class="form-control" rows="3" placeholder="Любые заметки"></textarea>
+    `,
+    async () => {
+      const name = document.getElementById("m_eq_name").value;
+      const ac_bonus = intOrNull(document.getElementById("m_eq_ac").value) ?? 0;
+      const stats = document.getElementById("m_eq_stats").value;
+      const info = document.getElementById("m_eq_info").value;
+
+      state.equipDraft[key] = serializeEquipSlot({ name, ac_bonus, stats, info });
+      renderEquipUI();
+    }
+  );
+
+  document.getElementById("m_eq_name").value = cur.name || "";
+  document.getElementById("m_eq_ac").value = String(cur.ac_bonus ?? 0);
+  document.getElementById("m_eq_stats").value = cur.stats || "";
+  document.getElementById("m_eq_info").value = cur.info || "";
+}
+
+function fillEquip(equipment) {
+  state.equipDraft = { ...(equipment || {}) };
+  renderEquipUI();
+}
+
 function readEquip() {
-  const payload = {};
-  document.querySelectorAll("input[data-eq]").forEach((input) => {
-    const key = input.dataset.eq;
-    payload[key] = input.value;
-  });
-  return payload;
+  return { ...(state.equipDraft || {}) };
 }
 
 el("btnSaveEquip").addEventListener("click", async () => {

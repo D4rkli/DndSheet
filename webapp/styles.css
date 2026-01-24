@@ -568,84 +568,23 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
   }
 }
 
-/* =========================
-   Money (GP/SP/CP)
-   ========================= */
 
-.money-wrap{
-  padding: 12px;
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 16px;
-  background: rgba(255,255,255,.03);
+/* ===== Equipment cards ===== */
+.equip-slot{
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 10px;
 }
 
-.money-title{
-  font-weight: 600;
-  letter-spacing: .2px;
-  margin-bottom: 10px;
+.equip-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
 }
 
-.money-grid{
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.money-input{
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.coin-badge{
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.06);
-}
-
-.coin-gold{ color: #ffd66e; }
-.coin-silver{ color: #d7dde7; }
-.coin-copper{ color: #ffb08a; }
-
-.money-preview{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.coin-chip{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.04);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.coin-unit{
-  opacity: .75;
+.equip-title{
   font-weight: 700;
-  letter-spacing: .3px;
+  letter-spacing: .2px;
 }
-
-.coin-total{
-  opacity: .75;
-  margin-left: 4px;
-  font-variant-numeric: tabular-nums;
-}
-
-@media (max-width: 520px){
-  .money-grid{ grid-template-columns: 1fr; }
-}
-
-
