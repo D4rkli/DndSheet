@@ -872,15 +872,14 @@ function renderEquipUI() {
           <div class="item-title"><i class="bi bi-shield"></i> <span>${escapeHtml(label)}:</span> <span>${title}</span></div>
           ${preview ? `<div class="item-sub">${preview}</div>` : ``}
         </div>
-        <div class="d-flex align-items-center gap-2 item-actions">
-          <button class="btn btn-sm btn-outline-light" data-act="edit" title="Редактировать слот">
+        <div class="d-flex align-items-center gap-1 item-actions">
+          <button class="btn btn-sm btn-outline-light equip-btn" data-act="edit" title="Редактировать">
             <i class="bi bi-pencil"></i>
           </button>
-          <button class="btn btn-sm btn-outline-light" data-act="clear" title="Очистить слот">
-            <i class="bi bi-x-lg"></i>
+          <button class="btn btn-sm btn-outline-light equip-btn equip-clear" data-act="clear" title="Очистить">
+            <i class="bi bi-x"></i>
           </button>
         </div>
-      </div>
       ${details ? `<div class="item-details">${details}</div>` : ``}
     `;
 
@@ -932,42 +931,6 @@ function openEquipSlotModal(key, label) {
   document.getElementById("m_eq_stats").value = cur.stats || "";
   document.getElementById("m_eq_info").value = cur.info || "";
 }
-
-(function buildEquip() {
-  const wrap = el("equipGrid");
-  wrap.innerHTML = "";
-  equipFields.forEach(({ key, label }) => {
-    const div = document.createElement("div");
-    div.innerHTML = `
-      <label class="form-label">${label}</label>
-      <input class="form-control" data-eq="${key}" />
-    `;
-    wrap.appendChild(div);
-  });
-})();
-
-function fillEquip(equipment) {
-  document.querySelectorAll("input[data-eq]").forEach((input) => {
-    const key = input.dataset.eq;
-    input.value = equipment?.[key] ?? "";
-  });
-}
-
-function readEquip() {
-  const payload = {};
-  document.querySelectorAll("input[data-eq]").forEach((input) => {
-    const key = input.dataset.eq;
-    payload[key] = input.value;
-  });
-  return payload;
-}
-
-el("btnSaveEquip").addEventListener("click", async () => {
-  const id = currentChId();
-  await api(`/characters/${id}/equipment`, { method: "PATCH", body: JSON.stringify(readEquip()) });
-  setStatus("Сохранено ✅");
-  await loadSheet(false);
-});
 
 // CUSTOM FIELDS (from template)
 function renderCustomFields() {
@@ -1482,7 +1445,10 @@ async function loadSheet(showStatus = true) {
   fillStatInputs("statsPersonality", ch);
   fillStatInputs("statsCombat", ch);
 
-  fillEquip(state.sheet.equipment);
+  // экипировка: берём с сервера и кладём в draft
+    state.equipDraft = { ...(state.sheet.equipment || {}) };
+    renderEquipUI();
+
 
   renderCustomFields();
 

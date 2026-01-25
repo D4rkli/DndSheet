@@ -588,3 +588,24 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
   font-weight: 700;
   letter-spacing: .2px;
 }
+
+/* EQUIP: компактные кнопки */
+.equip-btn{
+  padding: .25rem .45rem;
+  border-radius: 12px;
+  opacity: .85;
+}
+.equip-btn:hover{ opacity: 1; }
+.equip-clear{ opacity: .55; }
+
+/* EQUIP: меньше воздуха в карточке */
+#equipGrid .item{
+  padding: 10px 12px;
+}
+#equipGrid .item-title{
+  font-size: 15px;
+}
+#equipGrid .item-sub{
+  font-size: 12px;
+  opacity: .8;
+}
