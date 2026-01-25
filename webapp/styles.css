@@ -664,3 +664,33 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== Equip: stop overflow / keep actions inside ===== */
+
+.equip-top{
+  gap: 10px;
+}
+
+/* левый блок должен уметь сжиматься */
+.equip-slot{
+  min-width: 0;        /* 🔥 ключ! */
+  flex: 1 1 auto;
+}
+
+/* текст в строке не должен раздувать карточку */
+.equip-slot span{
+  min-width: 0;
+}
+
+/* если название длинное — обрезаем аккуратно */
+.equip-slot span:nth-child(3){
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* кнопки всегда справа и не сжимаются */
+.equip-actions{
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
