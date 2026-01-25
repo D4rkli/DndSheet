@@ -664,8 +664,3 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
     grid-template-columns: 1fr;
   }
 }
-/* ===== Equipment header fix ===== */
-.equip-header {
-  grid-column: 1 / -1; /* занимает всю строку грида */
-}
-

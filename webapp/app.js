@@ -854,12 +854,12 @@ function renderEquipUI() {
   wrap.innerHTML = "";
 
   const bonus = equipArmorBonusTotal();
-  const header = document.createElement("div");
-  header.className = "equip-header muted mb-2";
-  header.innerHTML = bonus ? `Бонус брони от экипировки: <b>+${bonus}</b>` : `Бонус брони от экипировки: <b>0</b>`;
-  wrap.appendChild(header);
+  const bonusEl = el("equipBonus");
+  if (bonusEl) {
+    bonusEl.innerHTML = `Бонус брони от экипировки: <b>${bonus ? `+${bonus}` : `0`}</b>`;
+  }
 
-    equipFields.forEach(({ key, label }) => {
+  equipFields.forEach(({ key, label }) => {
     const raw = state.equipDraft?.[key] ?? "";
     const slot = parseEquipSlot(raw);
 
