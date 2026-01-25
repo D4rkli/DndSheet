@@ -569,43 +569,81 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 }
 
 
-/* ===== Equipment cards ===== */
-.equip-slot{
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-  padding: 10px;
+/* ===== Equipment (nice cards) ===== */
+
+#equipGrid.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.equip-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
+.equip-card {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 8px 22px rgba(0,0,0,.22);
 }
 
-.equip-title{
+.equip-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.equip-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 700;
-  letter-spacing: .2px;
 }
 
-/* EQUIP: компактные кнопки */
-.equip-btn{
-  padding: .25rem .45rem;
+.equip-slot i {
+  opacity: .9;
+}
+
+.equip-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.equip-actions .btn-icon {
+  width: 34px;
+  height: 34px;
   border-radius: 12px;
-  opacity: .85;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-.equip-btn:hover{ opacity: 1; }
-.equip-clear{ opacity: .55; }
 
-/* EQUIP: меньше воздуха в карточке */
-#equipGrid .item{
-  padding: 10px 12px;
+.equip-actions .btn-icon:active {
+  transform: scale(.98);
 }
-#equipGrid .item-title{
-  font-size: 15px;
+
+.equip-name {
+  margin-top: 10px;
+  font-weight: 700;
+  opacity: .95;
 }
-#equipGrid .item-sub{
+
+.equip-sub {
+  margin-top: 4px;
   font-size: 12px;
-  opacity: .8;
+  opacity: .75;
 }
+
+.equip-info {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: .75;
+  white-space: pre-wrap;
+}
+
+/* пустой слот — чтобы "—" выглядел как плейсхолдер */
+.equip-empty {
+  opacity: .6;
+}
+

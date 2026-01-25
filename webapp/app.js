@@ -66,9 +66,15 @@ function setActiveTemplateId(id) {
 }
 
 function activeTabs() {
-  const tpl = state.templates.find((t) => t.id === state.activeTemplateId);
-  const tabs = tpl?.config?.tabs;
-  return Array.isArray(tabs) && tabs.length ? tabs : DEFAULT_TABS;
+  // что выбрано в шаблоне (или дефолт)
+  const base = (state.template && Array.isArray(state.template.tabs) && state.template.tabs.length)
+    ? state.template.tabs
+    : DEFAULT_TABS;
+
+  // 👇 важное: добавляем новые вкладки, чтобы старые шаблоны не ломались
+  const mustHave = ["passive-abilities", "abilities"]; // на будущее можно сюда докидывать новые
+
+  return Array.from(new Set([...base, ...mustHave]));
 }
 
 function applyTemplateToUI() {
@@ -859,39 +865,96 @@ function renderEquipUI() {
 
     const card = document.createElement("div");
     card.className = "item";
-    const title = escapeHtml(slot.name || `—`);
-    const previewParts = [];
-    if (slot.ac_bonus) previewParts.push(`AC +${slot.ac_bonus}`);
-    if (slot.stats) previewParts.push(slot.stats);
-    const preview = escapeHtml(previewParts.join(" · "));
-    const details = escapeHtml(slot.info || "");
+    const title = slot.label;               // "Голова", "Броня", ...
+    const name = s.name?.trim() || "—";
+    const ac = Number(s.ac || 0);
+    const stats = s.stats?.trim() || "";
+    const info = s.info?.trim() || "";
+
+    card.className = "item equip-card";
 
     card.innerHTML = `
       <div class="item-head">
         <div class="min-w-0">
-          <div class="item-title"><i class="bi bi-shield"></i> <span>${escapeHtml(label)}:</span> <span>${title}</span></div>
-          ${preview ? `<div class="item-sub">${preview}</div>` : ``}
+          <div class="item-title equip-title">
+            <i class="bi bi-shield"></i>
+            <span>${escapeHtml(title)}:</span>
+            <span class="ms-1">${escapeHtml(name)}</span>
+            ${ac ? `<span class="ms-2 muted">AC +${ac}</span>` : ``}
+          </div>
+    
+          ${stats ? `<div class="equip-sub">${escapeHtml(stats)}</div>` : `<div class="equip-sub muted">Нажми ✏️ чтобы заполнить</div>`}
         </div>
-        <div class="d-flex align-items-center gap-1 item-actions">
-          <button class="btn btn-sm btn-outline-light equip-btn" data-act="edit" title="Редактировать">
+    
+        <div class="d-flex align-items-center gap-1 equip-actions">
+          <button class="btn btn-sm btn-outline-light" data-act="edit" title="Редактировать">
             <i class="bi bi-pencil"></i>
           </button>
-          <button class="btn btn-sm btn-outline-light equip-btn equip-clear" data-act="clear" title="Очистить">
+          <button class="btn btn-sm btn-outline-light equip-clear" data-act="clear" title="Очистить">
             <i class="bi bi-x"></i>
           </button>
         </div>
-      ${details ? `<div class="item-details">${details}</div>` : ``}
+      </div>
+    
+      ${info ? `<div class="equip-details d-none">${escapeHtml(info)}</div>` : ``}
     `;
 
-    card.querySelector("button[data-act='edit']")?.addEventListener("click", () => openEquipSlotModal(key, label));
-    card.querySelector("button[data-act='clear']")?.addEventListener("click", async () => {
-      state.equipDraft[key] = "";
+
+        // раскрыть/скрыть info по тапу на карточку
+    card.addEventListener("click", () => {
+      const d = card.querySelector(".equip-details");
+      if (d) d.classList.toggle("d-none");
+    });
+
+    // edit
+    card.querySelector("[data-act='edit']").addEventListener("click", (e) => {
+      e.stopPropagation();
+      openEquipSlotModal(slot.key); // или как у тебя называется (см. ниже)
+    });
+
+    // clear
+    card.querySelector("[data-act='clear']").addEventListener("click", async (e) => {
+      e.stopPropagation();
+
+      // очистка слота в draft
+      state.equipDraft[slot.key] = ""; // старый формат совместимости
       renderEquipUI();
     });
+
+    const bonus = calcEquipAcBonusFromDraft();
+    const elBonus = document.getElementById("equipAcBonusText"); // если есть
+    if (elBonus) elBonus.textContent = String(bonus);
 
     wrap.appendChild(card);
   });
 }
+
+function calcEquipAcBonusFromDraft() {
+  const eq = state.equipDraft || {};
+  let sum = 0;
+
+  for (const k in eq) {
+    const raw = eq[k];
+    if (!raw) continue;
+    const s = parseEquipSlot(raw);     // твоя функция парсинга JSON/строки
+    sum += Number(s.ac || 0) || 0;
+  }
+
+  return sum;
+}
+
+const equipIcons = {
+  head: "bi-helmet",
+  body: "bi-shield",
+  hands: "bi-hand-index-thumb",
+  legs: "bi-person-walking",
+  feet: "bi-boot",
+  weapon1: "bi-sword",
+  weapon2: "bi-sword",
+  ring1: "bi-gem",
+  ring2: "bi-gem",
+  trinket: "bi-stars",
+};
 
 function openEquipSlotModal(key, label) {
   const cur = parseEquipSlot(state.equipDraft?.[key]);
