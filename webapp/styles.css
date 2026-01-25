@@ -578,25 +578,28 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 }
 
 .equip-card {
-  padding: 12px;
-  border-radius: 16px;
   background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.08);
-  box-shadow: 0 8px 22px rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .equip-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
 }
 
 .equip-slot {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-weight: 700;
+  font-size: 13px;
 }
 
 .equip-slot i {
@@ -605,18 +608,19 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 
 .equip-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .equip-actions .btn-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,.10);
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.15);
   background: rgba(255,255,255,.06);
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
 }
 
 .equip-actions .btn-icon:active {
@@ -645,5 +649,19 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 /* пустой слот — чтобы "—" выглядел как плейсхолдер */
 .equip-empty {
   opacity: .6;
+}
+/* ===== Equipment layout FIX ===== */
+
+#equipGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* на очень узких экранах */
+@media (max-width: 420px) {
+  #equipGrid {
+    grid-template-columns: 1fr;
+  }
 }
 

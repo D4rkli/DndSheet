@@ -859,71 +859,53 @@ function renderEquipUI() {
   header.innerHTML = bonus ? `Бонус брони от экипировки: <b>+${bonus}</b>` : `Бонус брони от экипировки: <b>0</b>`;
   wrap.appendChild(header);
 
-  equipFields.forEach(({ key, label }) => {
+    equipFields.forEach(({ key, label }) => {
     const raw = state.equipDraft?.[key] ?? "";
     const slot = parseEquipSlot(raw);
 
-    const card = document.createElement("div");
-    card.className = "item";
-    const title = slot.label;               // "Голова", "Броня", ...
-    const name = s.name?.trim() || "—";
-    const ac = Number(s.ac || 0);
-    const stats = s.stats?.trim() || "";
-    const info = s.info?.trim() || "";
+    const name = slot.name?.trim() || "—";
+    const ac = Number(slot.ac_bonus || 0);
+    const stats = slot.stats?.trim() || "";
+    const info = slot.info?.trim() || "";
 
-    card.className = "item equip-card";
+    const card = document.createElement("div");
+    card.className = "equip-card";
 
     card.innerHTML = `
-      <div class="item-head">
-        <div class="min-w-0">
-          <div class="item-title equip-title">
-            <i class="bi bi-shield"></i>
-            <span>${escapeHtml(title)}:</span>
-            <span class="ms-1">${escapeHtml(name)}</span>
-            ${ac ? `<span class="ms-2 muted">AC +${ac}</span>` : ``}
-          </div>
-    
-          ${stats ? `<div class="equip-sub">${escapeHtml(stats)}</div>` : `<div class="equip-sub muted">Нажми ✏️ чтобы заполнить</div>`}
+      <div class="equip-top">
+        <div class="equip-slot">
+          <i class="bi bi-shield"></i>
+          <span>${label}:</span>
+          <span class="${name === "—" ? "equip-empty" : ""}">
+            ${escapeHtml(name)}
+          </span>
+          ${ac ? `<span class="muted">+${ac} AC</span>` : ""}
         </div>
-    
-        <div class="d-flex align-items-center gap-1 equip-actions">
-          <button class="btn btn-sm btn-outline-light" data-act="edit" title="Редактировать">
+  
+        <div class="equip-actions">
+          <button class="btn-icon" data-act="edit" title="Редактировать">
             <i class="bi bi-pencil"></i>
           </button>
-          <button class="btn btn-sm btn-outline-light equip-clear" data-act="clear" title="Очистить">
+          <button class="btn-icon" data-act="clear" title="Снять">
             <i class="bi bi-x"></i>
           </button>
         </div>
       </div>
-    
-      ${info ? `<div class="equip-details d-none">${escapeHtml(info)}</div>` : ``}
+  
+      ${stats ? `<div class="equip-sub">${escapeHtml(stats)}</div>` : ""}
+      ${info ? `<div class="equip-info">${escapeHtml(info)}</div>` : ""}
     `;
 
-
-        // раскрыть/скрыть info по тапу на карточку
-    card.addEventListener("click", () => {
-      const d = card.querySelector(".equip-details");
-      if (d) d.classList.toggle("d-none");
-    });
-
-    // edit
     card.querySelector("[data-act='edit']").addEventListener("click", (e) => {
       e.stopPropagation();
-      openEquipSlotModal(slot.key); // или как у тебя называется (см. ниже)
+      openEquipSlotModal(key, label);
     });
 
-    // clear
-    card.querySelector("[data-act='clear']").addEventListener("click", async (e) => {
+    card.querySelector("[data-act='clear']").addEventListener("click", (e) => {
       e.stopPropagation();
-
-      // очистка слота в draft
-      state.equipDraft[slot.key] = ""; // старый формат совместимости
+      state.equipDraft[key] = "";
       renderEquipUI();
     });
-
-    const bonus = calcEquipAcBonusFromDraft();
-    const elBonus = document.getElementById("equipAcBonusText"); // если есть
-    if (elBonus) elBonus.textContent = String(bonus);
 
     wrap.appendChild(card);
   });
