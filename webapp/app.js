@@ -881,30 +881,14 @@ function renderEquipUI() {
           </span>
           ${ac ? `<span class="muted">+${ac} AC</span>` : ""}
         </div>
-  
-        <div class="equip-actions">
-          <button class="btn-icon" data-act="edit" title="Редактировать">
-            <i class="bi bi-pencil"></i>
-          </button>
-          <button class="btn-icon" data-act="clear" title="Снять">
-            <i class="bi bi-x"></i>
-          </button>
-        </div>
       </div>
-  
+    
       ${stats ? `<div class="equip-sub">${escapeHtml(stats)}</div>` : ""}
       ${info ? `<div class="equip-info">${escapeHtml(info)}</div>` : ""}
     `;
 
-    card.querySelector("[data-act='edit']").addEventListener("click", (e) => {
-      e.stopPropagation();
+    card.addEventListener("click", () => {
       openEquipSlotModal(key, label);
-    });
-
-    card.querySelector("[data-act='clear']").addEventListener("click", (e) => {
-      e.stopPropagation();
-      state.equipDraft[key] = "";
-      renderEquipUI();
     });
 
     wrap.appendChild(card);
@@ -965,8 +949,10 @@ function openEquipSlotModal(key, label) {
       const ac_bonus = intOrNull(document.getElementById("m_eq_ac").value) ?? 0;
       const stats = document.getElementById("m_eq_stats").value;
       const info = document.getElementById("m_eq_info").value;
+      const nameTrim = String(name || "").trim();
+      const allEmpty = !nameTrim && !ac_bonus && !String(stats||"").trim() && !String(info||"").trim();
 
-      state.equipDraft[key] = serializeEquipSlot({ name, ac_bonus, stats, info });
+      state.equipDraft[key] = allEmpty ? "" : serializeEquipSlot({ name, ac_bonus, stats, info });
       renderEquipUI();
     }
   );

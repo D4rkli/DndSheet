@@ -605,3 +605,10 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
   height: 36px;
   border-radius: 12px;
 }
+.equip-card{
+  cursor: pointer;
+}
+
+.equip-card:active{
+  transform: translateY(1px);
+}
