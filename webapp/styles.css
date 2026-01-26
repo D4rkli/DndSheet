@@ -569,14 +569,24 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 }
 
 
-/* ===== EQUIP: buttons under text (mobile friendly) ===== */
+/* ===== EQUIPMENT CARDS (REAL FIX) ===== */
 
+.equip-card{
+  background: rgba(18, 26, 51, 0.72);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 12px;
+}
+
+/* нормальный хедер */
 .equip-top{
   display: grid;
-  grid-template-columns: 1fr;   /* одна колонка */
+  grid-template-columns: 1fr auto;
+  align-items: center;
   gap: 10px;
 }
 
+/* слот слева */
 .equip-slot{
   display: flex;
   align-items: center;
@@ -584,14 +594,12 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
   min-width: 0;
 }
 
-/* кнопки теперь снизу и слева (можно справа если хочешь) */
+/* кнопки справа */
 .equip-actions{
-  display: flex;
-  gap: 10px;
-  justify-content: flex-start;
+  justify-self: end;
 }
 
-/* сами иконки покомпактнее */
+/* иконки-кнопки */
 .btn-icon{
   width: 36px;
   height: 36px;
