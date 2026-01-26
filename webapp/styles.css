@@ -569,128 +569,52 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 }
 
 
-/* ===== Equipment (nice cards) ===== */
+/* ===== EQUIPMENT layout FIX ===== */
 
-#equipGrid.grid-2 {
+#equipGrid.grid-2{
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
-.equip-card {
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 16px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+/* карточка */
+.equip-card{
+  width: 100%;
 }
 
-.equip-top {
+/* верхняя строка карточки: слева слот, справа кнопки */
+.equip-top{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-}
-
-.equip-slot {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.equip-slot i {
-  opacity: .9;
-}
-
-.equip-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.equip-actions .btn-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.15);
-  background: rgba(255,255,255,.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-.equip-actions .btn-icon:active {
-  transform: scale(.98);
-}
-
-.equip-name {
-  margin-top: 10px;
-  font-weight: 700;
-  opacity: .95;
-}
-
-.equip-sub {
-  margin-top: 4px;
-  font-size: 12px;
-  opacity: .75;
-}
-
-.equip-info {
-  margin-top: 6px;
-  font-size: 12px;
-  opacity: .75;
-  white-space: pre-wrap;
-}
-
-/* пустой слот — чтобы "—" выглядел как плейсхолдер */
-.equip-empty {
-  opacity: .6;
-}
-/* ===== Equipment layout FIX ===== */
-
-#equipGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-/* на очень узких экранах */
-@media (max-width: 420px) {
-  #equipGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ===== Equip: stop overflow / keep actions inside ===== */
-
-.equip-top{
   gap: 10px;
 }
 
-/* левый блок должен уметь сжиматься */
+/* левый блок обязан сжиматься, иначе ломает сетку */
 .equip-slot{
-  min-width: 0;        /* 🔥 ключ! */
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex: 1 1 auto;
+  min-width: 0;            /* 🔥 КЛЮЧ */
 }
 
-/* текст в строке не должен раздувать карточку */
+/* текст внутри слота пусть обрезается, не раздувает карточку */
 .equip-slot span{
   min-width: 0;
 }
 
-/* если название длинное — обрезаем аккуратно */
 .equip-slot span:nth-child(3){
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* кнопки всегда справа и не сжимаются */
+/* кнопки справа не сжимаются */
 .equip-actions{
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex: 0 0 auto;
   white-space: nowrap;
 }

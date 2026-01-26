@@ -919,7 +919,7 @@ function calcEquipAcBonusFromDraft() {
     const raw = eq[k];
     if (!raw) continue;
     const s = parseEquipSlot(raw);     // твоя функция парсинга JSON/строки
-    sum += Number(s.ac || 0) || 0;
+    sum += Number(s.ac_bonus || 0) || 0;
   }
 
   return sum;
