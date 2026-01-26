@@ -1,5 +1,3 @@
-body{ outline: 5px solid red !important; }
-
 :root {
   --bg: #0b1020;
   --card: #121a33;
@@ -571,7 +569,7 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 }
 
 
-/* ===== EQUIPMENT layout FIX ===== */
+/* ===== EQUIP: stop buttons from spilling out ===== */
 
 #equipGrid.grid-2{
   display: grid;
@@ -579,44 +577,41 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
   gap: 12px;
 }
 
-/* карточка */
 .equip-card{
-  width: 100%;
+  overflow: hidden;           /* 🔥 режем всё, что вылезло */
 }
 
-/* верхняя строка карточки: слева слот, справа кнопки */
 .equip-top{
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  min-width: 0;
 }
 
-/* левый блок обязан сжиматься, иначе ломает сетку */
 .equip-slot{
   display: flex;
   align-items: center;
   gap: 8px;
+
   flex: 1 1 auto;
-  min-width: 0;            /* 🔥 КЛЮЧ */
+  min-width: 0;              /* 🔥 ключ для сжатия */
 }
 
-/* текст внутри слота пусть обрезается, не раздувает карточку */
-.equip-slot span{
+.equip-actions{
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-left: auto;         /* 🔥 гарантированно вправо */
+}
+
+.equip-slot > span{
   min-width: 0;
 }
 
-.equip-slot span:nth-child(3){
+/* имя (3-й элемент: i, "label:", "name") */
+.equip-slot > span:nth-of-type(2){
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* кнопки справа не сжимаются */
-.equip-actions{
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
   white-space: nowrap;
 }
