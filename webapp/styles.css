@@ -569,49 +569,42 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 }
 
 
-/* ===== EQUIP: stop buttons from spilling out ===== */
+/* ===== EQUIPMENT: absolute actions (hard fix) ===== */
 
-#equipGrid.grid-2{
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+#equipGrid{
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
 }
 
 .equip-card{
-  overflow: hidden;           /* 🔥 режем всё, что вылезло */
+  position: relative !important;
+  overflow: hidden !important;
 }
 
+/* даём место справа под кнопки */
 .equip-top{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-width: 0;
+  padding-right: 86px !important; /* 2 кнопки + зазор */
 }
 
-.equip-slot{
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  flex: 1 1 auto;
-  min-width: 0;              /* 🔥 ключ для сжатия */
-}
-
+/* кнопки всегда внутри карточки справа сверху */
 .equip-actions{
-  display: flex;
-  gap: 8px;
-  flex: 0 0 auto;
-  margin-left: auto;         /* 🔥 гарантированно вправо */
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  display: flex !important;
+  gap: 8px !important;
+  z-index: 2 !important;
 }
 
-.equip-slot > span{
-  min-width: 0;
+/* чтобы текст не залезал под кнопки */
+.equip-slot{
+  min-width: 0 !important;
 }
 
-/* имя (3-й элемент: i, "label:", "name") */
-.equip-slot > span:nth-of-type(2){
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.equip-slot span{
+  min-width: 0 !important;
 }
+
+#equipGrid .equip-card { outline: 3px solid red !important; }
+#equipGrid .equip-actions { outline: 3px solid lime !important; }
