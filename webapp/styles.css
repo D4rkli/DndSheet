@@ -1,3 +1,5 @@
+body{ outline: 5px solid red !important; }
+
 :root {
   --bg: #0b1020;
   --card: #121a33;
