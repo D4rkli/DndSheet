@@ -613,6 +613,3 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
   align-items: center;
   justify-content: center;
 }
-
-#equipGrid .equip-card { outline: 3px solid red !important; }
-#equipGrid .equip-actions { outline: 3px solid lime !important; }
