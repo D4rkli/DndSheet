@@ -569,41 +569,49 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 }
 
 
-/* ===== EQUIPMENT: absolute actions (hard fix) ===== */
-
-#equipGrid{
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 12px !important;
-}
+/* ===== EQUIPMENT CARDS (REAL FIX) ===== */
 
 .equip-card{
-  position: relative !important;
-  overflow: hidden !important;
+  background: rgba(18, 26, 51, 0.72);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 12px;
 }
 
-/* даём место справа под кнопки */
+/* нормальный хедер */
 .equip-top{
-  padding-right: 86px !important; /* 2 кнопки + зазор */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-/* кнопки всегда внутри карточки справа сверху */
-.equip-actions{
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  display: flex !important;
-  gap: 8px !important;
-  z-index: 2 !important;
-}
-
-/* чтобы текст не залезал под кнопки */
+/* слот слева */
 .equip-slot{
-  min-width: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
-.equip-slot span{
-  min-width: 0 !important;
+/* кнопки справа */
+.equip-actions{
+  display: flex;
+  gap: 6px;
+}
+
+/* иконки-кнопки */
+.btn-icon{
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: #fff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #equipGrid .equip-card { outline: 3px solid red !important; }
