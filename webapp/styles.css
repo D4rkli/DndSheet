@@ -573,7 +573,7 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 
 .equip-card{
   background: rgba(18, 26, 51, 0.72);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgb(252, 252, 252);
   border-radius: 18px;
   padding: 12px;
 }
