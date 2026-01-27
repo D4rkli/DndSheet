@@ -538,6 +538,9 @@ function escapeHtml(s) {
     .replaceAll("\"", "&quot;")
     .replaceAll("'", "&#039;");
 }
+function escapeAttr(s) {
+  return String(s ?? "").replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+}
 
 // ===== Modal helpers
 const modalEl = el("editModal");
@@ -887,7 +890,10 @@ function renderEquipUI() {
         <div class="equip-slot">
           <i class="bi bi-shield"></i>
           <span>${label}:</span>
-          <span class="${name === "—" ? "equip-empty" : ""}">
+          <span
+            class="equip-name ${name === "—" ? "equip-empty" : ""}"
+            title="${name !== "—" ? escapeAttr(name) : ""}"
+          >
             ${escapeHtml(name)}
           </span>
           ${ac ? `<span class="muted">+${ac} AC</span>` : ""}
