@@ -83,6 +83,8 @@ class Character(Base):
     abilities: Mapped[list["Ability"]] = relationship(back_populates="character", cascade="all, delete-orphan")
     states: Mapped[list["State"]] = relationship(back_populates="character", cascade="all, delete-orphan")
 
+    summons: Mapped[list["Summon"]] = relationship(back_populates="character", cascade="all, delete-orphan")
+
     equipment: Mapped["Equipment"] = relationship(
         back_populates="character",
         cascade="all, delete-orphan",
@@ -189,3 +191,20 @@ class Equipment(Base):
 
     character: Mapped["Character"] = relationship(back_populates="equipment")
 
+class Summon(Base):
+    __tablename__ = "summons"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    character_id: Mapped[int] = mapped_column(ForeignKey("characters.id"), index=True)
+
+    name: Mapped[str] = mapped_column(String(120))
+    description: Mapped[str] = mapped_column(Text, default="")
+    duration: Mapped[str] = mapped_column(String(80), default="")
+
+    # коэффициенты/доли (строками: "1/3", "50%", "0.25")
+    hp_ratio: Mapped[str] = mapped_column(String(40), default="1/3")
+    attack_ratio: Mapped[str] = mapped_column(String(40), default="1/2")
+    defense_ratio: Mapped[str] = mapped_column(String(40), default="1/4")
+
+    count: Mapped[int] = mapped_column(Integer, default=1)
+
+    character: Mapped["Character"] = relationship(back_populates="summons")

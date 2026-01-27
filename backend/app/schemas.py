@@ -124,6 +124,23 @@ class EquipmentUpdate(BaseModel):
     ring4: Optional[str] = None
     jewelry: Optional[str] = None
 
+class SummonCreate(BaseModel):
+    name: str
+    description: str = ""
+    duration: str = ""
+    hp_ratio: str = "1/3"
+    attack_ratio: str = "1/2"
+    defense_ratio: str = "1/4"
+    count: int = 1
+
+class SummonUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    duration: Optional[str] = None
+    hp_ratio: Optional[str] = None
+    attack_ratio: Optional[str] = None
+    defense_ratio: Optional[str] = None
+    count: Optional[int] = None
 
 class SheetTemplateCreate(BaseModel):
     name: str
@@ -145,6 +162,7 @@ class SheetExportOut(BaseModel):
     abilities: list[Dict[str, Any]]
     states: list[Dict[str, Any]]
     equipment: Optional[Dict[str, Any]] = None
+    summons: list[Dict[str, Any]] = []
 
 
 class SheetImportIn(SheetExportOut):
@@ -171,3 +189,5 @@ class ImportPayload(BaseModel):
     states: list[Dict[str, Any]] = []
     equipment: Optional[Dict[str, Any]] = None
     custom_values: Optional[Dict[str, Any]] = None
+    summons: list[Dict[str, Any]] = []
+

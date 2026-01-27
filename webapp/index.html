@@ -63,6 +63,7 @@
       <li class="nav-item"><button class="nav-link" data-tab="abilities"><i class="bi bi-lightning-fill"></i><span>Способ.</span></button></li>
       <li class="nav-item"><button class="nav-link" data-tab="passive-abilities"><i class="bi bi-lightning-charge"></i><span>Пассив.</span></button></li>
       <li class="nav-item"><button class="nav-link" data-tab="states"><i class="bi bi-activity"></i><span>Сост.</span></button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="summons"><i class="bi bi-stars"></i><span>Призывы</span></button></li>
       <li class="nav-item"><button class="nav-link" data-tab="equip"><i class="bi bi-shield"></i><span>Экип.</span></button></li>
       <li class="nav-item"><button class="nav-link" data-tab="custom"><i class="bi bi-sliders"></i><span>Поля</span></button></li>
     </ul>
@@ -319,6 +320,18 @@
       </div>
     </section>
 
+    <section class="tab d-none" id="tab-summons">
+      <div class="card card-soft">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="section-title mb-0">Призывы</div>
+            <button id="btnAddSummon" class="btn btn-light btn-sm">+ Призыв</button>
+          </div>
+
+          <div id="summonsList" class="list mt-2"></div>
+        </div>
+      </div>
+    </section>
 
     <!-- CUSTOM FIELDS -->
     <section class="tab d-none" id="tab-custom">

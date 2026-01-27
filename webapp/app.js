@@ -48,6 +48,7 @@ const DEFAULT_TABS = [
   "abilities",
   "passive-abilities",
   "states",
+  "summons",
   "equip",
   "custom",
 ];
@@ -72,7 +73,7 @@ function activeTabs() {
     : DEFAULT_TABS;
 
   // 👇 важное: добавляем новые вкладки, чтобы старые шаблоны не ломались
-  const mustHave = ["passive-abilities", "abilities"]; // на будущее можно сюда докидывать новые
+  const mustHave = ["passive-abilities", "abilities", "summons"]; // на будущее можно сюда докидывать новые
 
   return Array.from(new Set([...base, ...mustHave]));
 }
@@ -230,6 +231,134 @@ function parseCostParts(costStr) {
   });
   return out;
 }
+
+function parseRatio(raw) {
+  const s = String(raw || "").trim().toLowerCase();
+  if (!s) return 0;
+
+  // 50%
+  if (s.endsWith("%")) {
+    const n = Number(s.slice(0, -1).trim().replace(",", "."));
+    return Number.isFinite(n) ? n / 100 : 0;
+  }
+
+  // 1/3
+  if (s.includes("/")) {
+    const [a, b] = s.split("/").map(x => Number(x.trim().replace(",", ".")));
+    if (Number.isFinite(a) && Number.isFinite(b) && b !== 0) return a / b;
+  }
+
+  // 0.25
+  const n = Number(s.replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function calcSummonStats(ch, summon) {
+  const hp = Math.round((ch.hp_max || 0) * parseRatio(summon.hp_ratio));
+  const atk = Math.round((ch.attack || 0) * parseRatio(summon.attack_ratio));
+  const def = Math.round((ch.defense || 0) * parseRatio(summon.defense_ratio));
+  const count = Math.max(1, Number(summon.count || 1));
+  return { hp, atk, def, count };
+}
+
+function openSummonModal(existing = null) {
+  const isEdit = !!existing;
+  const title = isEdit ? "Редактировать призыв" : "Добавить призыв";
+
+  openModal(
+    title,
+    `
+      <label class="form-label">Название</label>
+      <input id="m_name" class="form-control" />
+
+      <label class="form-label mt-2">Описание</label>
+      <textarea id="m_desc" class="form-control" rows="3"></textarea>
+
+      <div class="row g-2 mt-1">
+        <div class="col-6">
+          <label class="form-label">Длительность</label>
+          <input id="m_duration" class="form-control" placeholder="напр. 3 хода" />
+        </div>
+        <div class="col-6">
+          <label class="form-label">Количество</label>
+          <input id="m_count" type="number" class="form-control" min="1" value="1" />
+        </div>
+      </div>
+
+      <div class="row g-2 mt-2">
+        <div class="col-4">
+          <label class="form-label">HP доля</label>
+          <input id="m_hp_ratio" class="form-control" placeholder="1/3, 50%, 0.25" />
+        </div>
+        <div class="col-4">
+          <label class="form-label">ATK доля</label>
+          <input id="m_atk_ratio" class="form-control" placeholder="1/2" />
+        </div>
+        <div class="col-4">
+          <label class="form-label">DEF доля</label>
+          <input id="m_def_ratio" class="form-control" placeholder="1/4" />
+        </div>
+      </div>
+
+      <div id="m_preview" class="hint mt-2"></div>
+    `,
+    async () => {
+      const id = requireCharacterId();
+      if (!id) return;
+
+      const payload = {
+        name: el("m_name").value,
+        description: el("m_desc").value,
+        duration: el("m_duration").value,
+        count: Number(el("m_count").value || 1),
+        hp_ratio: el("m_hp_ratio").value,
+        attack_ratio: el("m_atk_ratio").value,
+        defense_ratio: el("m_def_ratio").value,
+      };
+
+      const base = `/characters/${id}/summons`;
+      const path = isEdit ? `${base}/${existing.id}` : base;
+      const method = isEdit ? "PATCH" : "POST";
+
+      await api(path, { method, body: JSON.stringify(payload) });
+      await loadSheet(false);
+    }
+  );
+
+  const ch = state.sheet?.character || {};
+  const updatePreview = () => {
+    const tmp = {
+      hp_ratio: el("m_hp_ratio").value,
+      attack_ratio: el("m_atk_ratio").value,
+      defense_ratio: el("m_def_ratio").value,
+      count: Number(el("m_count").value || 1),
+    };
+    const r = calcSummonStats(ch, tmp);
+    el("m_preview").textContent = `Итого: HP ${r.hp} · ATK ${r.atk} · DEF ${r.def} · x${r.count}`;
+  };
+
+  ["m_hp_ratio","m_atk_ratio","m_def_ratio","m_count"].forEach(id => {
+    el(id).addEventListener("input", updatePreview);
+  });
+
+  if (existing) {
+    el("m_name").value = existing.name || "";
+    el("m_desc").value = existing.description || "";
+    el("m_duration").value = existing.duration || "";
+    el("m_count").value = String(existing.count ?? 1);
+    el("m_hp_ratio").value = existing.hp_ratio || "1/3";
+    el("m_atk_ratio").value = existing.attack_ratio || "1/2";
+    el("m_def_ratio").value = existing.defense_ratio || "1/4";
+  } else {
+    el("m_hp_ratio").value = "1/3";
+    el("m_atk_ratio").value = "1/2";
+    el("m_def_ratio").value = "1/4";
+  }
+
+  updatePreview();
+}
+
+el("btnAddSummon")?.addEventListener("click", () => openSummonModal());
 
 function evalCostExpr(res, expr, character, level) {
   const maxBase = Number(character?.[`${res}_max`] ?? 0) || 0;
@@ -1573,6 +1702,30 @@ async function loadSheet(showStatus = true) {
         onEdit: (a) => openSpellModal("ability", a),
       }
     );
+    // Summons
+    if (el("summonsList")) {
+      const ch = state.sheet.character || {};
+      renderList(
+        "summonsList",
+        (state.sheet.summons || []).map((s) => {
+          const r = calcSummonStats(ch, s);
+          return {
+            ...s,
+            preview: `HP ${r.hp} · ATK ${r.atk} · DEF ${r.def} · x${r.count}${s.duration ? ` · ${s.duration}` : ""}`,
+          };
+        }),
+        async (s) => {
+          const id = currentChId();
+          await api(`/characters/${id}/summons/${s.id}`, { method: "DELETE" });
+          await loadSheet(false);
+        },
+        {
+          icon: "bi-person-plus",
+          clamp: true,
+          onEdit: (s) => openSummonModal(s),
+        }
+      );
+    }
   }
 
   setStatus("Ок ✅");

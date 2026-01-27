@@ -635,6 +635,112 @@ async def update_equipment(
     eq = await crud.update_equipment(db, ch_id, body.model_dump(exclude_unset=True))
     return {"status": "ok", "equipment": {"id": eq.id}}
 
+# =========================
+# SUMMONS
+# =========================
+
+@router.get("/characters/{ch_id}/summons")
+async def list_summons(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    rows = await crud.list_summons(db, ch_id)
+    return [
+        {
+            "id": s.id,
+            "name": s.name,
+            "description": s.description,
+            "duration": s.duration,
+            "hp_ratio": s.hp_ratio,
+            "attack_ratio": s.attack_ratio,
+            "defense_ratio": s.defense_ratio,
+            "count": s.count,
+        }
+        for s in rows
+    ]
+
+
+@router.post("/characters/{ch_id}/summons")
+async def add_summon(
+    ch_id: int,
+    body: schemas.SummonCreate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    obj = await crud.add_summon(db, ch_id, body.model_dump())
+    return {"id": obj.id}
+
+
+@router.patch("/characters/{ch_id}/summons/{summon_id}")
+async def patch_summon(
+    ch_id: int,
+    summon_id: int,
+    body: schemas.SummonUpdate,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    obj = await crud.update_summon(db, ch_id, summon_id, body)
+    if not obj:
+        raise HTTPException(404, "Summon not found")
+    return {"status": "ok"}
+
+
+@router.delete("/characters/{ch_id}/summons/{summon_id}")
+async def delete_summon(
+    ch_id: int,
+    summon_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+):
+    tg_user = _auth_user(x_tg_init_data)
+    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
+
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    ok = await crud.delete_summon(db, summon_id)
+    if not ok:
+        raise HTTPException(404, "Summon not found")
+    return {"status": "deleted"}
 
 # =========================
 # FULL SHEET (one call for webapp)
@@ -747,6 +853,19 @@ async def get_full_sheet(
             "ring4": equipment.ring4,
             "jewelry": equipment.jewelry,
         },
+        "summons": [
+            {
+                "id": s.id,
+                "name": s.name,
+                "description": s.description,
+                "duration": s.duration,
+                "hp_ratio": s.hp_ratio,
+                "attack_ratio": s.attack_ratio,
+                "defense_ratio": s.defense_ratio,
+                "count": s.count,
+            }
+            for s in sheet["summons"]
+        ],
         "template": sheet.get("template"),
         "custom_values": sheet.get("custom_values", {}),
     }

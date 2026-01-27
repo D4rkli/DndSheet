@@ -11,6 +11,7 @@ from .models import (
     State,
     Equipment,
     SheetTemplate,
+    Summon,
 )
 
 # =========================
@@ -376,6 +377,41 @@ async def update_state(db, ch_id: int, state_id: int, data):
     await db.commit()
     await db.refresh(obj)
     return obj
+
+# =========================
+# SUMMONS
+# =========================
+
+async def list_summons(db: AsyncSession, character_id: int) -> list[Summon]:
+    q = await db.execute(select(Summon).where(Summon.character_id == character_id))
+    return list(q.scalars().all())
+
+async def add_summon(db: AsyncSession, character_id: int, payload: dict) -> Summon:
+    obj = Summon(character_id=character_id, **payload)
+    db.add(obj)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
+
+async def update_summon(db: AsyncSession, ch_id: int, summon_id: int, data) -> Summon | None:
+    obj = await db.get(Summon, summon_id)
+    if not obj or obj.character_id != ch_id:
+        return None
+    for field in ["name", "description", "duration", "hp_ratio", "attack_ratio", "defense_ratio", "count"]:
+        v = getattr(data, field, None)
+        if v is not None:
+            setattr(obj, field, v)
+    await db.commit()
+    await db.refresh(obj)
+    return obj
+
+async def delete_summon(db: AsyncSession, summon_id: int) -> bool:
+    obj = await db.get(Summon, summon_id)
+    if not obj:
+        return False
+    await db.delete(obj)
+    await db.commit()
+    return True
 
 # =========================
 # TEMPLATES
