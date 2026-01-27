@@ -352,16 +352,21 @@ function normalizeCoinsFromInputs(writeBack = true) {
 function updateMoneyPreview(coins) {
   const node = el("moneyPreview");
   if (!node) return;
+
   const { gold = 0, silver = 0, copper = 0 } = coins || {};
   const totalCp = coinsToCp({ gold, silver, copper });
   const totalGp = (totalCp / 100).toFixed(2);
+
   node.innerHTML = `
-    <span class="coin-chip coin-gold"><i class="bi bi-coin"></i> ${gold} <span class="coin-unit">GP</span></span>
-    <span class="coin-chip coin-silver"><i class="bi bi-coin"></i> ${silver} <span class="coin-unit">SP</span></span>
-    <span class="coin-chip coin-copper"><i class="bi bi-coin"></i> ${copper} <span class="coin-unit">CP</span></span>
-    <span class="coin-total">≈ ${totalGp} gp</span>
+    <div class="wallet-preview-row">
+      <span class="coin-ico coin-gold"></span><span class="wallet-num">${gold}</span>
+      <span class="coin-ico coin-silver"></span><span class="wallet-num">${silver}</span>
+      <span class="coin-ico coin-copper"></span><span class="wallet-num">${copper}</span>
+      <span class="coin-total">≈ ${totalGp} gp</span>
+    </div>
   `;
 }
+
 
 function wireMoneyInputs() {
   const g = el("f_gold");
@@ -369,21 +374,17 @@ function wireMoneyInputs() {
   const c = el("f_copper");
   if (!g || !s || !c) return;
 
-  // на вводе — только обновляем превью (без writeBack, чтобы курсор не прыгал)
+  // Только превью. Никакой автоконвертации/перезаписи полей.
   const onInput = () => normalizeCoinsFromInputs(false);
+
   g.addEventListener("input", onInput);
   s.addEventListener("input", onInput);
   c.addEventListener("input", onInput);
 
-  // на выходе из поля — нормализуем и записываем назад (carry)
-  const onBlur = () => normalizeCoinsFromInputs(true);
-  g.addEventListener("change", onBlur);
-  s.addEventListener("change", onBlur);
-  c.addEventListener("change", onBlur);
-  g.addEventListener("blur", onBlur);
-  s.addEventListener("blur", onBlur);
-  c.addEventListener("blur", onBlur);
+  // при открытии — обновим превью из текущих значений
+  onInput();
 }
+
 
 function mapGenderToSelect(v) {
   const raw = String(v ?? "").trim().toLowerCase();
@@ -707,7 +708,15 @@ el("btnNew").addEventListener("click", () => {
 // MAIN save
 async function saveMain(extra = {}) {
   // автоконвертация монет перед сохранением
-  const coins = normalizeCoinsFromInputs(true);
+  // монеты: сохраняем как ввели (без автоконвертации)
+    const coinsRaw = {
+      gold: parseIntSafe(el("f_gold")?.value),
+      silver: parseIntSafe(el("f_silver")?.value),
+      copper: parseIntSafe(el("f_copper")?.value),
+    };
+
+    // превью оставляем конвертированным (только для отображения)
+    normalizeCoinsFromInputs(false);
 
   const payload = {
     name: el("f_name").value.trim(),
@@ -717,9 +726,9 @@ async function saveMain(extra = {}) {
     level: intOrNull(el("f_level").value),
     xp: intOrNull(el("f_xp").value),
 
-    gold: coins.gold,
-    silver: coins.silver,
-    copper: coins.copper,
+    gold: coinsRaw.gold,
+    silver: coinsRaw.silver,
+    copper: coinsRaw.copper,
 
     hp: intOrNull(el("f_hp").value),
     hp_max: intOrNull(el("f_hp_max").value),
