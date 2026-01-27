@@ -374,14 +374,18 @@ function wireMoneyInputs() {
   const c = el("f_copper");
   if (!g || !s || !c) return;
 
-  // Только превью. Никакой автоконвертации/перезаписи полей.
-  const onInput = () => normalizeCoinsFromInputs(false);
+  const onInput = () => {
+    updateMoneyPreview({
+      gold: parseIntSafe(g.value),
+      silver: parseIntSafe(s.value),
+      copper: parseIntSafe(c.value),
+    });
+  };
 
   g.addEventListener("input", onInput);
   s.addEventListener("input", onInput);
   c.addEventListener("input", onInput);
 
-  // при открытии — обновим превью из текущих значений
   onInput();
 }
 
@@ -716,8 +720,6 @@ async function saveMain(extra = {}) {
     };
 
     // превью оставляем конвертированным (только для отображения)
-    normalizeCoinsFromInputs(false);
-
   const payload = {
     name: el("f_name").value.trim(),
     race: el("f_race").value.trim(),
