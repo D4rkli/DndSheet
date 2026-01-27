@@ -1053,34 +1053,10 @@ function getActiveTabKey() {
 }
 
 function updateFab() {
-  const id = currentChId();
-    if (!id) {
-      // если персонажа нет — FAB скрываем
-      const fab = document.getElementById("fabAdd");
-      if (fab) fab.classList.add("d-none");
-      return;
-    }
   const fab = el("fabAdd");
-  const tab = getActiveTabKey();
-
-  // показываем FAB только там, где есть "добавить"
-  const map = {
-    inv: { text: "Предмет", icon: "bi-backpack", onClick: () => el("btnAddItem")?.click() },
-    spells: { text: "Заклинание", icon: "bi-stars", onClick: () => openSpellModal("spell") },
-    abilities: { text: "Умение", icon: "bi-lightning-charge", onClick: () => openSpellModal("ability") },
-    states: { text: "Состояние", icon: "bi-activity", onClick: () => el("btnAddState")?.click() },
-  };
-
-  const cfg = map[tab];
-  if (!cfg) {
-    fab.classList.add("d-none");
-    fab.onclick = null;
-    return;
-  }
-
-  fab.classList.remove("d-none");
-  fab.innerHTML = `<i class="bi bi-plus-lg"></i>`;
-  fab.onclick = cfg.onClick;
+  if (!fab) return;
+  fab.classList.add("d-none");
+  fab.onclick = null;
 }
 
 function showFabMenu(show) {
