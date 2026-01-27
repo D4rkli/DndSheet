@@ -103,31 +103,26 @@
 
             <div class="col-12">
               <div class="money-wrap">
-                <div class="money-title">Кошелёк</div>
-                <div class="money-grid">
-                  <div class="money-field">
-                    <label class="form-label">Золото</label>
-                    <div class="money-input">
-                      <span class="coin-badge coin-gold"><i class="bi bi-coin"></i></span>
-                      <input id="f_gold" type="number" class="form-control" min="0" inputmode="numeric" />
-                    </div>
+                <div class="section-title">Кошелёк</div>
+
+                <div class="coins-line">
+                  <div class="coin-item">
+                    <span class="coin-icon gold">●</span>
+                    <input id="f_gold" type="number" class="coin-input" inputmode="numeric" />
                   </div>
-                  <div class="money-field">
-                    <label class="form-label">Серебро</label>
-                    <div class="money-input">
-                      <span class="coin-badge coin-silver"><i class="bi bi-coin"></i></span>
-                      <input id="f_silver" type="number" class="form-control" min="0" inputmode="numeric" />
-                    </div>
+
+                  <div class="coin-item">
+                    <span class="coin-icon silver">●</span>
+                    <input id="f_silver" type="number" class="coin-input" inputmode="numeric" />
                   </div>
-                  <div class="money-field">
-                    <label class="form-label">Медь</label>
-                    <div class="money-input">
-                      <span class="coin-badge coin-copper"><i class="bi bi-coin"></i></span>
-                      <input id="f_copper" type="number" class="form-control" min="0" inputmode="numeric" />
-                    </div>
+
+                  <div class="coin-item">
+                    <span class="coin-icon copper">●</span>
+                    <input id="f_copper" type="number" class="coin-input" inputmode="numeric" />
                   </div>
                 </div>
-                <div id="moneyPreview" class="money-preview muted">—</div>
+
+                <div class="hint mt-2" id="moneyPreview"></div>
                 <div class="hint">Автоконвертация: 10 🟤 = 1 ⚪, 10 ⚪ = 1 🟡</div>
               </div>
             </div>

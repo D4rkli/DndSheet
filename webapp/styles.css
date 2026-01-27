@@ -612,3 +612,81 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
 .equip-card:active{
   transform: translateY(1px);
 }
+
+/* ===== COINS: icon + number line ===== */
+
+.coins-line{
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.coin-item{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* кружок-монета */
+.coin-icon{
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-block;
+  opacity: .95;
+}
+
+.coin-icon.gold{
+  background: linear-gradient(180deg, #ffd966, #d4a900);
+}
+
+.coin-icon.silver{
+  background: linear-gradient(180deg, #e6e6e6, #9fa3a7);
+}
+
+.coin-icon.copper{
+  background: linear-gradient(180deg, #e0a070, #a45a2a);
+}
+
+/* число */
+.coin-input{
+  width: 70px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,.25);
+  color: #fff;
+  font-weight: 800;
+  font-size: 16px;
+  text-align: left;
+  padding: 2px 4px;
+}
+
+.coin-input:focus{
+  outline: none;
+  border-bottom-color: rgba(255,255,255,.7);
+}
+
+/* ===== EQUIP readability ===== */
+.equip-card{
+  color: rgba(255,255,255,.92);
+}
+
+.equip-slot i{
+  opacity: .9;
+}
+
+.equip-slot span{
+  color: rgba(255,255,255,.88);
+  font-weight: 700;
+}
+
+.equip-slot span.equip-empty{
+  color: rgba(255,255,255,.55);
+  font-weight: 600;
+}
+
+.equip-sub,
+.equip-info{
+  color: rgba(255,255,255,.72);
+}
