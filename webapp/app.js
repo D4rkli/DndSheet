@@ -471,18 +471,25 @@ function updateMoneyPreview(coins) {
   `;
 }
 
-function wireMoneyInputs() {
+function wireMoneyInputs(): void {
   const g = el("f_gold");
   const s = el("f_silver");
   const c = el("f_copper");
   if (!g || !s || !c) return;
 
   const onInput = () => {
-    updateMoneyPreview({
+    const coins = {
       gold: parseIntSafe(g.value),
       silver: parseIntSafe(s.value),
       copper: parseIntSafe(c.value),
-    });
+    };
+
+    // 🔴 ВАЖНО: сохраняем в state
+    if (state.character) {
+      state.character.money = { ...coins };
+    }
+
+    updateMoneyPreview(coins);
   };
 
   g.addEventListener("input", onInput);
@@ -1674,6 +1681,16 @@ async function loadSheet(showStatus = true) {
   }
 
   setStatus("Ок ✅");
+}
+
+function fillMoneyInputsFromState() {
+  if (!state.character?.money) return;
+
+  el("f_gold").value = String(state.character.money.gold ?? 0);
+  el("f_silver").value = String(state.character.money.silver ?? 0);
+  el("f_copper").value = String(state.character.money.copper ?? 0);
+
+  updateMoneyPreview(state.character.money);
 }
 
 async function boot() {
