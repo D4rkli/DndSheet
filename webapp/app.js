@@ -471,7 +471,7 @@ function updateMoneyPreview(coins) {
   `;
 }
 
-function wireMoneyInputs(): void {
+function wireMoneyInputs() {
   const g = el("f_gold");
   const s = el("f_silver");
   const c = el("f_copper");
