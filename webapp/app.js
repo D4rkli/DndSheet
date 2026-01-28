@@ -1701,6 +1701,7 @@ async function boot() {
     if (state.characters.length === 0) setStatus("Персонажей нет. Создай нового 👆");
     await loadSheet();
 
+    fillMoneyInputsFromState();
     wireFabMenu();
     wireMoneyInputs();
   } catch (e) {
