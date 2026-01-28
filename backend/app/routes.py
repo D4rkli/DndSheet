@@ -864,7 +864,7 @@ async def get_full_sheet(
                 "defense_ratio": s.defense_ratio,
                 "count": s.count,
             }
-            for s in sheet["summons"]
+            for s in sheet.get("summons", [])
         ],
         "template": sheet.get("template"),
         "custom_values": sheet.get("custom_values", {}),

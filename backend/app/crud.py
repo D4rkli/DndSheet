@@ -539,12 +539,19 @@ async def get_sheet(db: AsyncSession, character_id: int, user_id: int) -> dict |
     except Exception:
         custom = {}
 
+    summons = (
+        await db.execute(
+            select(Summon).where(Summon.character_id == ch_id)
+        )
+    ).scalars().all()
+
     return {
         "character": ch,
         "items": items,
         "spells": spells,
         "abilities": abilities,
         "states": states,
+        "summons": summons,
         "equipment": eq,
         "template": {"id": tpl.id, "name": tpl.name, "config": config} if tpl else None,
         "custom_values": custom,
