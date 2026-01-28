@@ -144,7 +144,7 @@ async function renderTemplatesModal() {
     });
   }
 
-  // чекбоксы вкладок для создания
+  // чекбокс вкладок для создания
   el("tplTabs").innerHTML = tabsCheckboxesHtml(DEFAULT_TABS);
 }
 
@@ -453,31 +453,6 @@ function coinsToCp({ gold = 0, silver = 0, copper = 0 }) {
   return gold * 100 + silver * 10 + copper;
 }
 
-function cpToCoins(totalCp) {
-  const cp = Math.max(0, parseIntSafe(totalCp));
-  const gold = Math.floor(cp / 100);
-  const rem1 = cp % 100;
-  const silver = Math.floor(rem1 / 10);
-  const copper = rem1 % 10;
-  return { gold, silver, copper };
-}
-
-function normalizeCoinsFromInputs(writeBack = true) {
-  const gold = parseIntSafe(el("f_gold")?.value);
-  const silver = parseIntSafe(el("f_silver")?.value);
-  const copper = parseIntSafe(el("f_copper")?.value);
-  const normalized = cpToCoins(coinsToCp({ gold, silver, copper }));
-
-  if (writeBack) {
-    if (el("f_gold")) el("f_gold").value = String(normalized.gold);
-    if (el("f_silver")) el("f_silver").value = String(normalized.silver);
-    if (el("f_copper")) el("f_copper").value = String(normalized.copper);
-  }
-
-  updateMoneyPreview(normalized);
-  return normalized;
-}
-
 function updateMoneyPreview(coins) {
   const node = el("moneyPreview");
   if (!node) return;
@@ -495,7 +470,6 @@ function updateMoneyPreview(coins) {
     </div>
   `;
 }
-
 
 function wireMoneyInputs() {
   const g = el("f_gold");
@@ -516,16 +490,6 @@ function wireMoneyInputs() {
   c.addEventListener("input", onInput);
 
   onInput();
-}
-
-
-function mapGenderToSelect(v) {
-  const raw = String(v ?? "").trim().toLowerCase();
-  if (!raw) return "";
-  if (["female", "f", "woman", "girl", "жен", "женщина", "ж"].some((x) => raw.startsWith(x))) return "female";
-  if (["male", "m", "man", "boy", "муж", "мужчина", "м"].some((x) => raw.startsWith(x))) return "male";
-  if (["none", "n/a", "не", "нет", "unspecified"].some((x) => raw.startsWith(x))) return "";
-  return raw;
 }
 
 function fillInput(id, value) {
@@ -1041,20 +1005,6 @@ function renderEquipUI() {
   });
 }
 
-function calcEquipAcBonusFromDraft() {
-  const eq = state.equipDraft || {};
-  let sum = 0;
-
-  for (const k in eq) {
-    const raw = eq[k];
-    if (!raw) continue;
-    const s = parseEquipSlot(raw);     // твоя функция парсинга JSON/строки
-    sum += Number(s.ac_bonus || 0) || 0;
-  }
-
-  return sum;
-}
-
 const equipIcons = {
   head: "bi-helmet",
   body: "bi-shield",
@@ -1087,7 +1037,7 @@ function openEquipSlotModal(key, label) {
       <label class="form-label mt-2">Характеристика</label>
       <input id="m_eq_stats" class="form-control" placeholder="Напр. +2 ловк, сопротивление огню" />
 
-      <label class="form-label mt-2">Доп. информация</label>
+      <label class="form-label mt-2">Доп. Информация</label>
       <textarea id="m_eq_info" class="form-control" rows="3" placeholder="Любые заметки"></textarea>
     `,
     async () => {
@@ -1222,7 +1172,7 @@ function wireFabMenu() {
     if (action === "add-state") return document.getElementById("btnAddState")?.click();
   });
 
-  // обычный тап по FAB: действие по вкладке (как у тебя уже было)
+  // обычной тап по FAB: действие по вкладке (как у тебя уже было)
   // долгий тап/ПК-правый клик: открыть меню
 
   let pressTimer = null;
@@ -1266,23 +1216,18 @@ function wireFabMenu() {
 
   // клик по FAB
   fab.addEventListener("click", (e) => {
-    // если был long press — не выполняем действие вкладки
-    if (longPressed) return;
+    e.preventDefault();
+    e.stopPropagation();
 
-    // если меню открыто — закрыть
+    // если меню уже открыто — закрыть
     if (!menu.classList.contains("d-none")) {
       showFabMenu(false);
       return;
     }
 
-    // иначе — обычное действие по активной вкладке
-    const tab = getActiveTabKey();
-    if (tab === "spells") return openSpellModal("spell");
-    if (tab === "abilities") return openSpellModal("ability");
-    if (tab === "inv") return document.getElementById("btnAddItem")?.click();
-    if (tab === "states") return document.getElementById("btnAddState")?.click();
+    // обычный клик = открыть меню
+    showFabMenu(true);
   });
-
   // клик вне меню закрывает его
   document.addEventListener("click", (e) => {
     if (menu.classList.contains("d-none")) return;
@@ -1738,6 +1683,9 @@ async function boot() {
     await loadCharacters();
     if (state.characters.length === 0) setStatus("Персонажей нет. Создай нового 👆");
     await loadSheet();
+
+    wireFabMenu();
+    wireMoneyInputs();
   } catch (e) {
     console.error(e);
     setStatus("Ошибка");
