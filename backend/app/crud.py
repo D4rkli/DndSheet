@@ -541,7 +541,7 @@ async def get_sheet(db: AsyncSession, character_id: int, user_id: int) -> dict |
 
     summons = (
         await db.execute(
-            select(Summon).where(Summon.character_id == ch_id)
+            select(Summon).where(Summon.character_id == character_id)
         )
     ).scalars().all()
 
