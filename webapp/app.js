@@ -333,10 +333,18 @@ function cpToCoins(totalCp) {
   return { gold, silver, copper };
 }
 
+function readCoinsFromInputs() {
+  return {
+    gold: parseIntSafe(el("f_gold")?.value),
+    silver: parseIntSafe(el("f_silver")?.value),
+    copper: parseIntSafe(el("f_copper")?.value),
+  };
+}
+
+// ОПЦИОНАЛЬНО: если когда-то захочешь "с переносом" (100 CP -> 1 GP)
+// Сейчас мы НЕ используем это автоматически, только для ручного вызова.
 function normalizeCoinsFromInputs(writeBack = true) {
-  const gold = parseIntSafe(el("f_gold")?.value);
-  const silver = parseIntSafe(el("f_silver")?.value);
-  const copper = parseIntSafe(el("f_copper")?.value);
+  const { gold, silver, copper } = readCoinsFromInputs();
   const normalized = cpToCoins(coinsToCp({ gold, silver, copper }));
 
   if (writeBack) {
@@ -369,20 +377,21 @@ function wireMoneyInputs() {
   const c = el("f_copper");
   if (!g || !s || !c) return;
 
-  // на вводе — только обновляем превью (без writeBack, чтобы курсор не прыгал)
-  const onInput = () => normalizeCoinsFromInputs(false);
-  g.addEventListener("input", onInput);
-  s.addEventListener("input", onInput);
-  c.addEventListener("input", onInput);
+  const onAnyChange = () => updateMoneyPreview(readCoinsFromInputs());
 
-  // на выходе из поля — нормализуем и записываем назад (carry)
-  const onBlur = () => normalizeCoinsFromInputs(true);
-  g.addEventListener("change", onBlur);
-  s.addEventListener("change", onBlur);
-  c.addEventListener("change", onBlur);
-  g.addEventListener("blur", onBlur);
-  s.addEventListener("blur", onBlur);
-  c.addEventListener("blur", onBlur);
+  g.addEventListener("input", onAnyChange);
+  s.addEventListener("input", onAnyChange);
+  c.addEventListener("input", onAnyChange);
+
+  // на blur/change тоже просто обновляем превью (без автоконвертации)
+  g.addEventListener("change", onAnyChange);
+  s.addEventListener("change", onAnyChange);
+  c.addEventListener("change", onAnyChange);
+  g.addEventListener("blur", onAnyChange);
+  s.addEventListener("blur", onAnyChange);
+  c.addEventListener("blur", onAnyChange);
+
+  onAnyChange();
 }
 
 function mapGenderToSelect(v) {
@@ -708,8 +717,9 @@ el("btnNew").addEventListener("click", () => {
 
 // MAIN save
 async function saveMain(extra = {}) {
-  // автоконвертация монет перед сохранением
-  const coins = normalizeCoinsFromInputs(true);
+  // монеты сохраняем как введены (без автоконвертации)
+  const coins = readCoinsFromInputs();
+  updateMoneyPreview(coins);
 
   const payload = {
     name: el("f_name").value.trim(),
