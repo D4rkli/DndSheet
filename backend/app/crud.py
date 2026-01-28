@@ -116,6 +116,10 @@ async def update_character(
         if field in payload and payload[field] is not None:
             payload[field] = max(0, int(payload[field]))
 
+    for field in ("gold", "silver", "copper"):
+        if field in payload and payload[field] is not None:
+            payload[field] = max(0, int(payload[field]))
+
     # Per-level deltas: ints
     for field in ("hp_per_level", "mana_per_level", "energy_per_level"):
         if field in payload and payload[field] is not None:
