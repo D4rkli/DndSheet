@@ -990,7 +990,7 @@ function renderEquipUI() {
     card.innerHTML = `
       <div class="equip-top">
         <div class="equip-slot">
-          <i class="bi bi-shield"></i>
+          <i class="bi ${equipIcons[key] || "bi-shield"}"></i>
           <span>${label}:</span>
           <span
             class="equip-name ${name === "—" ? "equip-empty" : ""}"
@@ -1015,17 +1015,25 @@ function renderEquipUI() {
 }
 
 const equipIcons = {
-  head: "bi-helmet",
-  body: "bi-shield",
-  hands: "bi-hand-index-thumb",
-  legs: "bi-person-walking",
-  feet: "bi-boot",
-  weapon1: "bi-sword",
-  weapon2: "bi-sword",
+  head: "bi-helmet",                 // Голова
+  armor: "bi-shield-fill",           // Броня
+  back: "bi-cape",                   // Спина (если не понравится — заменим)
+  hands: "bi-hand-index-thumb",      // Руки
+  legs: "bi-person-walking",         // Ноги
+  feet: "bi-boot",                   // Ступни
+
+  weapon1: "bi-sword",               // Оружие 1
+  weapon2: "bi-sword",               // Оружие 2
+  belt: "bi-bag",                    // Пояс
+
   ring1: "bi-gem",
   ring2: "bi-gem",
-  trinket: "bi-stars",
+  ring3: "bi-gem",
+  ring4: "bi-gem",
+
+  jewelry: "bi-stars"                // Украшения
 };
+
 
 function openEquipSlotModal(key, label) {
   const cur = parseEquipSlot(state.equipDraft?.[key]);
