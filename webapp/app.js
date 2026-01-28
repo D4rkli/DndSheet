@@ -48,6 +48,7 @@ const DEFAULT_TABS = [
   "abilities",
   "passive-abilities",
   "states",
+  "summons",
   "equip",
   "custom",
 ];
@@ -72,7 +73,7 @@ function activeTabs() {
     : DEFAULT_TABS;
 
   // 👇 важное: добавляем новые вкладки, чтобы старые шаблоны не ломались
-  const mustHave = ["passive-abilities", "abilities"]; // на будущее можно сюда докидывать новые
+  const mustHave = ["passive-abilities", "abilities", "summons"]; // на будущее можно сюда докидывать новые
 
   return Array.from(new Set([...base, ...mustHave]));
 }
@@ -83,8 +84,8 @@ function applyTemplateToUI() {
     const tab = b.dataset.tab;
     const show = allowed.has(tab);
     b.closest("li")?.classList.toggle("d-none", !show);
+    updateFab();
   });
-  updateFab();
   // если текущая вкладка скрыта — прыгнем в main
   const cur = document.querySelector("#tabs .nav-link.active")?.dataset?.tab;
   if (cur && !allowed.has(cur)) {
@@ -231,6 +232,134 @@ function parseCostParts(costStr) {
   return out;
 }
 
+function parseRatio(raw) {
+  const s = String(raw || "").trim().toLowerCase();
+  if (!s) return 0;
+
+  // 50%
+  if (s.endsWith("%")) {
+    const n = Number(s.slice(0, -1).trim().replace(",", "."));
+    return Number.isFinite(n) ? n / 100 : 0;
+  }
+
+  // 1/3
+  if (s.includes("/")) {
+    const [a, b] = s.split("/").map(x => Number(x.trim().replace(",", ".")));
+    if (Number.isFinite(a) && Number.isFinite(b) && b !== 0) return a / b;
+  }
+
+  // 0.25
+  const n = Number(s.replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function calcSummonStats(ch, summon) {
+  const hp = Math.round((ch.hp_max || 0) * parseRatio(summon.hp_ratio));
+  const atk = Math.round((ch.attack || 0) * parseRatio(summon.attack_ratio));
+  const def = Math.round((ch.defense || 0) * parseRatio(summon.defense_ratio));
+  const count = Math.max(1, Number(summon.count || 1));
+  return { hp, atk, def, count };
+}
+
+function openSummonModal(existing = null) {
+  const isEdit = !!existing;
+  const title = isEdit ? "Редактировать призыв" : "Добавить призыв";
+
+  openModal(
+    title,
+    `
+      <label class="form-label">Название</label>
+      <input id="m_name" class="form-control" />
+
+      <label class="form-label mt-2">Описание</label>
+      <textarea id="m_desc" class="form-control" rows="3"></textarea>
+
+      <div class="row g-2 mt-1">
+        <div class="col-6">
+          <label class="form-label">Длительность</label>
+          <input id="m_duration" class="form-control" placeholder="напр. 3 хода" />
+        </div>
+        <div class="col-6">
+          <label class="form-label">Количество</label>
+          <input id="m_count" type="number" class="form-control" min="1" value="1" />
+        </div>
+      </div>
+
+      <div class="row g-2 mt-2">
+        <div class="col-4">
+          <label class="form-label">HP доля</label>
+          <input id="m_hp_ratio" class="form-control" placeholder="1/3, 50%, 0.25" />
+        </div>
+        <div class="col-4">
+          <label class="form-label">ATK доля</label>
+          <input id="m_atk_ratio" class="form-control" placeholder="1/2" />
+        </div>
+        <div class="col-4">
+          <label class="form-label">DEF доля</label>
+          <input id="m_def_ratio" class="form-control" placeholder="1/4" />
+        </div>
+      </div>
+
+      <div id="m_preview" class="hint mt-2"></div>
+    `,
+    async () => {
+      const id = requireCharacterId();
+      if (!id) return;
+
+      const payload = {
+        name: el("m_name").value,
+        description: el("m_desc").value,
+        duration: el("m_duration").value,
+        count: Number(el("m_count").value || 1),
+        hp_ratio: el("m_hp_ratio").value,
+        attack_ratio: el("m_atk_ratio").value,
+        defense_ratio: el("m_def_ratio").value,
+      };
+
+      const base = `/characters/${id}/summons`;
+      const path = isEdit ? `${base}/${existing.id}` : base;
+      const method = isEdit ? "PATCH" : "POST";
+
+      await api(path, { method, body: JSON.stringify(payload) });
+      await loadSheet(false);
+    }
+  );
+
+  const ch = state.sheet?.character || {};
+  const updatePreview = () => {
+    const tmp = {
+      hp_ratio: el("m_hp_ratio").value,
+      attack_ratio: el("m_atk_ratio").value,
+      defense_ratio: el("m_def_ratio").value,
+      count: Number(el("m_count").value || 1),
+    };
+    const r = calcSummonStats(ch, tmp);
+    el("m_preview").textContent = `Итого: HP ${r.hp} · ATK ${r.atk} · DEF ${r.def} · x${r.count}`;
+  };
+
+  ["m_hp_ratio","m_atk_ratio","m_def_ratio","m_count"].forEach(id => {
+    el(id).addEventListener("input", updatePreview);
+  });
+
+  if (existing) {
+    el("m_name").value = existing.name || "";
+    el("m_desc").value = existing.description || "";
+    el("m_duration").value = existing.duration || "";
+    el("m_count").value = String(existing.count ?? 1);
+    el("m_hp_ratio").value = existing.hp_ratio || "1/3";
+    el("m_atk_ratio").value = existing.attack_ratio || "1/2";
+    el("m_def_ratio").value = existing.defense_ratio || "1/4";
+  } else {
+    el("m_hp_ratio").value = "1/3";
+    el("m_atk_ratio").value = "1/2";
+    el("m_def_ratio").value = "1/4";
+  }
+
+  updatePreview();
+}
+
+el("btnAddSummon")?.addEventListener("click", () => openSummonModal());
+
 function evalCostExpr(res, expr, character, level) {
   const maxBase = Number(character?.[`${res}_max`] ?? 0) || 0;
   const s = String(expr || "").toLowerCase().replaceAll(" ", "");
@@ -333,18 +462,10 @@ function cpToCoins(totalCp) {
   return { gold, silver, copper };
 }
 
-function readCoinsFromInputs() {
-  return {
-    gold: parseIntSafe(el("f_gold")?.value),
-    silver: parseIntSafe(el("f_silver")?.value),
-    copper: parseIntSafe(el("f_copper")?.value),
-  };
-}
-
-// ОПЦИОНАЛЬНО: если когда-то захочешь "с переносом" (100 CP -> 1 GP)
-// Сейчас мы НЕ используем это автоматически, только для ручного вызова.
 function normalizeCoinsFromInputs(writeBack = true) {
-  const { gold, silver, copper } = readCoinsFromInputs();
+  const gold = parseIntSafe(el("f_gold")?.value);
+  const silver = parseIntSafe(el("f_silver")?.value);
+  const copper = parseIntSafe(el("f_copper")?.value);
   const normalized = cpToCoins(coinsToCp({ gold, silver, copper }));
 
   if (writeBack) {
@@ -360,16 +481,21 @@ function normalizeCoinsFromInputs(writeBack = true) {
 function updateMoneyPreview(coins) {
   const node = el("moneyPreview");
   if (!node) return;
+
   const { gold = 0, silver = 0, copper = 0 } = coins || {};
   const totalCp = coinsToCp({ gold, silver, copper });
   const totalGp = (totalCp / 100).toFixed(2);
+
   node.innerHTML = `
-    <span class="coin-chip coin-gold"><i class="bi bi-coin"></i> ${gold} <span class="coin-unit">GP</span></span>
-    <span class="coin-chip coin-silver"><i class="bi bi-coin"></i> ${silver} <span class="coin-unit">SP</span></span>
-    <span class="coin-chip coin-copper"><i class="bi bi-coin"></i> ${copper} <span class="coin-unit">CP</span></span>
-    <span class="coin-total">≈ ${totalGp} gp</span>
+    <div class="wallet-preview-row">
+      <span class="coin-ico coin-gold"></span><span class="wallet-num">${gold}</span>
+      <span class="coin-ico coin-silver"></span><span class="wallet-num">${silver}</span>
+      <span class="coin-ico coin-copper"></span><span class="wallet-num">${copper}</span>
+      <span class="coin-total">≈ ${totalGp} gp</span>
+    </div>
   `;
 }
+
 
 function wireMoneyInputs() {
   const g = el("f_gold");
@@ -377,22 +503,21 @@ function wireMoneyInputs() {
   const c = el("f_copper");
   if (!g || !s || !c) return;
 
-  const onAnyChange = () => updateMoneyPreview(readCoinsFromInputs());
+  const onInput = () => {
+    updateMoneyPreview({
+      gold: parseIntSafe(g.value),
+      silver: parseIntSafe(s.value),
+      copper: parseIntSafe(c.value),
+    });
+  };
 
-  g.addEventListener("input", onAnyChange);
-  s.addEventListener("input", onAnyChange);
-  c.addEventListener("input", onAnyChange);
+  g.addEventListener("input", onInput);
+  s.addEventListener("input", onInput);
+  c.addEventListener("input", onInput);
 
-  // на blur/change тоже просто обновляем превью (без автоконвертации)
-  g.addEventListener("change", onAnyChange);
-  s.addEventListener("change", onAnyChange);
-  c.addEventListener("change", onAnyChange);
-  g.addEventListener("blur", onAnyChange);
-  s.addEventListener("blur", onAnyChange);
-  c.addEventListener("blur", onAnyChange);
-
-  onAnyChange();
+  onInput();
 }
+
 
 function mapGenderToSelect(v) {
   const raw = String(v ?? "").trim().toLowerCase();
@@ -542,6 +667,9 @@ function escapeHtml(s) {
     .replaceAll("\"", "&quot;")
     .replaceAll("'", "&#039;");
 }
+function escapeAttr(s) {
+  return String(s ?? "").replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+}
 
 // ===== Modal helpers
 const modalEl = el("editModal");
@@ -665,7 +793,6 @@ el("btnImport")?.addEventListener("click", async () => {
       if (newName) parsed.new_name = newName;
       await api(`/characters/import`, { method: "POST", body: JSON.stringify(parsed) });
       await loadCharacters();
-    wireFabMenu();
       await loadSheet();
       setStatus("Импортировано ✅");
     },
@@ -710,17 +837,21 @@ el("btnNew").addEventListener("click", () => {
         await api(`/characters`, { method: "POST", body: JSON.stringify({ name }) });
       }
       await loadCharacters();
-    wireFabMenu();
     }
   );
 });
 
 // MAIN save
 async function saveMain(extra = {}) {
-  // монеты сохраняем как введены (без автоконвертации)
-  const coins = readCoinsFromInputs();
-  updateMoneyPreview(coins);
+  // автоконвертация монет перед сохранением
+  // монеты: сохраняем как ввели (без автоконвертации)
+    const coinsRaw = {
+      gold: parseIntSafe(el("f_gold")?.value),
+      silver: parseIntSafe(el("f_silver")?.value),
+      copper: parseIntSafe(el("f_copper")?.value),
+    };
 
+    // превью оставляем конвертированным (только для отображения)
   const payload = {
     name: el("f_name").value.trim(),
     race: el("f_race").value.trim(),
@@ -729,9 +860,9 @@ async function saveMain(extra = {}) {
     level: intOrNull(el("f_level").value),
     xp: intOrNull(el("f_xp").value),
 
-    gold: coins.gold,
-    silver: coins.silver,
-    copper: coins.copper,
+    gold: coinsRaw.gold,
+    silver: coinsRaw.silver,
+    copper: coinsRaw.copper,
 
     hp: intOrNull(el("f_hp").value),
     hp_max: intOrNull(el("f_hp_max").value),
@@ -866,12 +997,12 @@ function renderEquipUI() {
   wrap.innerHTML = "";
 
   const bonus = equipArmorBonusTotal();
-  const header = document.createElement("div");
-  header.className = "muted mb-2";
-  header.innerHTML = bonus ? `Бонус брони от экипировки: <b>+${bonus}</b>` : `Бонус брони от экипировки: <b>0</b>`;
-  wrap.appendChild(header);
+  const bonusEl = el("equipBonus");
+  if (bonusEl) {
+    bonusEl.innerHTML = `Бонус брони от экипировки: <b>${bonus ? `+${bonus}` : `0`}</b>`;
+  }
 
-    equipFields.forEach(({ key, label }) => {
+  equipFields.forEach(({ key, label }) => {
     const raw = state.equipDraft?.[key] ?? "";
     const slot = parseEquipSlot(raw);
 
@@ -888,35 +1019,22 @@ function renderEquipUI() {
         <div class="equip-slot">
           <i class="bi bi-shield"></i>
           <span>${label}:</span>
-          <span class="${name === "—" ? "equip-empty" : ""}">
+          <span
+            class="equip-name ${name === "—" ? "equip-empty" : ""}"
+            title="${name !== "—" ? escapeAttr(name) : ""}"
+          >
             ${escapeHtml(name)}
           </span>
           ${ac ? `<span class="muted">+${ac} AC</span>` : ""}
         </div>
-  
-        <div class="equip-actions">
-          <button class="btn-icon" data-act="edit" title="Редактировать">
-            <i class="bi bi-pencil"></i>
-          </button>
-          <button class="btn-icon" data-act="clear" title="Снять">
-            <i class="bi bi-x"></i>
-          </button>
-        </div>
       </div>
-  
+    
       ${stats ? `<div class="equip-sub">${escapeHtml(stats)}</div>` : ""}
       ${info ? `<div class="equip-info">${escapeHtml(info)}</div>` : ""}
     `;
 
-    card.querySelector("[data-act='edit']").addEventListener("click", (e) => {
-      e.stopPropagation();
+    card.addEventListener("click", () => {
       openEquipSlotModal(key, label);
-    });
-
-    card.querySelector("[data-act='clear']").addEventListener("click", (e) => {
-      e.stopPropagation();
-      state.equipDraft[key] = "";
-      renderEquipUI();
     });
 
     wrap.appendChild(card);
@@ -931,7 +1049,7 @@ function calcEquipAcBonusFromDraft() {
     const raw = eq[k];
     if (!raw) continue;
     const s = parseEquipSlot(raw);     // твоя функция парсинга JSON/строки
-    sum += Number(s.ac || 0) || 0;
+    sum += Number(s.ac_bonus || 0) || 0;
   }
 
   return sum;
@@ -977,8 +1095,10 @@ function openEquipSlotModal(key, label) {
       const ac_bonus = intOrNull(document.getElementById("m_eq_ac").value) ?? 0;
       const stats = document.getElementById("m_eq_stats").value;
       const info = document.getElementById("m_eq_info").value;
+      const nameTrim = String(name || "").trim();
+      const allEmpty = !nameTrim && !ac_bonus && !String(stats||"").trim() && !String(info||"").trim();
 
-      state.equipDraft[key] = serializeEquipSlot({ name, ac_bonus, stats, info });
+      state.equipDraft[key] = allEmpty ? "" : serializeEquipSlot({ name, ac_bonus, stats, info });
       renderEquipUI();
     }
   );
@@ -1062,34 +1182,10 @@ function getActiveTabKey() {
 }
 
 function updateFab() {
-  const id = currentChId();
-    if (!id) {
-      // если персонажа нет — FAB скрываем
-      const fab = document.getElementById("fabAdd");
-      if (fab) fab.classList.add("d-none");
-      return;
-    }
   const fab = el("fabAdd");
-  const tab = getActiveTabKey();
-
-  // показываем FAB только там, где есть "добавить"
-  const map = {
-    inv: { text: "Предмет", icon: "bi-backpack", onClick: () => el("btnAddItem")?.click() },
-    spells: { text: "Заклинание", icon: "bi-stars", onClick: () => openSpellModal("spell") },
-    abilities: { text: "Умение", icon: "bi-lightning-charge", onClick: () => openSpellModal("ability") },
-    states: { text: "Состояние", icon: "bi-activity", onClick: () => el("btnAddState")?.click() },
-  };
-
-  const cfg = map[tab];
-  if (!cfg) {
-    fab.classList.add("d-none");
-    fab.onclick = null;
-    return;
-  }
-
-  fab.classList.remove("d-none");
-  fab.innerHTML = `<i class="bi bi-plus-lg"></i>`;
-  fab.onclick = cfg.onClick;
+  if (!fab) return;
+  fab.classList.add("d-none");
+  fab.onclick = null;
 }
 
 function showFabMenu(show) {
@@ -1606,6 +1702,30 @@ async function loadSheet(showStatus = true) {
         onEdit: (a) => openSpellModal("ability", a),
       }
     );
+    // Summons
+    if (el("summonsList")) {
+      const ch = state.sheet.character || {};
+      renderList(
+        "summonsList",
+        (state.sheet.summons || []).map((s) => {
+          const r = calcSummonStats(ch, s);
+          return {
+            ...s,
+            preview: `HP ${r.hp} · ATK ${r.atk} · DEF ${r.def} · x${r.count}${s.duration ? ` · ${s.duration}` : ""}`,
+          };
+        }),
+        async (s) => {
+          const id = currentChId();
+          await api(`/characters/${id}/summons/${s.id}`, { method: "DELETE" });
+          await loadSheet(false);
+        },
+        {
+          icon: "bi-person-plus",
+          clamp: true,
+          onEdit: (s) => openSummonModal(s),
+        }
+      );
+    }
   }
 
   setStatus("Ок ✅");
@@ -1616,7 +1736,6 @@ async function boot() {
     await loadMe();
     await loadTemplates();
     await loadCharacters();
-    wireFabMenu();
     if (state.characters.length === 0) setStatus("Персонажей нет. Создай нового 👆");
     await loadSheet();
   } catch (e) {
@@ -1671,13 +1790,11 @@ document.addEventListener("click", (e) => {
 
 const topbar = document.querySelector(".topbar");
 
-window.addEventListener(
-  "scroll",
-  () => {
-    if (!topbar) return;
-    if (window.scrollY > 40) topbar.classList.add("is-collapsed");
-    else topbar.classList.remove("is-collapsed");
-  },
-  { passive: true }
-);
+window.addEventListener("scroll", () => {
+  if (window.scrollY > 40) {
+    topbar.classList.add("is-collapsed");
+  } else {
+    topbar.classList.remove("is-collapsed");
+  }
+});
 
