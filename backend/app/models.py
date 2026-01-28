@@ -98,8 +98,9 @@ class Character(Base):
 
     custom_values: Mapped[str] = mapped_column(Text, default="{}")
 
-    template: Mapped["SheetTemplate | None"] = relationship()
-
+    template: Mapped["SheetTemplate | None"] = relationship(
+        foreign_keys=[template_id]
+    )
 
 class SheetTemplate(Base):
     __tablename__ = "sheet_templates"
