@@ -1,8 +1,9 @@
 import json
+
 from sqlalchemy import select
-from .schemas import CharacterUpdate
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .schemas import CharacterUpdate
 from .models import (
     User,
     Character,
@@ -16,15 +17,35 @@ from .models import (
 )
 
 # =========================
+# INTERNAL HELPERS
+# =========================
+
+def _safe_json_dict(raw: str | None) -> dict:
+    """Parse JSON string into dict; return {} on any error or non-dict."""
+    if not raw:
+        return {}
+    try:
+        data = json.loads(raw)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+# Fields used across CRUD updates (avoid copy-paste)
+SPELL_FIELDS = ["name", "description", "range", "duration", "cost"]
+ABILITY_FIELDS = ["name", "description", "range", "duration", "cost"]
+STATE_FIELDS = ["name", "hp_cost", "duration", "is_active"]
+ITEM_FIELDS = ["name", "description", "stats", "qty"]
+SUMMON_FIELDS = ["name", "description", "duration", "hp_ratio", "attack_ratio", "defense_ratio", "count"]
+
+
+# =========================
 # USERS
 # =========================
 
 async def get_or_create_user(db: AsyncSession, tg_id: int) -> User:
-    q = await db.execute(
-        select(User).where(User.tg_id == tg_id)
-    )
+    q = await db.execute(select(User).where(User.tg_id == tg_id))
     user = q.scalar_one_or_none()
-
     if user:
         return user
 
@@ -39,23 +60,16 @@ async def get_or_create_user(db: AsyncSession, tg_id: int) -> User:
 # CHARACTERS
 # =========================
 
-async def list_characters(
-    db: AsyncSession,
-    user_id: int,
-) -> list[Character]:
-    q = await db.execute(
-        select(Character).where(
-            Character.owner_user_id == user_id
-        )
-    )
+async def list_characters(db: AsyncSession, user_id: int) -> list[Character]:
+    q = await db.execute(select(Character).where(Character.owner_user_id == user_id))
     return list(q.scalars().all())
+
 
 async def create_character(db: AsyncSession, user_id: int, name: str) -> Character:
     ch = Character(
         owner_user_id=user_id,
         name=name,
         level=1,
-
         hp=10, hp_max=10, hp_per_level=0,
         mana=5, mana_max=5, mana_per_level=0,
         energy=3, energy_max=3, energy_per_level=0,
@@ -65,11 +79,8 @@ async def create_character(db: AsyncSession, user_id: int, name: str) -> Charact
     await db.refresh(ch)
     return ch
 
-async def get_character_for_user(
-    db: AsyncSession,
-    character_id: int,
-    user_id: int,
-) -> Character | None:
+
+async def get_character_for_user(db: AsyncSession, character_id: int, user_id: int) -> Character | None:
     q = await db.execute(
         select(Character).where(
             Character.id == character_id,
@@ -79,15 +90,8 @@ async def get_character_for_user(
     return q.scalar_one_or_none()
 
 
-async def get_character_by_id(
-    db: AsyncSession,
-    character_id: int,
-) -> Character | None:
-    q = await db.execute(
-        select(Character).where(
-            Character.id == character_id
-        )
-    )
+async def get_character_by_id(db: AsyncSession, character_id: int) -> Character | None:
+    q = await db.execute(select(Character).where(Character.id == character_id))
     return q.scalar_one_or_none()
 
 
@@ -104,33 +108,24 @@ async def update_character(
     payload = data.model_dump(exclude_unset=True)
 
     # Level: minimum 1
-    if "level" in payload:
+    if "level" in payload and payload["level"] is not None:
         payload["level"] = max(1, int(payload["level"]))
 
     # Clamp max resources to >=0
     for field in ("hp_max", "mana_max", "energy_max"):
-        if field in payload:
+        if field in payload and payload[field] is not None:
             payload[field] = max(0, int(payload[field]))
 
     # Per-level deltas: ints
     for field in ("hp_per_level", "mana_per_level", "energy_per_level"):
-        if field in payload:
+        if field in payload and payload[field] is not None:
             payload[field] = int(payload[field])
 
-    # Apply any known fields directly
+    # Apply fields
     for key, value in payload.items():
         if not hasattr(ch, key):
             continue
-        # keep strings as-is, cast ints where appropriate
-        if isinstance(value, bool):
-            setattr(ch, key, value)
-        elif isinstance(value, int):
-            setattr(ch, key, value)
-        elif value is None:
-            setattr(ch, key, value)
-        else:
-            # pydantic may give str for some fields
-            setattr(ch, key, value)
+        setattr(ch, key, value)
 
     # Clamp current resources
     for res in ("hp", "mana", "energy"):
@@ -138,26 +133,20 @@ async def update_character(
         cur = max(0, int(cur))
         max_value = getattr(ch, f"{res}_max", 0) or 0
         if max_value > 0:
-            cur = min(cur, max_value)
+            cur = min(cur, int(max_value))
         setattr(ch, res, cur)
 
     await db.commit()
     await db.refresh(ch)
     return ch
 
+
 # =========================
 # ITEMS (INVENTORY)
 # =========================
 
-async def list_items(
-    db: AsyncSession,
-    character_id: int,
-) -> list[Item]:
-    q = await db.execute(
-        select(Item).where(
-            Item.character_id == character_id
-        )
-    )
+async def list_items(db: AsyncSession, character_id: int) -> list[Item]:
+    q = await db.execute(select(Item).where(Item.character_id == character_id))
     return list(q.scalars().all())
 
 
@@ -182,28 +171,22 @@ async def add_item(
     return it
 
 
-async def delete_item(
-    db: AsyncSession,
-    item_id: int,
-) -> bool:
-    q = await db.execute(
-        select(Item).where(Item.id == item_id)
-    )
+async def delete_item(db: AsyncSession, item_id: int) -> bool:
+    q = await db.execute(select(Item).where(Item.id == item_id))
     item = q.scalar_one_or_none()
-
     if not item:
         return False
-
     await db.delete(item)
     await db.commit()
     return True
 
-async def update_item(db, ch_id: int, item_id: int, data):
+
+async def update_item(db: AsyncSession, ch_id: int, item_id: int, data):
     item = await db.get(Item, item_id)
     if not item or item.character_id != ch_id:
         return None
 
-    for field in ["name", "description", "stats", "qty"]:
+    for field in ITEM_FIELDS:
         v = getattr(data, field, None)
         if v is not None:
             setattr(item, field, v)
@@ -212,19 +195,13 @@ async def update_item(db, ch_id: int, item_id: int, data):
     await db.refresh(item)
     return item
 
+
 # =========================
 # SPELLS
 # =========================
 
-async def add_spell(
-    db: AsyncSession,
-    character_id: int,
-    payload: dict,
-) -> Spell:
-    sp = Spell(
-        character_id=character_id,
-        **payload,
-    )
+async def add_spell(db: AsyncSession, character_id: int, payload: dict) -> Spell:
+    sp = Spell(character_id=character_id, **payload)
     db.add(sp)
     await db.commit()
     await db.refresh(sp)
@@ -235,15 +212,8 @@ async def add_spell(
 # ABILITIES
 # =========================
 
-async def add_ability(
-    db: AsyncSession,
-    character_id: int,
-    payload: dict,
-) -> Ability:
-    ab = Ability(
-        character_id=character_id,
-        **payload,
-    )
+async def add_ability(db: AsyncSession, character_id: int, payload: dict) -> Ability:
+    ab = Ability(character_id=character_id, **payload)
     db.add(ab)
     await db.commit()
     await db.refresh(ab)
@@ -254,15 +224,8 @@ async def add_ability(
 # STATES
 # =========================
 
-async def add_state(
-    db: AsyncSession,
-    character_id: int,
-    payload: dict,
-) -> State:
-    st = State(
-        character_id=character_id,
-        **payload,
-    )
+async def add_state(db: AsyncSession, character_id: int, payload: dict) -> State:
+    st = State(character_id=character_id, **payload)
     db.add(st)
     await db.commit()
     await db.refresh(st)
@@ -343,41 +306,51 @@ async def delete_state(db: AsyncSession, state_id: int) -> bool:
     await db.commit()
     return True
 
-async def update_spell(db, ch_id: int, spell_id: int, data):
+
+async def update_spell(db: AsyncSession, ch_id: int, spell_id: int, data):
     obj = await db.get(Spell, spell_id)
     if not obj or obj.character_id != ch_id:
         return None
-    for f in ["name","description","range","duration","cost"]:
+
+    for f in SPELL_FIELDS:
         v = getattr(data, f, None)
         if v is not None:
             setattr(obj, f, v)
+
     await db.commit()
     await db.refresh(obj)
     return obj
 
-async def update_ability(db, ch_id: int, ability_id: int, data):
+
+async def update_ability(db: AsyncSession, ch_id: int, ability_id: int, data):
     obj = await db.get(Ability, ability_id)
     if not obj or obj.character_id != ch_id:
         return None
-    for f in ["name","description","range","duration","cost"]:
+
+    for f in ABILITY_FIELDS:
         v = getattr(data, f, None)
         if v is not None:
             setattr(obj, f, v)
+
     await db.commit()
     await db.refresh(obj)
     return obj
 
-async def update_state(db, ch_id: int, state_id: int, data):
+
+async def update_state(db: AsyncSession, ch_id: int, state_id: int, data):
     obj = await db.get(State, state_id)
     if not obj or obj.character_id != ch_id:
         return None
-    for f in ["name","hp_cost","duration","is_active"]:
+
+    for f in STATE_FIELDS:
         v = getattr(data, f, None)
         if v is not None:
             setattr(obj, f, v)
+
     await db.commit()
     await db.refresh(obj)
     return obj
+
 
 # =========================
 # SUMMONS
@@ -387,6 +360,7 @@ async def list_summons(db: AsyncSession, character_id: int) -> list[Summon]:
     q = await db.execute(select(Summon).where(Summon.character_id == character_id))
     return list(q.scalars().all())
 
+
 async def add_summon(db: AsyncSession, character_id: int, payload: dict) -> Summon:
     obj = Summon(character_id=character_id, **payload)
     db.add(obj)
@@ -394,17 +368,21 @@ async def add_summon(db: AsyncSession, character_id: int, payload: dict) -> Summ
     await db.refresh(obj)
     return obj
 
+
 async def update_summon(db: AsyncSession, ch_id: int, summon_id: int, data) -> Summon | None:
     obj = await db.get(Summon, summon_id)
     if not obj or obj.character_id != ch_id:
         return None
-    for field in ["name", "description", "duration", "hp_ratio", "attack_ratio", "defense_ratio", "count"]:
+
+    for field in SUMMON_FIELDS:
         v = getattr(data, field, None)
         if v is not None:
             setattr(obj, field, v)
+
     await db.commit()
     await db.refresh(obj)
     return obj
+
 
 async def delete_summon(db: AsyncSession, summon_id: int) -> bool:
     obj = await db.get(Summon, summon_id)
@@ -413,6 +391,7 @@ async def delete_summon(db: AsyncSession, summon_id: int) -> bool:
     await db.delete(obj)
     await db.commit()
     return True
+
 
 # =========================
 # TEMPLATES
@@ -432,7 +411,12 @@ async def create_template(db: AsyncSession, user_id: int, name: str, config: dic
 
 
 async def delete_template(db: AsyncSession, user_id: int, template_id: int) -> bool:
-    q = await db.execute(select(SheetTemplate).where(SheetTemplate.id == template_id, SheetTemplate.owner_user_id == user_id))
+    q = await db.execute(
+        select(SheetTemplate).where(
+            SheetTemplate.id == template_id,
+            SheetTemplate.owner_user_id == user_id,
+        )
+    )
     tpl = q.scalar_one_or_none()
     if not tpl:
         return False
@@ -455,27 +439,28 @@ def _tpl_defaults(config: dict) -> dict:
     return defaults
 
 
-async def apply_template_to_character(db: AsyncSession, character_id: int, user_id: int, template_id: int) -> Character | None:
+async def apply_template_to_character(
+    db: AsyncSession,
+    character_id: int,
+    user_id: int,
+    template_id: int,
+) -> Character | None:
     ch = await get_character_for_user(db, character_id, user_id)
     if not ch:
         return None
 
-    q = await db.execute(select(SheetTemplate).where(SheetTemplate.id == template_id, SheetTemplate.owner_user_id == user_id))
+    q = await db.execute(
+        select(SheetTemplate).where(
+            SheetTemplate.id == template_id,
+            SheetTemplate.owner_user_id == user_id,
+        )
+    )
     tpl = q.scalar_one_or_none()
     if not tpl:
         return None
 
-    try:
-        config = json.loads(tpl.config_json or "{}")
-    except Exception:
-        config = {}
-
-    try:
-        cur = json.loads(ch.custom_values or "{}")
-        if not isinstance(cur, dict):
-            cur = {}
-    except Exception:
-        cur = {}
+    config = _safe_json_dict(tpl.config_json)
+    cur = _safe_json_dict(ch.custom_values)
 
     for k, v in _tpl_defaults(config).items():
         cur.setdefault(k, v)
@@ -492,12 +477,8 @@ async def update_custom_values(db: AsyncSession, character_id: int, user_id: int
     ch = await get_character_for_user(db, character_id, user_id)
     if not ch:
         return False
-    try:
-        cur = json.loads(ch.custom_values or "{}")
-        if not isinstance(cur, dict):
-            cur = {}
-    except Exception:
-        cur = {}
+
+    cur = _safe_json_dict(ch.custom_values)
 
     for k, v in (values or {}).items():
         cur[str(k)] = v
@@ -520,6 +501,7 @@ async def get_sheet(db: AsyncSession, character_id: int, user_id: int) -> dict |
     spells = await list_spells(db, character_id)
     abilities = await list_abilities(db, character_id)
     states = await list_states(db, character_id)
+    summons = await list_summons(db, character_id)
     eq = await get_or_create_equipment(db, character_id)
 
     tpl = None
@@ -528,23 +510,9 @@ async def get_sheet(db: AsyncSession, character_id: int, user_id: int) -> dict |
         q = await db.execute(select(SheetTemplate).where(SheetTemplate.id == ch.template_id))
         tpl = q.scalar_one_or_none()
         if tpl:
-            try:
-                config = json.loads(tpl.config_json or "{}")
-            except Exception:
-                config = {}
+            config = _safe_json_dict(tpl.config_json)
 
-    try:
-        custom = json.loads(ch.custom_values or "{}")
-        if not isinstance(custom, dict):
-            custom = {}
-    except Exception:
-        custom = {}
-
-    summons = (
-        await db.execute(
-            select(Summon).where(Summon.character_id == character_id)
-        )
-    ).scalars().all()
+    custom = _safe_json_dict(ch.custom_values)
 
     return {
         "character": ch,
@@ -588,7 +556,6 @@ async def export_character(db: AsyncSession, character_id: int, user_id: int) ->
             "mana_per_level": ch.mana_per_level,
             "energy_per_level": ch.energy_per_level,
 
-            # include all numeric stats present on model
             "aggression_kindness": ch.aggression_kindness,
             "intellect": ch.intellect,
             "fearlessness": ch.fearlessness,
@@ -615,7 +582,12 @@ async def export_character(db: AsyncSession, character_id: int, user_id: int) ->
             "level_up_rules": ch.level_up_rules,
         },
         "items": [
-            {"name": i.name, "description": i.description, "stats": i.stats}
+            {
+                "name": i.name,
+                "description": i.description,
+                "stats": i.stats,
+                "qty": i.qty,
+            }
             for i in sheet["items"]
         ],
         "spells": [
@@ -629,6 +601,18 @@ async def export_character(db: AsyncSession, character_id: int, user_id: int) ->
         "states": [
             {"name": st.name, "hp_cost": st.hp_cost, "duration": st.duration, "is_active": st.is_active}
             for st in sheet["states"]
+        ],
+        "summons": [
+            {
+                "name": s.name,
+                "description": s.description,
+                "duration": s.duration,
+                "hp_ratio": s.hp_ratio,
+                "attack_ratio": s.attack_ratio,
+                "defense_ratio": s.defense_ratio,
+                "count": s.count,
+            }
+            for s in sheet.get("summons", [])
         ],
         "equipment": {
             "head": sheet["equipment"].head,
@@ -690,43 +674,80 @@ async def import_character(db: AsyncSession, user_id: int, payload: dict) -> Cha
     # items
     for i in payload.get("items") or []:
         if isinstance(i, dict) and i.get("name"):
-            await add_item(db, ch.id, i.get("name"), i.get("description", ""), i.get("stats", ""))
+            await add_item(
+                db,
+                ch.id,
+                i.get("name"),
+                i.get("description", ""),
+                i.get("stats", ""),
+                qty=int(i.get("qty", 1) or 1),
+            )
 
     # spells
     for s in payload.get("spells") or []:
         if isinstance(s, dict) and s.get("name"):
-            await add_spell(db, ch.id, {
-                "name": s.get("name"),
-                "description": s.get("description", ""),
-                "range": s.get("range", ""),
-                "duration": s.get("duration", ""),
-                "cost": s.get("cost", ""),
-            })
+            await add_spell(
+                db,
+                ch.id,
+                {
+                    "name": s.get("name"),
+                    "description": s.get("description", ""),
+                    "range": s.get("range", ""),
+                    "duration": s.get("duration", ""),
+                    "cost": s.get("cost", ""),
+                },
+            )
 
+    # abilities
     for a in payload.get("abilities") or []:
         if isinstance(a, dict) and a.get("name"):
-            await add_ability(db, ch.id, {
-                "name": a.get("name"),
-                "description": a.get("description", ""),
-                "range": a.get("range", ""),
-                "duration": a.get("duration", ""),
-                "cost": a.get("cost", ""),
-            })
+            await add_ability(
+                db,
+                ch.id,
+                {
+                    "name": a.get("name"),
+                    "description": a.get("description", ""),
+                    "range": a.get("range", ""),
+                    "duration": a.get("duration", ""),
+                    "cost": a.get("cost", ""),
+                },
+            )
 
+    # states
     for st in payload.get("states") or []:
         if isinstance(st, dict) and st.get("name"):
-            await add_state(db, ch.id, {
-                "name": st.get("name"),
-                "hp_cost": int(st.get("hp_cost", 0) or 0),
-                "duration": st.get("duration", ""),
-                "is_active": bool(st.get("is_active", True)),
-            })
+            await add_state(
+                db,
+                ch.id,
+                {
+                    "name": st.get("name"),
+                    "hp_cost": int(st.get("hp_cost", 0) or 0),
+                    "duration": st.get("duration", ""),
+                    "is_active": bool(st.get("is_active", True)),
+                },
+            )
+
+    # summons
+    for sm in payload.get("summons") or []:
+        if isinstance(sm, dict) and sm.get("name"):
+            await add_summon(
+                db,
+                ch.id,
+                {
+                    "name": sm.get("name"),
+                    "description": sm.get("description", ""),
+                    "duration": sm.get("duration", ""),
+                    "hp_ratio": sm.get("hp_ratio", "1/3"),
+                    "attack_ratio": sm.get("attack_ratio", "1/2"),
+                    "defense_ratio": sm.get("defense_ratio", "1/4"),
+                    "count": int(sm.get("count", 1) or 1),
+                },
+            )
 
     return ch
 
 
 # Backward-compatible aliases
-
 async def export_sheet(db: AsyncSession, character_id: int, user_id: int) -> dict | None:
     return await export_character(db, character_id, user_id)
 
