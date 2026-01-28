@@ -485,8 +485,10 @@ function wireMoneyInputs() {
     };
 
     // 🔴 ВАЖНО: сохраняем в state
-    if (state.character) {
-      state.character.money = { ...coins };
+    if (state.sheet?.character) {
+      state.sheet.character.gold = coins.gold;
+      state.sheet.character.silver = coins.silver;
+      state.sheet.character.copper = coins.copper;
     }
 
     updateMoneyPreview(coins);
