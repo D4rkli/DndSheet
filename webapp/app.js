@@ -254,18 +254,23 @@ function parseRatio(raw) {
 }
 
 function calcSummonStats(ch, summon) {
-  const level = Number(ch?.level || 1);
+  const hp = Math.round((ch.hp_max || 0) * parseRatio(summon.hp_ratio));
+  const mana = Math.round((ch.mana_max || 0) * parseRatio(summon.mana_ratio));
+  const energy = Math.round((ch.energy_max || 0) * parseRatio(summon.energy_ratio));
 
-  const baseHp = Number(ch?.hp_max || 0);
-  const baseAtk = Number(ch?.attack || 0);
-  const baseDef = Number(ch?.defense || 0);
+  const atk = Math.round((ch.attack || 0) * parseRatio(summon.attack_ratio));
+  const def = Math.round((ch.defense || 0) * parseRatio(summon.defense_ratio));
 
-  const hp = Math.max(0, evalSummonExpr(summon.hp_ratio, baseHp, level));
-  const atk = Math.max(0, evalSummonExpr(summon.attack_ratio, baseAtk, level));
-  const def = Math.max(0, evalSummonExpr(summon.defense_ratio, baseDef, level));
+  const initiative = Math.round((ch.initiative || 0) * parseRatio(summon.initiative_ratio));
+  const luck = Math.round((ch.luck || 0) * parseRatio(summon.luck_ratio));
+  const steps = Math.round((ch.steps || 0) * parseRatio(summon.steps_ratio));
+
+  // пока базу дальности берём от steps персонажа (логично как “клетки/метры”),
+  // если у тебя будет отдельный stat "attack_range" — поменяем на него.
+  const attackRange = Math.round((ch.steps || 0) * parseRatio(summon.attack_range_ratio));
 
   const count = Math.max(1, Number(summon.count || 1));
-  return { hp, atk, def, count };
+  return { hp, mana, energy, atk, def, initiative, luck, steps, attackRange, count };
 }
 
 function openSummonModal(existing = null) {
@@ -306,6 +311,40 @@ function openSummonModal(existing = null) {
           <input id="m_def_ratio" class="form-control" placeholder="1/4, 15%, 5" />
         </div>
       </div>
+      <div class="row g-2 mt-2">
+      
+      <div class="col-6">
+        <label class="form-label">Мана доля</label>
+        <input id="m_mana_ratio" class="form-control" placeholder="0, 1/4, 50%" />
+      </div>
+      <div class="col-6">
+        <label class="form-label">Энергия доля</label>
+        <input id="m_energy_ratio" class="form-control" placeholder="0, 1/4, 50%" />
+      </div>
+    </div>
+    
+    <div class="row g-2 mt-2">
+      <div class="col-4">
+        <label class="form-label">Инициатива доля</label>
+        <input id="m_initiative_ratio" class="form-control" placeholder="0, 1/2, 100%" />
+      </div>
+      <div class="col-4">
+        <label class="form-label">Удача доля</label>
+        <input id="m_luck_ratio" class="form-control" placeholder="0, 1/2, 100%" />
+      </div>
+      <div class="col-4">
+        <label class="form-label">Шаги доля</label>
+        <input id="m_steps_ratio" class="form-control" placeholder="0, 1/2, 100%" />
+      </div>
+    </div>
+    
+    <div class="row g-2 mt-2">
+      <div class="col-12">
+        <label class="form-label">Дальность атаки доля</label>
+        <input id="m_attack_range_ratio" class="form-control" placeholder="0, 1/2, 100%" />
+        <div class="hint">Считается от шагов персонажа (если хочешь другую базу — скажешь, поменяем).</div>
+      </div>
+    </div>
 
       <div id="m_preview" class="hint mt-2"></div>
     `,
@@ -321,6 +360,12 @@ function openSummonModal(existing = null) {
         hp_ratio: el("m_hp_ratio").value,
         attack_ratio: el("m_atk_ratio").value,
         defense_ratio: el("m_def_ratio").value,
+        mana_ratio: el("m_mana_ratio").value,
+        energy_ratio: el("m_energy_ratio").value,
+        initiative_ratio: el("m_initiative_ratio").value,
+        luck_ratio: el("m_luck_ratio").value,
+        steps_ratio: el("m_steps_ratio").value,
+        attack_range_ratio: el("m_attack_range_ratio").value,
       };
 
       const base = `/characters/${id}/summons`;
@@ -341,12 +386,15 @@ function openSummonModal(existing = null) {
       count: Number(el("m_count").value || 1),
     };
     const r = calcSummonStats(ch, tmp);
-    el("m_preview").textContent = `Итого: HP ${r.hp} · ATK ${r.atk} · DEF ${r.def} · x${r.count}`;
+    el("m_preview").textContent =
+      `Итого: HP ${r.hp} · Mana ${r.mana} · Energy ${r.energy} · ` +
+      `ATK ${r.atk} · DEF ${r.def} · Ini ${r.initiative} · Luck ${r.luck} · ` +
+      `Steps ${r.steps} · Range ${r.attackRange} · x${r.count}`;
   };
 
-  ["m_hp_ratio","m_atk_ratio","m_def_ratio","m_count"].forEach(id => {
-    el(id).addEventListener("input", updatePreview);
-  });
+  ["m_hp_ratio","m_mana_ratio","m_energy_ratio","m_atk_ratio","m_def_ratio",
+   "m_initiative_ratio","m_luck_ratio","m_steps_ratio","m_attack_range_ratio","m_count"
+  ].forEach(id => el(id).addEventListener("input", updatePreview));
 
   if (existing) {
     el("m_name").value = existing.name || "";
@@ -356,6 +404,12 @@ function openSummonModal(existing = null) {
     el("m_hp_ratio").value = existing.hp_ratio || "1/3";
     el("m_atk_ratio").value = existing.attack_ratio || "1/2";
     el("m_def_ratio").value = existing.defense_ratio || "1/4";
+    el("m_mana_ratio").value = existing?.mana_ratio ?? "0";
+    el("m_energy_ratio").value = existing?.energy_ratio ?? "0";
+    el("m_initiative_ratio").value = existing?.initiative_ratio ?? "0";
+    el("m_luck_ratio").value = existing?.luck_ratio ?? "0";
+    el("m_steps_ratio").value = existing?.steps_ratio ?? "0";
+    el("m_attack_range_ratio").value = existing?.attack_range_ratio ?? "0";
   } else {
     el("m_hp_ratio").value = "1/3";
     el("m_atk_ratio").value = "1/2";
@@ -1839,7 +1893,7 @@ async function loadSheet(showStatus = true) {
           const r = calcSummonStats(ch, s);
           return {
             ...s,
-            preview: `HP ${r.hp} · ATK ${r.atk} · DEF ${r.def} · x${r.count}${s.duration ? ` · ${s.duration}` : ""}`,
+            preview: `HP ${r.hp} · M ${r.mana} · E ${r.energy} · ATK ${r.atk} · DEF ${r.def} · Ini ${r.initiative} · L ${r.luck} · S ${r.steps} · R ${r.attackRange} · x${r.count}${s.duration ? ` · ${s.duration}` : ""}`,
           };
         }),
         async (s) => {

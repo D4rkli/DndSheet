@@ -866,6 +866,12 @@ async def get_full_sheet(
                 "attack_ratio": s.attack_ratio,
                 "defense_ratio": s.defense_ratio,
                 "count": s.count,
+                "mana_ratio": s.mana_ratio,
+                "energy_ratio": s.energy_ratio,
+                "initiative_ratio": s.initiative_ratio,
+                "luck_ratio": s.luck_ratio,
+                "steps_ratio": s.steps_ratio,
+                "attack_range_ratio": s.attack_range_ratio,
             }
             for s in sheet.get("summons", [])
         ],

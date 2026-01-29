@@ -133,6 +133,12 @@ class SummonCreate(BaseModel):
     attack_ratio: str = "1/2"
     defense_ratio: str = "1/4"
     count: int = 1
+    mana_ratio: str = "0"
+    energy_ratio: str = "0"
+    initiative_ratio: str = "0"
+    luck_ratio: str = "0"
+    steps_ratio: str = "0"
+    attack_range_ratio: str = "0"
 
 class SummonUpdate(BaseModel):
     name: Optional[str] = None
@@ -142,6 +148,12 @@ class SummonUpdate(BaseModel):
     attack_ratio: Optional[str] = None
     defense_ratio: Optional[str] = None
     count: Optional[int] = None
+    mana_ratio: Optional[str] = None
+    energy_ratio: Optional[str] = None
+    initiative_ratio: Optional[str] = None
+    luck_ratio: Optional[str] = None
+    steps_ratio: Optional[str] = None
+    attack_range_ratio: Optional[str] = None
 
 class SheetTemplateCreate(BaseModel):
     name: str

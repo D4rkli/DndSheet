@@ -36,8 +36,14 @@ SPELL_FIELDS = ["name", "description", "range", "duration", "cost"]
 ABILITY_FIELDS = ["name", "description", "range", "duration", "cost"]
 STATE_FIELDS = ["name", "hp_cost", "duration", "is_active"]
 ITEM_FIELDS = ["name", "description", "stats", "qty"]
-SUMMON_FIELDS = ["name", "description", "duration", "hp_ratio", "attack_ratio", "defense_ratio", "count"]
-
+SUMMON_FIELDS = [
+    "name", "description", "duration",
+    "hp_ratio", "attack_ratio", "defense_ratio",
+    "mana_ratio", "energy_ratio",
+    "initiative_ratio", "luck_ratio",
+    "steps_ratio", "attack_range_ratio",
+    "count",
+]
 
 # =========================
 # USERS
@@ -615,6 +621,14 @@ async def export_character(db: AsyncSession, character_id: int, user_id: int) ->
                 "hp_ratio": s.hp_ratio,
                 "attack_ratio": s.attack_ratio,
                 "defense_ratio": s.defense_ratio,
+
+                "mana_ratio": s.mana_ratio,
+                "energy_ratio": s.energy_ratio,
+                "initiative_ratio": s.initiative_ratio,
+                "luck_ratio": s.luck_ratio,
+                "steps_ratio": s.steps_ratio,
+                "attack_range_ratio": s.attack_range_ratio,
+
                 "count": s.count,
             }
             for s in sheet.get("summons", [])
@@ -745,10 +759,17 @@ async def import_character(db: AsyncSession, user_id: int, payload: dict) -> Cha
                     "hp_ratio": sm.get("hp_ratio", "1/3"),
                     "attack_ratio": sm.get("attack_ratio", "1/2"),
                     "defense_ratio": sm.get("defense_ratio", "1/4"),
+
+                    "mana_ratio": sm.get("mana_ratio", "0"),
+                    "energy_ratio": sm.get("energy_ratio", "0"),
+                    "initiative_ratio": sm.get("initiative_ratio", "0"),
+                    "luck_ratio": sm.get("luck_ratio", "0"),
+                    "steps_ratio": sm.get("steps_ratio", "0"),
+                    "attack_range_ratio": sm.get("attack_range_ratio", "0"),
+
                     "count": int(sm.get("count", 1) or 1),
                 },
             )
-
     return ch
 
 

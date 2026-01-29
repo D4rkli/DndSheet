@@ -206,6 +206,13 @@ class Summon(Base):
     hp_ratio: Mapped[str] = mapped_column(String(40), default="1/3")
     attack_ratio: Mapped[str] = mapped_column(String(40), default="1/2")
     defense_ratio: Mapped[str] = mapped_column(String(40), default="1/4")
+    # дополнительные параметры (строками, как доли/проценты/формулы)
+    mana_ratio: Mapped[str] = mapped_column(String(40), default="0")
+    energy_ratio: Mapped[str] = mapped_column(String(40), default="0")
+    initiative_ratio: Mapped[str] = mapped_column(String(40), default="0")
+    luck_ratio: Mapped[str] = mapped_column(String(40), default="0")
+    steps_ratio: Mapped[str] = mapped_column(String(40), default="0")
+    attack_range_ratio: Mapped[str] = mapped_column(String(40), default="0")
 
     count: Mapped[int] = mapped_column(Integer, default=1)
 
