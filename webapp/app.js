@@ -575,15 +575,52 @@ function tabSwitch(name) {
 function buildStatInputs(containerId, fields) {
   const wrap = el(containerId);
   wrap.innerHTML = "";
+
   fields.forEach(({ key, label }) => {
     const div = document.createElement("div");
+
+    // ✅ спец-поле: Агрессия / Доброта = два числа
+    if (key === "aggression_kindness") {
+      div.innerHTML = `
+        <label class="form-label">${label}</label>
+
+        <div class="stepper stepper-split" style="grid-template-columns: 1fr 14px 1fr;">
+          <input class="form-control" type="number" step="1" inputmode="numeric" data-ak="a" placeholder="агрессия" />
+          <span class="step-sep">/</span>
+          <input class="form-control" type="number" step="1" inputmode="numeric" data-ak="k" placeholder="доброта" />
+        </div>
+
+        <input type="hidden" data-key="${key}" />
+      `;
+
+      // обновляем скрытое поле "a/b" при вводе
+      const a = div.querySelector('input[data-ak="a"]');
+      const k = div.querySelector('input[data-ak="k"]');
+      const hidden = div.querySelector(`input[data-key="${key}"]`);
+
+      const sync = () => {
+        const av = String(a.value ?? "").trim();
+        const kv = String(k.value ?? "").trim();
+        hidden.value = `${av}/${kv}`;
+      };
+
+      a.addEventListener("input", sync);
+      k.addEventListener("input", sync);
+      sync();
+
+      wrap.appendChild(div);
+      return;
+    }
+
+    // остальные статы как раньше
     div.innerHTML = `
       <label class="form-label">${label}</label>
-      <input class="form-control" type="text" inputmode="text" data-key="${key}" placeholder="напр. 5/10 или -3" />
+      <input class="form-control" type="number" step="1" inputmode="numeric" data-key="${key}" />
     `;
     wrap.appendChild(div);
   });
 }
+
 
 function readStatInputs(containerId) {
   const data = {};
@@ -596,9 +633,28 @@ function readStatInputs(containerId) {
 }
 
 function fillStatInputs(containerId, source) {
-  el(containerId).querySelectorAll("input[data-key]").forEach((input) => {
+  const root = el(containerId);
+
+  // ✅ заполняем спец-поле aggression_kindness
+  const hidden = root.querySelector('input[data-key="aggression_kindness"]');
+  if (hidden) {
+    const raw = String(source?.aggression_kindness ?? "").trim(); // "10/5"
+    const [a, k] = raw.split("/");
+
+    const aInp = root.querySelector('input[data-ak="a"]');
+    const kInp = root.querySelector('input[data-ak="k"]');
+
+    if (aInp) aInp.value = a ?? "";
+    if (kInp) kInp.value = k ?? "";
+
+    hidden.value = raw || `${aInp?.value ?? ""}/${kInp?.value ?? ""}`;
+  }
+
+  // остальные инпуты как раньше
+  root.querySelectorAll('input[data-key]').forEach((input) => {
     const key = input.dataset.key;
-    input.value = source?.[key] ?? "";
+    if (key === "aggression_kindness") return; // уже сделали выше
+    input.value = source?.[key] ?? 0;
   });
 }
 
