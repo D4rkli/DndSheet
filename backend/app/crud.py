@@ -563,6 +563,7 @@ async def export_character(db: AsyncSession, character_id: int, user_id: int) ->
             "aggression_kindness": ch.aggression_kindness,
             "intellect": ch.intellect,
             "fearlessness": ch.fearlessness,
+            "confidence": ch.confidence,
             "humor": ch.humor,
             "emotionality": ch.emotionality,
             "sociability": ch.sociability,

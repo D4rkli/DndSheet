@@ -37,6 +37,7 @@ class CharacterUpdate(BaseModel):
     aggression_kindness: Optional[int] = None
     intellect: Optional[int] = None
     fearlessness: Optional[int] = None
+    confidence: Optional[int] = None
     humor: Optional[int] = None
     emotionality: Optional[int] = None
     sociability: Optional[int] = None

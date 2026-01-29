@@ -991,6 +991,7 @@ const personalityFields = [
   { key: "aggression_kindness", label: "Агрессия/Доброта" },
   { key: "intellect", label: "Интеллект" },
   { key: "fearlessness", label: "Бесстрашие" },
+  { key: "confidence", label: "Уверенность" },
   { key: "humor", label: "Юмор" },
   { key: "emotionality", label: "Эмоц." },
   { key: "sociability", label: "Общительность" },
