@@ -254,9 +254,16 @@ function parseRatio(raw) {
 }
 
 function calcSummonStats(ch, summon) {
-  const hp = Math.round((ch.hp_max || 0) * parseRatio(summon.hp_ratio));
-  const atk = Math.round((ch.attack || 0) * parseRatio(summon.attack_ratio));
-  const def = Math.round((ch.defense || 0) * parseRatio(summon.defense_ratio));
+  const level = Number(ch?.level || 1);
+
+  const baseHp = Number(ch?.hp_max || 0);
+  const baseAtk = Number(ch?.attack || 0);
+  const baseDef = Number(ch?.defense || 0);
+
+  const hp = Math.max(0, evalSummonExpr(summon.hp_ratio, baseHp, level));
+  const atk = Math.max(0, evalSummonExpr(summon.attack_ratio, baseAtk, level));
+  const def = Math.max(0, evalSummonExpr(summon.defense_ratio, baseDef, level));
+
   const count = Math.max(1, Number(summon.count || 1));
   return { hp, atk, def, count };
 }
@@ -288,15 +295,15 @@ function openSummonModal(existing = null) {
       <div class="row g-2 mt-2">
         <div class="col-4">
           <label class="form-label">HP доля</label>
-          <input id="m_hp_ratio" class="form-control" placeholder="1/3, 50%, 0.25" />
+          <input id="m_hp_ratio" class="form-control" placeholder="50%, 1/3, 3x-5" />
         </div>
         <div class="col-4">
           <label class="form-label">ATK доля</label>
-          <input id="m_atk_ratio" class="form-control" placeholder="1/2" />
+          <input id="m_atk_ratio" class="form-control" placeholder="25%, 2x, 10%+x" />
         </div>
         <div class="col-4">
           <label class="form-label">DEF доля</label>
-          <input id="m_def_ratio" class="form-control" placeholder="1/4" />
+          <input id="m_def_ratio" class="form-control" placeholder="1/4, 15%, 5" />
         </div>
       </div>
 
@@ -391,6 +398,56 @@ function evalCostExpr(res, expr, character, level) {
       val = level;
     } else if (t.match(/^\d+(?:\.\d+)?$/)) {
       val = Math.round(Number(t));
+    }
+
+    if (val === null) continue;
+    total += sign * val;
+  }
+
+  return total;
+}
+
+function evalSummonExpr(expr, base, level) {
+  const s = String(expr || "").toLowerCase().replaceAll(" ", "");
+  if (!s) return 0;
+
+  const tokens = s.match(/[+-]?[^+-]+/g) || [];
+  let total = 0;
+
+  for (let t of tokens) {
+    if (!t) continue;
+
+    let sign = 1;
+    if (t[0] === "+") t = t.slice(1);
+    else if (t[0] === "-") { sign = -1; t = t.slice(1); }
+
+    if (!t) continue;
+
+    let val = null;
+
+    // 50% от base
+    const perc = t.match(/^(\d+(?:\.\d+)?)%$/);
+    if (perc) {
+      val = Math.round(Number(base) * (Number(perc[1]) / 100));
+    }
+    // 1/3 от base
+    else if (t.match(/^\d+(?:\.\d+)?\/\d+(?:\.\d+)?$/)) {
+      const [a, b] = t.split("/").map(x => Number(x.replace(",", ".")));
+      if (Number.isFinite(a) && Number.isFinite(b) && b !== 0) {
+        val = Math.round(Number(base) * (a / b));
+      }
+    }
+    // 3x (от уровня)
+    else if (t.match(/^\d+(?:\.\d+)?x$/)) {
+      val = Math.round(Number(t.replace("x", "").replace(",", ".")) * level);
+    }
+    // x (от уровня)
+    else if (t === "x") {
+      val = Math.round(level);
+    }
+    // просто число
+    else if (t.match(/^\d+(?:\.\d+)?$/)) {
+      val = Math.round(Number(t.replace(",", ".")));
     }
 
     if (val === null) continue;
@@ -522,7 +579,7 @@ function buildStatInputs(containerId, fields) {
     const div = document.createElement("div");
     div.innerHTML = `
       <label class="form-label">${label}</label>
-      <input class="form-control" type="number" data-key="${key}" />
+      <input class="form-control" type="text" inputmode="text" data-key="${key}" placeholder="напр. 5/10 или -3" />
     `;
     wrap.appendChild(div);
   });
@@ -532,8 +589,8 @@ function readStatInputs(containerId) {
   const data = {};
   el(containerId).querySelectorAll("input[data-key]").forEach((input) => {
     const key = input.dataset.key;
-    const val = intOrNull(input.value);
-    if (val !== null) data[key] = val;
+    const val = String(input.value ?? "").trim();
+    if (val !== "") data[key] = val;
   });
   return data;
 }
@@ -541,7 +598,7 @@ function readStatInputs(containerId) {
 function fillStatInputs(containerId, source) {
   el(containerId).querySelectorAll("input[data-key]").forEach((input) => {
     const key = input.dataset.key;
-    input.value = source?.[key] ?? 0;
+    input.value = source?.[key] ?? "";
   });
 }
 
@@ -703,7 +760,14 @@ document.querySelectorAll("#tabs .nav-link").forEach((btn) => {
   btn.addEventListener("click", () => tabSwitch(btn.dataset.tab));
 });
 
-el("btnSync").addEventListener("click", () => loadSheet());
+el("btnSync").addEventListener("click", async () => {
+  try {
+    await saveEquipment();   // ✅ сначала сохраняем экипировку
+    await loadSheet(true);   // ✅ потом синхронизируем
+  } catch (e) {
+    alert(e.message);
+  }
+});
 
 el("btnExport")?.addEventListener("click", async () => {
   const id = currentChId();
@@ -897,10 +961,37 @@ const combatFields = [
 buildStatInputs("statsPersonality", personalityFields);
 buildStatInputs("statsCombat", combatFields);
 
+el("btnSaveEquip")?.addEventListener("click", async () => {
+  try {
+    await saveEquipment();
+    await loadSheet(false);
+  } catch (e) {
+    alert(e.message);
+  }
+});
+
+
 el("btnSaveStats").addEventListener("click", async () => {
   const extra = { ...readStatInputs("statsPersonality"), ...readStatInputs("statsCombat") };
   await saveMain(extra);
 });
+
+async function saveEquipDraft() {
+  const chId = state.currentCharacterId;
+  if (!chId) return;
+
+  // берём то, что сейчас в черновике
+  const payload = {};
+  for (const { key } of equipFields) {
+    const v = state.equipDraft?.[key];
+    if (v !== undefined) payload[key] = v ?? "";
+  }
+
+  // если нечего сохранять — выходим
+  if (Object.keys(payload).length === 0) return;
+
+  await apiPatch(`/characters/${chId}/equipment`, payload);
+}
 
 // EQUIPMENT
 const equipFields = [
@@ -1013,6 +1104,25 @@ function renderEquipUI() {
     wrap.appendChild(card);
   });
 }
+
+async function saveEquipment() {
+  const id = currentChId();
+  if (!id) return;
+
+  // отправляем весь черновик на сервер
+  const payload = {};
+  equipFields.forEach(({ key }) => {
+    payload[key] = state.equipDraft?.[key] ?? "";
+  });
+
+  await api(`/characters/${id}/equipment`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+
+  setStatus("Экипировка сохранена ✅");
+}
+
 
 const equipIcons = {
   head: "bi-person-badge",        // Голова
