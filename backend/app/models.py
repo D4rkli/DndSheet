@@ -36,8 +36,8 @@ class Character(Base):
     copper: Mapped[int] = mapped_column(Integer, default=0)
 
     # “Характер” (можно расширять)
-    aggression_kindness: Mapped[int] = mapped_column(Integer, default=0)
-    intellect: Mapped[int] = mapped_column(Integer, default=0)
+    aggression: Mapped[int] = mapped_column(Integer, default=0)
+    kindness: Mapped[int] = mapped_column(Integer, default=0)
     fearlessness: Mapped[int] = mapped_column(Integer, default=0)
     confidence: Mapped[int] = mapped_column(Integer, default=0)
     humor: Mapped[int] = mapped_column(Integer, default=0)

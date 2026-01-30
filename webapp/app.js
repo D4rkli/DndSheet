@@ -1042,7 +1042,8 @@ document.getElementById("btnSaveRules").addEventListener("click", () => saveMain
 
 // STATS
 const personalityFields = [
-  { key: "aggression_kindness", label: "Агрессия/Доброта" },
+  { key: "aggression", label: "Агрессия" },
+  { key: "kindness", label: "Доброта" },
   { key: "intellect", label: "Интеллект" },
   { key: "fearlessness", label: "Бесстрашие" },
   { key: "confidence", label: "Уверенность" },
