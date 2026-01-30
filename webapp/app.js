@@ -669,11 +669,11 @@ function buildStatInputs(containerId, fields) {
     // остальные статы как раньше
     div.innerHTML = `
       <label class="form-label">${label}</label>
-      <div class="stepper">
-          <button class="btn btn-outline-light step-btn" type="button" data-step="-1">−</button>
-          <input class="form-control num" type="number" step="1" data-key="${key}" />
-          <button class="btn btn-outline-light step-btn" type="button" data-step="+1">+</button>
-        </div>
+      <div class="stepper stepper-stat">
+        <button class="btn btn-outline-light step-btn" type="button" data-step="-1">−</button>
+        <input class="form-control num stat-num" type="number" step="1" data-key="${key}" />
+        <button class="btn btn-outline-light step-btn" type="button" data-step="+1">+</button>
+      </div>
     `;
     wrap.appendChild(div);
   });

@@ -847,3 +847,39 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Статы: − [input] + в одну линию */
+.stepper.stepper-stat{
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  align-items: center;
+  gap: 10px;
+}
+
+.stepper.stepper-stat .step-btn{
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* чтобы инпут был ровный и не "прыгал" */
+.stepper.stepper-stat .stat-num{
+  height: 42px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* опционально: чуть компактнее на очень узких экранах */
+@media (max-width: 360px){
+  .stepper.stepper-stat{
+    grid-template-columns: 40px 1fr 40px;
+    gap: 8px;
+  }
+  .stepper.stepper-stat .step-btn,
+  .stepper.stepper-stat .stat-num{
+    height: 40px;
+  }
+}
