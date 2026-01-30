@@ -883,3 +883,61 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
     height: 40px;
   }
 }
+
+/* ===== modalx (простая модалка) ===== */
+.modalx { position: fixed; inset: 0; z-index: 9999; }
+.modalx.d-none { display: none; }
+.modalx-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
+.modalx-card {
+  position: relative;
+  width: min(920px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  margin: 12px auto;
+  background: rgba(20, 25, 40, .98);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.modalx-head, .modalx-foot { padding: 12px 12px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.modalx-foot { border-bottom: none; border-top: 1px solid rgba(255,255,255,.06); }
+.modalx-title { font-weight: 700; }
+.modalx-body { padding: 12px 12px; overflow: auto; }
+
+.builder-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 720px) {
+  .builder-grid { grid-template-columns: 1fr; }
+}
+.builder-col-title { font-weight: 700; margin-bottom: 6px; }
+.builder-list {
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 8px;
+  min-height: 92px;
+}
+.builder-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.builder-item:hover { background: rgba(255,255,255,.04); }
+.builder-item.active { border-color: rgba(110,168,254,.65); background: rgba(110,168,254,.10); }
+
+.codebox {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 10px;
+}

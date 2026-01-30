@@ -2009,3 +2009,253 @@ window.addEventListener("scroll", () => {
   }
 });
 
+// ===== Конструктор вкладок =====
+
+const builderState = {
+  tabs: [],          // [{key,title,sections:[{title,fields:[...]}]}]
+  selectedTab: null,
+  selectedSection: null,
+  selectedField: null,
+};
+
+function bEl(id) { return document.getElementById(id); }
+
+function openBuilder() {
+  bEl("builderModal").classList.remove("d-none");
+  if (!bEl("builderTplName").value) {
+    bEl("builderTplName").value = `Мой шаблон ${new Date().toLocaleDateString()}`;
+  }
+  renderBuilder();
+}
+
+function closeBuilder() {
+  bEl("builderModal").classList.add("d-none");
+}
+
+function slugKey(s) {
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .replaceAll(" ", "_")
+    .replace(/[^a-z0-9_]/g, "");
+}
+
+function renderBuilder() {
+  // Tabs
+  const tabsRoot = bEl("builderTabs");
+  tabsRoot.innerHTML = "";
+  builderState.tabs.forEach((t) => {
+    const div = document.createElement("div");
+    div.className = "builder-item" + (builderState.selectedTab === t.key ? " active" : "");
+    div.innerHTML = `
+      <div>${escapeHtml(t.title)}</div>
+      <button class="btn btn-outline-light btn-sm" type="button" data-bdel="tab" data-bkey="${escapeHtml(t.key)}">🗑</button>
+    `;
+    div.addEventListener("click", (e) => {
+      if (e.target.closest("[data-bdel]")) return;
+      builderState.selectedTab = t.key;
+      builderState.selectedSection = null;
+      builderState.selectedField = null;
+      renderBuilder();
+    });
+    tabsRoot.appendChild(div);
+  });
+
+  // Sections
+  const secRoot = bEl("builderSections");
+  secRoot.innerHTML = "";
+  const tab = builderState.tabs.find(x => x.key === builderState.selectedTab);
+  const sections = tab?.sections || [];
+  sections.forEach((s, idx) => {
+    const skey = `${tab.key}::${idx}`;
+    const div = document.createElement("div");
+    div.className = "builder-item" + (builderState.selectedSection === skey ? " active" : "");
+    div.innerHTML = `
+      <div>${escapeHtml(s.title)}</div>
+      <button class="btn btn-outline-light btn-sm" type="button" data-bdel="section" data-bkey="${escapeHtml(skey)}">🗑</button>
+    `;
+    div.addEventListener("click", (e) => {
+      if (e.target.closest("[data-bdel]")) return;
+      builderState.selectedSection = skey;
+      builderState.selectedField = null;
+      renderBuilder();
+    });
+    secRoot.appendChild(div);
+  });
+
+  // Fields
+  const fRoot = bEl("builderFields");
+  fRoot.innerHTML = "";
+  let fields = [];
+  if (tab && builderState.selectedSection) {
+    const idx = Number(builderState.selectedSection.split("::")[1]);
+    fields = tab.sections?.[idx]?.fields || [];
+  }
+  fields.forEach((f, idx) => {
+    const fkey = `${builderState.selectedSection}::${idx}`;
+    const div = document.createElement("div");
+    div.className = "builder-item" + (builderState.selectedField === fkey ? " active" : "");
+    div.innerHTML = `
+      <div>${escapeHtml(f.label)} <span class="muted">(${escapeHtml(f.key)} · ${escapeHtml(f.type)})</span></div>
+      <button class="btn btn-outline-light btn-sm" type="button" data-bdel="field" data-bkey="${escapeHtml(fkey)}">🗑</button>
+    `;
+    div.addEventListener("click", (e) => {
+      if (e.target.closest("[data-bdel]")) return;
+      builderState.selectedField = fkey;
+      // заполнить редактор
+      bEl("builderFieldLabel").value = f.label || "";
+      bEl("builderFieldKey").value = f.key || "";
+      bEl("builderFieldType").value = f.type || "text";
+      bEl("builderFieldDefault").value = f.default ?? "";
+      renderBuilder();
+    });
+    fRoot.appendChild(div);
+  });
+
+  // JSON preview
+  const cfg = buildTemplateConfigFromBuilder();
+  bEl("builderJson").textContent = JSON.stringify(cfg, null, 2);
+}
+
+function buildTemplateConfigFromBuilder() {
+  // основной список вкладок: твои базовые + custom + все кастомные
+  const base = ["main", "stats", "inv", "custom"];
+  const customTabs = builderState.tabs.map(t => ({
+    key: t.key,
+    title: t.title,
+    sections: t.sections || [],
+  }));
+
+  return {
+    tabs: base,
+    custom_tabs: customTabs,
+  };
+}
+
+function addTab() {
+  const title = prompt("Название вкладки?", "Заметки");
+  if (!title) return;
+  const key = slugKey("tab_" + title);
+  builderState.tabs.push({ key, title, sections: [] });
+  builderState.selectedTab = key;
+  builderState.selectedSection = null;
+  builderState.selectedField = null;
+  renderBuilder();
+}
+
+function addSection() {
+  const tab = builderState.tabs.find(x => x.key === builderState.selectedTab);
+  if (!tab) return alert("Сначала выбери вкладку.");
+  const title = prompt("Название раздела?", "Раздел");
+  if (!title) return;
+  tab.sections.push({ title, fields: [] });
+  builderState.selectedSection = `${tab.key}::${tab.sections.length - 1}`;
+  builderState.selectedField = null;
+  renderBuilder();
+}
+
+function addField() {
+  const tab = builderState.tabs.find(x => x.key === builderState.selectedTab);
+  if (!tab || !builderState.selectedSection) return alert("Сначала выбери вкладку и раздел.");
+  const idx = Number(builderState.selectedSection.split("::")[1]);
+  const sec = tab.sections[idx];
+
+  const label = prompt("Название поля (label)?", "Поле");
+  if (!label) return;
+  const key = slugKey(prompt("Ключ поля (key)?", "my_field") || "my_field");
+  const type = prompt("Тип (text / textarea / number / checkbox)?", "text") || "text";
+
+  sec.fields.push({ key, label, type: type.toLowerCase(), default: type === "number" ? 0 : "" });
+  builderState.selectedField = `${builderState.selectedSection}::${sec.fields.length - 1}`;
+  renderBuilder();
+}
+
+function applyFieldEdits() {
+  if (!builderState.selectedField) return alert("Выбери поле.");
+  const tab = builderState.tabs.find(x => x.key === builderState.selectedTab);
+  const secIdx = Number(builderState.selectedSection.split("::")[1]);
+  const fieldIdx = Number(builderState.selectedField.split("::")[2]);
+  const field = tab.sections[secIdx].fields[fieldIdx];
+
+  field.label = bEl("builderFieldLabel").value.trim() || field.label;
+  field.key = slugKey(bEl("builderFieldKey").value.trim() || field.key);
+  field.type = (bEl("builderFieldType").value || "text").toLowerCase();
+  const d = bEl("builderFieldDefault").value;
+  field.default = field.type === "number" ? (parseInt(d || "0", 10) || 0) : (field.type === "checkbox" ? Boolean(d === "true" || d === "1") : d);
+
+  renderBuilder();
+}
+
+function deleteBuilderEntity(kind, bkey) {
+  if (kind === "tab") {
+    builderState.tabs = builderState.tabs.filter(t => t.key !== bkey);
+    if (builderState.selectedTab === bkey) {
+      builderState.selectedTab = null;
+      builderState.selectedSection = null;
+      builderState.selectedField = null;
+    }
+  } else if (kind === "section") {
+    const tab = builderState.tabs.find(x => x.key === builderState.selectedTab);
+    if (!tab) return;
+    const idx = Number(bkey.split("::")[1]);
+    tab.sections.splice(idx, 1);
+    builderState.selectedSection = null;
+    builderState.selectedField = null;
+  } else if (kind === "field") {
+    const tab = builderState.tabs.find(x => x.key === builderState.selectedTab);
+    if (!tab) return;
+    const secIdx = Number(bkey.split("::")[1]);
+    const fieldIdx = Number(bkey.split("::")[2]);
+    tab.sections[secIdx].fields.splice(fieldIdx, 1);
+    builderState.selectedField = null;
+  }
+  renderBuilder();
+}
+
+async function saveBuilderAsTemplateAndApply() {
+  const chId = currentChId();
+  if (!chId) return alert("Нет выбранного персонажа.");
+
+  const name = bEl("builderTplName").value.trim() || "Мой шаблон";
+  const config = buildTemplateConfigFromBuilder();
+
+  // 1) создаём шаблон
+  const tpl = await api("/templates", {
+    method: "POST",
+    body: JSON.stringify({ name, config }),
+  });
+
+  // ожидаем, что api вернёт {id, name, config}
+  const templateId = tpl?.id;
+  if (!templateId) return alert("Не получил id шаблона от сервера.");
+
+  // 2) применяем к персонажу
+  await api(`/characters/${chId}/apply-template`, {
+    method: "POST",
+    body: JSON.stringify({ template_id: templateId }),
+  });
+
+  closeBuilder();
+  await loadSheet(true);
+  setStatus("Шаблон применён ✅");
+}
+
+// wiring
+document.addEventListener("click", (e) => {
+  const del = e.target.closest("[data-bdel]");
+  if (del) {
+    e.preventDefault();
+    deleteBuilderEntity(del.dataset.bdel, del.dataset.bkey);
+  }
+});
+
+el("btnBuilder")?.addEventListener("click", openBuilder);
+bEl("builderClose")?.addEventListener("click", closeBuilder);
+bEl("builderModal")?.querySelector(".modalx-backdrop")?.addEventListener("click", closeBuilder);
+
+bEl("builderAddTab")?.addEventListener("click", addTab);
+bEl("builderAddSection")?.addEventListener("click", addSection);
+bEl("builderAddField")?.addEventListener("click", addField);
+bEl("builderApplyField")?.addEventListener("click", applyFieldEdits);
+bEl("builderSave")?.addEventListener("click", saveBuilderAsTemplateAndApply);
+
