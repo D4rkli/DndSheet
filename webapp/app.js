@@ -2259,3 +2259,15 @@ bEl("builderAddField")?.addEventListener("click", addField);
 bEl("builderApplyField")?.addEventListener("click", applyFieldEdits);
 bEl("builderSave")?.addEventListener("click", saveBuilderAsTemplateAndApply);
 
+document.addEventListener("DOMContentLoaded", () => {
+  const closeBtn = document.getElementById("builderClose");
+  const modal = document.getElementById("builderModal");
+  const backdrop = modal?.querySelector(".modalx-backdrop");
+
+  function closeBuilderModal() {
+    modal?.classList.add("d-none");
+  }
+
+  closeBtn?.addEventListener("click", closeBuilderModal);
+  backdrop?.addEventListener("click", closeBuilderModal);
+});
