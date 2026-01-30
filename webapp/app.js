@@ -2292,3 +2292,43 @@ document.addEventListener("DOMContentLoaded", () => {
     window.open(DONATE_URL, "_blank", "noopener,noreferrer");
   });
 })();
+
+// ===== Donate button (DonationAlerts) =====
+document.addEventListener("DOMContentLoaded", () => {
+  const DONATE_URL = "https://www.donationalerts.com/r/d4rkl1";
+  const btn = document.getElementById("btnDonate");
+  if (!btn) return;
+
+  // на всякий случай держим ссылку и в href
+  btn.setAttribute("href", DONATE_URL);
+  btn.setAttribute("target", "_blank");
+  btn.setAttribute("rel", "noopener noreferrer");
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (window.Telegram?.WebApp?.openLink) {
+      window.Telegram.WebApp.openLink(DONATE_URL, { try_instant_view: false });
+      return;
+    }
+
+    window.open(DONATE_URL, "_blank", "noopener,noreferrer");
+  });
+});
+
+// Fallback: если вдруг кнопка появилась позже / или DOMContentLoaded не помог
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("#btnDonate");
+  if (!a) return;
+
+  const DONATE_URL = "https://www.donationalerts.com/r/d4rkl1";
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (window.Telegram?.WebApp?.openLink) {
+    window.Telegram.WebApp.openLink(DONATE_URL, { try_instant_view: false });
+  } else {
+    window.open(DONATE_URL, "_blank", "noopener,noreferrer");
+  }
+});
