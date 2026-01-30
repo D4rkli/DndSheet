@@ -941,3 +941,32 @@ header.topbar .d-flex.gap-2::-webkit-scrollbar{
   border-radius: 14px;
   padding: 10px;
 }
+
+/* ===== Фикс: текст в инпутах/textarea на тёмной теме ===== */
+.form-control,
+.form-select,
+textarea.form-control,
+input.form-control {
+  color: rgba(255, 255, 255, 0.92) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* placeholder */
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* когда фокус — чуть ярче */
+.form-control:focus,
+.form-select:focus {
+  color: rgba(255, 255, 255, 0.95) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(110, 168, 254, 0.7) !important;
+  box-shadow: 0 0 0 0.2rem rgba(110, 168, 254, 0.15) !important;
+}
+
+/* чтобы выделение текста тоже было видно */
+.form-control::selection {
+  background: rgba(110, 168, 254, 0.35);
+}
