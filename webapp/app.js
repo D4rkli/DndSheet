@@ -2271,3 +2271,24 @@ document.addEventListener("DOMContentLoaded", () => {
   closeBtn?.addEventListener("click", closeBuilderModal);
   backdrop?.addEventListener("click", closeBuilderModal);
 });
+
+// Donate button
+(function initDonate() {
+  const btn = document.getElementById("btnDonate");
+  if (!btn) return;
+
+  const DONATE_URL = "https://www.donationalerts.com/r/d4rkl1";
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    // если это Telegram WebApp — открываем внешнюю ссылку правильно
+    if (window.Telegram?.WebApp?.openLink) {
+      window.Telegram.WebApp.openLink(DONATE_URL, { try_instant_view: false });
+      return;
+    }
+
+    // fallback для обычного браузера
+    window.open(DONATE_URL, "_blank", "noopener,noreferrer");
+  });
+})();

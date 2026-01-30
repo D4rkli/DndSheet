@@ -970,3 +970,33 @@ input.form-control {
 .form-control::selection {
   background: rgba(110, 168, 254, 0.35);
 }
+
+/* Fixed donate button */
+.donate-btn{
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 12px 14px;
+  border-radius: 16px;
+
+  text-decoration: none;
+  font-weight: 700;
+
+  background: rgba(110,168,254,.22);
+  border: 1px solid rgba(110,168,254,.55);
+  color: rgba(255,255,255,.95);
+  backdrop-filter: blur(8px);
+}
+
+/* чтобы контент не прятался под кнопкой */
+body{
+  padding-bottom: 72px;
+}
