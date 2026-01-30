@@ -669,7 +669,11 @@ function buildStatInputs(containerId, fields) {
     // остальные статы как раньше
     div.innerHTML = `
       <label class="form-label">${label}</label>
-      <input class="form-control" type="number" step="1" inputmode="numeric" data-key="${key}" />
+      <div class="stepper">
+          <button class="btn btn-outline-light step-btn" type="button" data-step="-1">−</button>
+          <input class="form-control num" type="number" step="1" data-key="${key}" />
+          <button class="btn btn-outline-light step-btn" type="button" data-step="+1">+</button>
+        </div>
     `;
     wrap.appendChild(div);
   });
@@ -1949,16 +1953,26 @@ document.addEventListener("click", (e) => {
   const btn = e.target.closest("button.step-btn");
   if (!btn) return;
 
-  const targetId = btn.dataset.target;
   const step = parseInt(btn.dataset.step || "0", 10);
-  const input = document.getElementById(targetId);
+
+  // 1) Если указан data-target — работаем как раньше (ресурсы)
+  let input = null;
+  if (btn.dataset.target) {
+    input = document.getElementById(btn.dataset.target);
+  } else {
+    // 2) Иначе — ищем инпут рядом (для статов)
+    input = btn.parentElement?.querySelector("input");
+  }
   if (!input) return;
 
-  const current = parseInt(input.value || "0", 10);
+  const current = parseInt(String(input.value || "0"), 10) || 0;
   const next = current + step;
-  input.value = String(next < 0 ? 0 : next);
 
-  // чтобы UI/валидации среагировали
+  // ✅ ВАЖНО: разрешаем отрицательные значения для статов
+  // а ресурсы можно оставить неотрицательными
+  const isStat = !btn.dataset.target; // если без target — это стат
+  input.value = String(isStat ? next : Math.max(0, next));
+
   input.dispatchEvent(new Event("input", { bubbles: true }));
 });
 
