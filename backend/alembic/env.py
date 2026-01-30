@@ -5,8 +5,6 @@ from sqlalchemy import pool
 
 from alembic import context
 from app.models import Base
-import app.models
-import os
 
 
 
@@ -29,6 +27,8 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+import os
+from app.config import settings
 
 def get_alembic_url():
     url = os.getenv("DATABASE_URL")
@@ -36,7 +36,13 @@ def get_alembic_url():
         url = url.replace("postgresql+asyncpg://", "postgresql://")
         url = url.replace("postgres://", "postgresql://")
         return url
-    return "sqlite:///./app.db"
+
+    # берём тот же sqlite url, что использует приложение
+    url = settings.SQLITE_PATH
+    # alembic нужен sync sqlite url
+    url = url.replace("sqlite+aiosqlite:///", "sqlite:///")
+    return url
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
