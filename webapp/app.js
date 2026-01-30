@@ -342,7 +342,7 @@ function openSummonModal(existing = null) {
       <div class="col-12">
         <label class="form-label">Дальность атаки доля</label>
         <input id="m_attack_range_ratio" class="form-control" placeholder="0, 1/2, 100%" />
-        <div class="hint">Считается от шагов персонажа (если хочешь другую базу — скажешь, поменяем).</div>
+        <div class="hint">Считается от шагов персонажа.</div>
       </div>
     </div>
 
