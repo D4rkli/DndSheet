@@ -36,6 +36,7 @@ class CharacterUpdate(BaseModel):
     # остальное (твои характеристики / боевые статы)
     aggression: Optional[int] = None
     kindness: Optional[int] = None
+    intellect: Optional[int] = None
     fearlessness: Optional[int] = None
     confidence: Optional[int] = None
     humor: Optional[int] = None
