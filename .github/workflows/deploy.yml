@@ -12,17 +12,17 @@ jobs:
     steps:
       - name: Debug secrets presence
         run: |
-          echo "HOST set? -> ${{ secrets.SSH_HOST != '' }}"
-          echo "USER set? -> ${{ secrets.SSH_USER != '' }}"
-          echo "PORT set? -> ${{ secrets.SSH_PORT != '' }}"
-          echo "KEY set?  -> ${{ secrets.SSH_KEY  != '' }}"
+          echo "HOST set -> ${{ secrets.SSH_HOST != '' }}"
+          echo "USER set -> ${{ secrets.SSH_USER != '' }}"
+          echo "PORT set -> ${{ secrets.SSH_PORT != '' }}"
+          echo "KEY  set -> ${{ secrets.SSH_KEY  != '' }}"
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          port: ${{ secrets.SSH_PORT }}
+          username: root
+          port: 22
           key: ${{ secrets.SSH_KEY }}
 
           script_stop: true
@@ -41,6 +41,3 @@ jobs:
 
             systemctl restart dnd-backend
             systemctl restart dnd-bot
-
-            systemctl --no-pager --full status dnd-backend || true
-            systemctl --no-pager --full status dnd-bot || true
