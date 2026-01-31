@@ -935,7 +935,7 @@ function recalcLevelFromTotalXp(oldLevel) {
 async function addXpAndHandleLevelUp() {
   const per = getXpPerLevel();
   if (!per) {
-    showToast?.("Сначала задай XP на уровень");
+    alert("Сначала задай XP на уровень");
     return;
   }
 
@@ -1121,6 +1121,7 @@ async function saveMain(extra = {}) {
     gender: el("f_gender").value.trim(),
     level: intOrNull(el("f_level").value),
     xp: intOrNull(el("f_xp").value),
+    xp_per_level: intOrNull(el("f_xp_per_level")?.value),
 
     gold: coinsRaw.gold,
     silver: coinsRaw.silver,
@@ -1882,6 +1883,7 @@ async function loadSheet(showStatus = true) {
   fillInput("f_gender", ch.gender);
   fillInput("f_level", ch.level);
   fillInput("f_xp", ch.xp);
+  fillInput("f_xp_per_level", ch.xp_per_level);
 
   updateXpToNextUI();
 
