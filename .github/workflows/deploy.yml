@@ -3,13 +3,20 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - master   # у тебя ветка master, это важно
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug secrets presence
+        run: |
+          echo "HOST set? -> ${{ secrets.SSH_HOST != '' }}"
+          echo "USER set? -> ${{ secrets.SSH_USER != '' }}"
+          echo "PORT set? -> ${{ secrets.SSH_PORT != '' }}"
+          echo "KEY set?  -> ${{ secrets.SSH_KEY  != '' }}"
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -17,6 +24,13 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
+
+          # чтобы падало сразу, если SSH/команда упала
+          script_stop: true
+
+          # удобно для логов (можно потом выключить)
+          debug: true
+
           script: |
             set -e
 
@@ -30,3 +44,6 @@ jobs:
 
             systemctl restart dnd-backend
             systemctl restart dnd-bot
+
+            systemctl --no-pager --full status dnd-backend || true
+            systemctl --no-pager --full status dnd-bot || true
