@@ -1,0 +1,32 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - master   # у тебя ветка master, это важно
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+
+            cd /opt/telegram-bot/DndSheet
+            git pull
+
+            cd backend
+            source venv/bin/activate
+            pip install -r requirements.txt
+            alembic upgrade head
+
+            systemctl restart dnd-backend
+            systemctl restart dnd-bot
