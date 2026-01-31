@@ -1,0 +1,11 @@
+[0;1;32m●[0m dnd-bot.service - DND Telegram Bot (aiogram polling)
+     Loaded: loaded (]8;;file://6521281-ct581149.twc1.net/etc/systemd/system/dnd-bot.service/etc/systemd/system/dnd-bot.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;32mactive (running)[0m since Sat 2026-01-31 13:29:02 UTC; 4min 23s ago
+   Main PID: 4932 (python)
+      Tasks: 2 (limit: 1107)
+     Memory: 90.7M (peak: 90.9M)
+        CPU: 3.229s
+     CGroup: /system.slice/dnd-bot.service
+             └─[0;38;5;245m4932 /opt/telegram-bot/DndSheet/backend/venv/bin/python -m app.bot[0m
+
+Jan 31 13:29:02 6521281-ct581149.twc1.net systemd[1]: Started dnd-bot.service - DND Telegram Bot (aiogram polling).
