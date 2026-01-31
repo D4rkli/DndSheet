@@ -847,6 +847,117 @@ el("jsonActionBtn")?.addEventListener("click", async () => {
   }
 });
 
+function getXpPerLevel() {
+  // если ты уже добавляла f_xp_per_level — используем его
+  const per = intOrNull(el("f_xp_per_level")?.value);
+  return (per && per > 0) ? per : 0;
+}
+
+function updateXpToNextUI() {
+  const per = getXpPerLevel();
+  const xp = intOrNull(el("f_xp")?.value) ?? 0;
+
+  const out = el("f_xp_to_next");
+  if (!out) return;
+
+  if (!per) {
+    out.value = "";
+    out.placeholder = "задай XP на уровень";
+    return;
+  }
+
+  const mod = xp % per;
+  const left = (mod === 0) ? per : (per - mod);
+  out.value = String(left);
+}
+
+// применить +lvl N раз (с авто-прибавками)
+function applyLevelUps(delta) {
+  if (delta <= 0) return;
+
+  // per-level
+  const hpPL = intOrNull(el("f_hp_per_level")?.value) ?? 0;
+  const manaPL = intOrNull(el("f_mana_per_level")?.value) ?? 0;
+  const energyPL = intOrNull(el("f_energy_per_level")?.value) ?? 0;
+  const atkPL = intOrNull(el("f_attack_per_level")?.value) ?? 0;
+
+  // текущие значения
+  const lvl = intOrNull(el("f_level")?.value) ?? 1;
+
+  const hpMax = intOrNull(el("f_hp_max")?.value) ?? 0;
+  const manaMax = intOrNull(el("f_mana_max")?.value) ?? 0;
+  const energyMax = intOrNull(el("f_energy_max")?.value) ?? 0;
+
+  const hp = intOrNull(el("f_hp")?.value) ?? 0;
+  const mana = intOrNull(el("f_mana")?.value) ?? 0;
+  const energy = intOrNull(el("f_energy")?.value) ?? 0;
+
+  const atk = intOrNull(el("f_attack")?.value) ?? 0;
+
+  // суммарные прибавки
+  const addHp = hpPL * delta;
+  const addMana = manaPL * delta;
+  const addEnergy = energyPL * delta;
+  const addAtk = atkPL * delta;
+
+  // новый уровень
+  el("f_level").value = String(lvl + delta);
+
+  // max увеличиваем
+  el("f_hp_max").value = String(hpMax + addHp);
+  el("f_mana_max").value = String(manaMax + addMana);
+  el("f_energy_max").value = String(energyMax + addEnergy);
+
+  // текущие тоже увеличиваем (как “получил” ресурсы)
+  el("f_hp").value = String(hp + addHp);
+  el("f_mana").value = String(mana + addMana);
+  el("f_energy").value = String(energy + addEnergy);
+
+  // атака
+  el("f_attack").value = String(atk + addAtk);
+}
+
+function recalcLevelFromTotalXp(oldLevel) {
+  const per = getXpPerLevel();
+  if (!per) return 0;
+
+  const xp = intOrNull(el("f_xp")?.value) ?? 0;
+  const newLevel = Math.max(1, Math.floor(xp / per) + 1);
+
+  const delta = newLevel - (oldLevel ?? (intOrNull(el("f_level")?.value) ?? 1));
+  if (delta > 0) applyLevelUps(delta);
+
+  // синхроним поле уровня на всякий
+  el("f_level").value = String(newLevel);
+  return delta;
+}
+
+async function addXpAndHandleLevelUp() {
+  const per = getXpPerLevel();
+  if (!per) {
+    showToast?.("Сначала задай XP на уровень");
+    return;
+  }
+
+  const add = intOrNull(el("f_xp_add")?.value) ?? 0;
+  if (add <= 0) return;
+
+  const oldLevel = intOrNull(el("f_level")?.value) ?? 1;
+  const xp = intOrNull(el("f_xp")?.value) ?? 0;
+
+  el("f_xp").value = String(xp + add);
+  el("f_xp_add").value = "";
+
+  // если перешли пороги — поднимаем уровень (и прибавляем статы)
+  recalcLevelFromTotalXp(oldLevel);
+
+  // обновляем “осталось”
+  updateXpToNextUI();
+
+  // сохраняем на сервер
+  await saveMain();
+}
+
 // Templates modal
 const templatesModalEl = el("templatesModal");
 const templatesModal = templatesModalEl ? new bootstrap.Modal(templatesModalEl) : null;
@@ -1772,6 +1883,8 @@ async function loadSheet(showStatus = true) {
   fillInput("f_level", ch.level);
   fillInput("f_xp", ch.xp);
 
+  updateXpToNextUI();
+
   fillInput("f_gold", ch.gold);
   fillInput("f_silver", ch.silver);
   fillInput("f_copper", ch.copper);
@@ -1947,6 +2060,12 @@ async function boot() {
     fillMoneyInputsFromState();
     wireFabMenu();
     wireMoneyInputs();
+      // XP / Level wiring
+      el("btnAddXp")?.addEventListener("click", addXpAndHandleLevelUp);
+
+      // чтобы "осталось до уровня" обновлялось при правке XP и XP-per-level
+      el("f_xp")?.addEventListener("input", updateXpToNextUI);
+      el("f_xp_per_level")?.addEventListener("input", updateXpToNextUI);
   } catch (e) {
     console.error(e);
     setStatus("Ошибка");
