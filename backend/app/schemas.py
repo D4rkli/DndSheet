@@ -78,6 +78,7 @@ class ItemUpdate(BaseModel):
 
 class SpellCreate(BaseModel):
     name: str
+    level: int = 0
     description: str = ""
     range: str = ""
     duration: str = ""
@@ -96,6 +97,7 @@ class StateCreate(BaseModel):
 
 class SpellUpdate(BaseModel):
     name: Optional[str] = None
+    level: Optional[int] = None
     description: Optional[str] = None
     range: Optional[str] = None
     duration: Optional[str] = None

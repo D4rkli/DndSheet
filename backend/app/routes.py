@@ -277,6 +277,7 @@ async def list_spells(
         {
             "id": s.id,
             "name": s.name,
+            "level": s.level,
             "description": s.description,
             "range": s.range,
             "duration": s.duration,
@@ -362,6 +363,7 @@ async def list_abilities(
         {
             "id": a.id,
             "name": a.name,
+            "level": a.level,
             "description": a.description,
             "range": a.range,
             "duration": a.duration,
@@ -473,7 +475,7 @@ async def patch_spell(
     if not obj:
         raise HTTPException(404, "Spell not found")
 
-    return {"id": obj.id, "name": obj.name, "description": obj.description, "range": obj.range, "duration": obj.duration, "cost": obj.cost}
+    return {"id": obj.id, "name": obj.name, "level": obj.level, "description": obj.description, "range": obj.range, "duration": obj.duration, "cost": obj.cost}
 
 
 @router.patch("/characters/{ch_id}/abilities/{ability_id}")
@@ -499,7 +501,7 @@ async def patch_ability(
     if not obj:
         raise HTTPException(404, "Ability not found")
 
-    return {"id": obj.id, "name": obj.name, "description": obj.description, "range": obj.range, "duration": obj.duration, "cost": obj.cost}
+    return {"id": obj.id, "name": obj.name, "level": obj.level, "description": obj.description, "range": obj.range, "duration": obj.duration, "cost": obj.cost}
 
 
 @router.patch("/characters/{ch_id}/states/{state_id}")

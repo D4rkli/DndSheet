@@ -1580,6 +1580,12 @@ function openSpellModal(kind, existing = null) {
     `
       <label class="form-label">Название</label>
       <input id="m_name" class="form-control" />
+      <div class="row g-2 mt-1">
+        <div class="col-4">
+          <label class="form-label">Уровень</label>
+          <input id="m_level" type="number" class="form-control" min="0" value="0" />
+        </div>
+      </div>
       <label class="form-label mt-2">Описание</label>
       <textarea id="m_desc" class="form-control" rows="3"></textarea>
       <div class="row g-2 mt-1">
@@ -1617,6 +1623,7 @@ function openSpellModal(kind, existing = null) {
 
       const payload = {
         name: document.getElementById("m_name").value,
+        level: intOrNull(document.getElementById("m_level").value) ?? 0,
         description: document.getElementById("m_desc").value,
         range: document.getElementById("m_range").value,
         duration: document.getElementById("m_duration").value,
@@ -1638,6 +1645,7 @@ function openSpellModal(kind, existing = null) {
 
   if (existing) {
     document.getElementById("m_name").value = existing.name || "";
+    document.getElementById("m_level").value = String(existing.level ?? 0);
     document.getElementById("m_desc").value = existing.description || "";
     document.getElementById("m_range").value = existing.range || "";
     document.getElementById("m_duration").value = existing.duration || "";
@@ -1815,7 +1823,7 @@ async function loadSheet(showStatus = true) {
     "spellsList",
     (state.sheet.spells || []).map((s) => ({
       ...s,
-      preview: [s.range, s.duration, s.cost].filter(Boolean).join(" · "),
+      preview: [`lvl ${s.level ?? 0}`, s.range, s.duration, s.cost].filter(Boolean).join(" · "),
     })),
     async (s) => {
       await api(`/characters/${id}/spells/${s.id}`, { method: "DELETE" });
@@ -1857,7 +1865,7 @@ async function loadSheet(showStatus = true) {
       "passiveAbilitiesList",
       passive.map((a) => ({
         ...a,
-        preview: [a.range, a.duration, a.cost].filter(Boolean).join(" · "),
+        preview: [`lvl ${a.level ?? 0}`, a.range, a.duration, a.cost].filter(Boolean).join(" · "),
       })),
       async (a) => {
         await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
@@ -1876,7 +1884,7 @@ async function loadSheet(showStatus = true) {
       "abilitiesList",
       active.map((a) => ({
         ...a,
-        preview: [a.range, a.duration, a.cost].filter(Boolean).join(" · "),
+        preview: [`lvl ${a.level ?? 0}`, a.range, a.duration, a.cost].filter(Boolean).join(" · "),
       })),
       async (a) => {
         await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });

@@ -32,8 +32,8 @@ def _safe_json_dict(raw: str | None) -> dict:
 
 
 # Fields used across CRUD updates (avoid copy-paste)
-SPELL_FIELDS = ["name", "description", "range", "duration", "cost"]
-ABILITY_FIELDS = ["name", "description", "range", "duration", "cost"]
+SPELL_FIELDS = ["name", "level", "description", "range", "duration", "cost"]
+ABILITY_FIELDS = ["name", "level", "description", "range", "duration", "cost"]
 STATE_FIELDS = ["name", "hp_cost", "duration", "is_active"]
 ITEM_FIELDS = ["name", "description", "stats", "qty"]
 SUMMON_FIELDS = [
