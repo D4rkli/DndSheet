@@ -22,13 +22,10 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
 
-          # чтобы падало сразу, если SSH/команда упала
           script_stop: true
-
-          # удобно для логов (можно потом выключить)
           debug: true
 
           script: |
