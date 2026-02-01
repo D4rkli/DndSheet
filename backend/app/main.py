@@ -14,6 +14,11 @@ app = FastAPI(title="DnD TG WebApp")
 #async def on_startup():
 #    async with engine.begin() as conn:
 #        await conn.run_sync(Base.metadata.create_all)
+from datetime import datetime
+
+@app.get("/api/version")
+def version():
+    return {"deployed_at": datetime.utcnow().isoformat() + "Z"}
 
 @app.get("/favicon.ico")
 def favicon():
