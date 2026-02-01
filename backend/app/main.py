@@ -4,16 +4,26 @@ from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi import Request
 
+
 from app.db import engine
 from app.models import Base
 from app.routes import router
 
 app = FastAPI(title="DnD TG WebApp")
+from fastapi.middleware.cors import CORSMiddleware
 
-#@app.on_event("startup")
-#async def on_startup():
-#    async with engine.begin() as conn:
-#        await conn.run_sync(Base.metadata.create_all)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://d4rkli.ru",
+        "https://www.d4rkli.ru",
+        "https://web.telegram.org",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 from datetime import datetime
 
 @app.get("/api/version")
