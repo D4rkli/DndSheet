@@ -1,4 +1,3 @@
-venv/
 backend/venv/
 backend/.env
 .env
@@ -9,3 +8,8 @@ backend/*.db
 .idea/
 __pycache__/
 *.pyc
+*.py[cod]
+
+# venv
+.venv/
+venv/
