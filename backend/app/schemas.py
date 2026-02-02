@@ -12,6 +12,7 @@ class CharacterUpdate(BaseModel):
     klass: Optional[str] = None
     level: Optional[int] = None
     xp: Optional[int] = None
+    xp_per_level: Optional[int] = None
 
     # деньги
     gold: Optional[int] = None

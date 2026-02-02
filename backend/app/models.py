@@ -29,6 +29,7 @@ class Character(Base):
     klass: Mapped[str] = mapped_column(String(60), default="")
     level: Mapped[int] = mapped_column(Integer, default=1)
     xp: Mapped[int] = mapped_column(Integer, default=0)
+    xp_per_level: Mapped[int] = mapped_column(Integer, default=0)
 
     # Деньги
     gold: Mapped[int] = mapped_column(Integer, default=0)

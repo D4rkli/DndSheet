@@ -127,7 +127,7 @@ async def update_character(
             payload[field] = max(0, int(payload[field]))
 
     # Per-level deltas: ints
-    for field in ("hp_per_level", "mana_per_level", "energy_per_level"):
+    for field in ("hp_per_level", "mana_per_level", "energy_per_level", "xp_per_level"):
         if field in payload and payload[field] is not None:
             payload[field] = int(payload[field])
 
