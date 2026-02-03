@@ -8,6 +8,8 @@ backend/*.db3
 *.db
 .idea/
 __pycache__/
+*.pyo
+*.pyd
 *.pyc
 *.py[cod]
 
