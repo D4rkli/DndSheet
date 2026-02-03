@@ -169,6 +169,7 @@ class State(Base):
     character_id: Mapped[int] = mapped_column(ForeignKey("characters.id"), index=True)
 
     name: Mapped[str] = mapped_column(String(80))
+    description: Mapped[str] = mapped_column(String, default="")
     hp_cost: Mapped[int] = mapped_column(Integer, default=0)
     duration: Mapped[str] = mapped_column(String(80), default="")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)

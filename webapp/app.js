@@ -1778,6 +1778,9 @@ function openStateModal(existing = null) {
     `
       <label class="form-label">Название</label>
       <input id="m_name" class="form-control" />
+          <label class="form-label mt-2">Описание</label>
+          <textarea id="m_desc" class="form-control" rows="3"
+            placeholder="Что делает это состояние"></textarea>
       <div class="row g-2 mt-1">
         <div class="col-6">
           <label class="form-label">HP стоимость</label>
@@ -1799,6 +1802,7 @@ function openStateModal(existing = null) {
 
       const payload = {
         name: document.getElementById("m_name").value,
+        description: document.getElementById("m_desc").value,
         hp_cost: intOrNull(document.getElementById("m_hp_cost").value) ?? 0,
         duration: document.getElementById("m_duration").value,
         is_active: document.getElementById("m_active").checked,
@@ -1815,6 +1819,7 @@ function openStateModal(existing = null) {
 
   if (existing) {
     document.getElementById("m_name").value = existing.name || "";
+    document.getElementById("m_desc").value = existing.description || "";
     document.getElementById("m_hp_cost").value = String(existing.hp_cost ?? 0);
     document.getElementById("m_duration").value = existing.duration || "";
     document.getElementById("m_active").checked = !!existing.is_active;

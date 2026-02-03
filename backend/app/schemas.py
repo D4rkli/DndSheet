@@ -92,6 +92,7 @@ class AbilityCreate(SpellCreate):
 
 class StateCreate(BaseModel):
     name: str
+    description: str = ""
     hp_cost: int = 0
     duration: str = ""
     is_active: bool = True
@@ -109,6 +110,7 @@ class AbilityUpdate(SpellUpdate):
 
 class StateUpdate(BaseModel):
     name: Optional[str] = None
+    description: Optional[str] = None
     hp_cost: Optional[int] = None
     duration: Optional[str] = None
     is_active: Optional[bool] = None
