@@ -32,7 +32,23 @@ jobs:
             set -e
 
             cd /opt/telegram-bot/DndSheet
-            git pull
+
+            # --- SAFETY: backup sqlite if exists ---
+            DB="backend/dnd_v2.sqlite3"
+            if [ -f "$DB" ]; then
+              cp "$DB" /tmp/dnd_v2.sqlite3.backup
+            fi
+
+            # --- UPDATE CODE WITHOUT MERGE CONFLICTS ---
+            git fetch --all
+            git reset --hard origin/master
+            git clean -fd
+
+            # --- restore sqlite back (if it existed) ---
+            if [ -f /tmp/dnd_v2.sqlite3.backup ]; then
+              mkdir -p backend
+              cp /tmp/dnd_v2.sqlite3.backup "$DB"
+            fi
 
             cd backend
             source venv/bin/activate
