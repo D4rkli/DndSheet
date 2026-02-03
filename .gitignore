@@ -3,6 +3,7 @@ backend/.env
 .env
 backend/*.sqlite3
 backend/*.db
+backend/*.db3
 *.sqlite3
 *.db
 .idea/
