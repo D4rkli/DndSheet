@@ -77,6 +77,7 @@ async def get_character(
         "klass": ch.klass,
         "level": ch.level,
         "xp": ch.xp,
+        "xp_per_level": ch.xp_per_level,
 
         "gold": getattr(ch, "gold", 0),
         "silver": getattr(ch, "silver", 0),
@@ -784,6 +785,7 @@ async def get_full_sheet(
             "klass": character.klass,
             "level": character.level,
             "xp": character.xp,
+            "xp_per_level": character.xp_per_level,
             "gold": getattr(character, "gold", 0),
             "silver": getattr(character, "silver", 0),
             "copper": getattr(character, "copper", 0),
