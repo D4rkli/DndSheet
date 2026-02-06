@@ -4,13 +4,15 @@ from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi import Request
 
-
+from app.db import init_db
 from app.db import engine
 from app.models import Base
 from app.routes import router
 
 app = FastAPI(title="DnD TG WebApp")
 from fastapi.middleware.cors import CORSMiddleware
+
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,6 +27,10 @@ app.add_middleware(
 )
 
 from datetime import datetime
+
+@app.on_event("startup")
+async def on_startup():
+    await init_db()
 
 @app.get("/api/version")
 def version():
