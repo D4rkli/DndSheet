@@ -18,12 +18,26 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-from alembic import op
-import sqlalchemy as sa
+def upgrade() -> None:
+    bind = op.get_bind()
+    insp = sa.inspect(bind)
 
-def upgrade():
-    op.add_column("spells", sa.Column("level", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("abilities", sa.Column("level", sa.Integer(), nullable=False, server_default="0"))
+    # spells.level
+    spell_cols = [c["name"] for c in insp.get_columns("spells")]
+    if "level" not in spell_cols:
+        with op.batch_alter_table("spells") as batch:
+            batch.add_column(
+                sa.Column("level", sa.Integer(), nullable=False, server_default="0")
+            )
+
+    # abilities.level
+    abil_cols = [c["name"] for c in insp.get_columns("abilities")]
+    if "level" not in abil_cols:
+        with op.batch_alter_table("abilities") as batch:
+            batch.add_column(
+                sa.Column("level", sa.Integer(), nullable=False, server_default="0")
+            )
+
 
 def downgrade():
     op.drop_column("abilities", "level")
