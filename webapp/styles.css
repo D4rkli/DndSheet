@@ -1000,3 +1000,49 @@ input.form-control {
 body{
   padding-bottom: 72px;
 }
+
+/* ===== FIX: XP input-group alignment ===== */
+#tab-main .input-group {
+  align-items: stretch;
+}
+
+#tab-main .input-group > .form-control,
+#tab-main .input-group > .btn {
+  height: 44px;
+}
+
+#tab-main .input-group > .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  white-space: nowrap;
+}
+
+/* ===== FIX: Wallet ровными колонками ===== */
+.wallet-row{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: center;
+}
+
+.wallet-pair{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wallet-input{
+  width: 100%;
+  height: 44px;
+  text-align: center;
+  font-weight: 700;
+}
+
+@media (max-width: 360px){
+  .wallet-row{
+    grid-template-columns: 1fr;
+  }
+}
