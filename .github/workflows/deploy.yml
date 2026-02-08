@@ -53,7 +53,6 @@ jobs:
             cd backend
             source venv/bin/activate
             pip install -r requirements.txt
-            alembic upgrade head
 
             systemctl restart dnd-backend
             systemctl restart dnd-bot
