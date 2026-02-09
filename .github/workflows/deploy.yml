@@ -10,13 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Debug secrets presence
-        run: |
-          echo "HOST set -> ${{ secrets.SSH_HOST != '' }}"
-          echo "USER set -> ${{ secrets.SSH_USER != '' }}"
-          echo "PORT set -> ${{ secrets.SSH_PORT != '' }}"
-          echo "KEY  set -> ${{ secrets.SSH_KEY  != '' }}"
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -24,56 +17,21 @@ jobs:
           username: root
           port: 22
           key: ${{ secrets.SSH_KEY }}
-
-          # ВАЖНО: не даём action обрывать скрипт на первой ошибке
-          script_stop: false
+          script_stop: true
           debug: true
 
           script: |
-            set -eu
+            set -e
 
-            APP_DIR="/opt/telegram-bot/DndSheet"
-            BACKEND_DIR="$APP_DIR/backend"
-            DB_PATH="$BACKEND_DIR/dnd_v2.sqlite3"
-            BACKUP_DIR="$BACKEND_DIR/db_backups"
+            cd /opt/telegram-bot/DndSheet
 
-            echo "==> Update code"
-            cd "$APP_DIR"
             git fetch --all
             git reset --hard origin/master
             git clean -fd
 
-            echo "==> Stop services"
-            systemctl stop dnd-backend || true
-            systemctl stop dnd-bot || true
-
-            echo "==> Install deps"
-            cd "$BACKEND_DIR"
-            . venv/bin/activate
+            cd backend
+            source venv/bin/activate
             pip install -r requirements.txt
 
-            echo "==> Migrate"
-            if alembic upgrade head; then
-              echo "✅ Alembic OK"
-            else
-              echo "⚠️ Alembic failed, rebuilding SQLite to keep deploy green"
-              TS="$(date +%Y%m%d_%H%M%S)"
-              mkdir -p "$BACKUP_DIR"
-              if [ -f "$DB_PATH" ]; then
-                mv "$DB_PATH" "$BACKUP_DIR/dnd_v2.sqlite3.$TS.bak"
-                echo "Moved old DB to $BACKUP_DIR/dnd_v2.sqlite3.$TS.bak"
-              fi
-
-              # Повторяем на чистой БД
-              alembic upgrade head
-              echo "✅ Alembic OK after rebuild"
-            fi
-
-            echo "==> Start services"
-            systemctl start dnd-backend
-            systemctl start dnd-bot
-
-            echo "==> Healthcheck"
-            sleep 2
-            curl -fsS http://127.0.0.1:8000/health >/dev/null ||
-
+            systemctl restart dnd-backend
+            systemctl restart dnd-bot
