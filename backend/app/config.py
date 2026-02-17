@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     BASE_URL: str = "https://d4rkli.ru"
     WEBAPP_URL: str = "//d4rkli.ru/webapp/?"
-    SQLITE_PATH: str = "sqlite+aiosqlite:///./dnd_v2.sqlite3"
+    SQLITE_PATH: str = "sqlite+aiosqlite:////var/lib/dndsheet/dnd_v2.sqlite3"
     DM_USER_IDS: str = ""
 
     def dm_ids(self) -> set[int]:
