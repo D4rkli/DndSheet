@@ -69,6 +69,54 @@
       <li class="nav-item"><button class="nav-link" data-tab="custom"><i class="bi bi-sliders"></i><span>Поля</span></button></li>
     </ul>
 
+    <!-- ✅ COMBAT HUD (видно всегда) -->
+    <div id="combatHud" class="combat-hud">
+      <div class="combat-hud-row">
+
+        <div class="combat-chip">
+          <div class="combat-chip-title">HP</div>
+          <div class="combat-chip-body">
+            <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_hp" data-step="-1">−</button>
+            <span id="hud_hp" class="combat-chip-val">0/0</span>
+            <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_hp" data-step="+1">+</button>
+          </div>
+        </div>
+
+        <div class="combat-chip">
+          <div class="combat-chip-title">Mana</div>
+          <div class="combat-chip-body">
+            <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_mana" data-step="-1">−</button>
+            <span id="hud_mana" class="combat-chip-val">0/0</span>
+            <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_mana" data-step="+1">+</button>
+          </div>
+        </div>
+
+        <div class="combat-chip">
+          <div class="combat-chip-title">Energy</div>
+          <div class="combat-chip-body">
+            <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_energy" data-step="-1">−</button>
+            <span id="hud_energy" class="combat-chip-val">0/0</span>
+            <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_energy" data-step="+1">+</button>
+          </div>
+        </div>
+
+        <div class="combat-chip">
+          <div class="combat-chip-title">DMG</div>
+          <div class="combat-chip-body">
+            <span id="hud_attack" class="combat-chip-val">0</span>
+          </div>
+        </div>
+
+        <div class="combat-chip">
+          <div class="combat-chip-title">Armor</div>
+          <div class="combat-chip-body">
+            <span id="hud_armor" class="combat-chip-val">0+0</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- MAIN -->
     <section class="tab" id="tab-main">
       <div class="card card-soft">
@@ -231,6 +279,24 @@
         </div>
       </div>
     </section>
+
+    <!-- ✅ COMBAT SHEET (внизу главной) -->
+    <div class="card card-soft mt-3">
+      <div class="card-body">
+        <div class="section-title mb-2">Боевой лист</div>
+
+        <div class="d-flex gap-2 align-items-center mb-2">
+          <div class="btn-group" role="group">
+            <button class="btn btn-outline-light btn-sm active" data-combat-tab="spells">Заклинания</button>
+            <button class="btn btn-outline-light btn-sm" data-combat-tab="abilities">Умения</button>
+          </div>
+          <input id="combatSearch" class="form-control form-control-sm" placeholder="Поиск…" />
+        </div>
+
+        <div id="combatQuickSpells" class="list"></div>
+        <div id="combatQuickAbilities" class="list d-none"></div>
+      </div>
+    </div>
 
     <!-- STATS -->
     <section class="tab d-none" id="tab-stats">

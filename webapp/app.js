@@ -2042,7 +2042,8 @@ async function loadSheet(showStatus = true) {
       );
     }
   }
-
+  updateCombatHudFromSheet();
+  renderCombatQuickLists();
   setStatus("Ок ✅");
 }
 
@@ -2081,6 +2082,11 @@ async function boot() {
 }
 
 boot();
+
+wireCombatHud();
+wireCombatSheet();
+updateCombatHudFromSheet();
+renderCombatQuickLists();
 
 // +/- для ресурсов (HP/Mana/Energy) — кнопки с data-target/data-step
 document.addEventListener("click", (e) => {
@@ -2466,3 +2472,97 @@ document.addEventListener("click", (e) => {
     window.open(DONATE_URL, "_blank", "noopener,noreferrer");
   }
 });
+
+function updateCombatHudFromSheet() {
+  const ch = state.sheet?.character;
+  if (!ch) return;
+
+  // текущее/макс — читаем из инпутов, потому что ты их меняешь кнопками
+  const hp = Number(el("f_hp")?.value || 0);
+  const hpMax = Number(el("f_hp_max")?.value || 0);
+
+  const mana = Number(el("f_mana")?.value || 0);
+  const manaMax = Number(el("f_mana_max")?.value || 0);
+
+  const energy = Number(el("f_energy")?.value || 0);
+  const energyMax = Number(el("f_energy_max")?.value || 0);
+
+  el("hud_hp").textContent = `${hp}/${hpMax}`;
+  el("hud_mana").textContent = `${mana}/${manaMax}`;
+  el("hud_energy").textContent = `${energy}/${energyMax}`;
+
+  // атака/броня берём из ch (они у тебя в statsCombat)
+  const atk = Number(ch.attack || 0);
+  const perm = Number(ch.perm_armor || 0);
+  const temp = Number(ch.temp_armor || 0);
+
+  el("hud_attack").textContent = String(atk);
+  el("hud_armor").textContent = `${perm}+${temp}`;
+}
+
+function wireCombatHud() {
+  // обновлять HUD при любых изменениях ресурсов
+  ["f_hp","f_hp_max","f_mana","f_mana_max","f_energy","f_energy_max"].forEach((id) => {
+    el(id)?.addEventListener("input", updateCombatHudFromSheet);
+    el(id)?.addEventListener("change", updateCombatHudFromSheet);
+  });
+}
+
+function renderCombatQuickLists() {
+  const id = currentChId();
+  if (!id || !state.sheet) return;
+
+  const q = String(el("combatSearch")?.value || "").trim().toLowerCase();
+
+  const spells = (state.sheet.spells || [])
+    .filter(s => !q || (String(s.name||"").toLowerCase().includes(q) || String(s.description||"").toLowerCase().includes(q)))
+    .map((s) => ({
+      ...s,
+      preview: [`lvl ${s.level ?? 0}`, s.range, s.duration, s.cost].filter(Boolean).join(" · "),
+    }));
+
+  const abilities = (state.sheet.abilities || [])
+    .filter(a => !q || (String(a.name||"").toLowerCase().includes(q) || String(a.description||"").toLowerCase().includes(q)))
+    .map((a) => ({
+      ...a,
+      preview: [`lvl ${a.level ?? 0}`, a.range, a.duration, a.cost].filter(Boolean).join(" · "),
+    }));
+
+  // Заклинания (use = списать cost)
+  renderList(
+    "combatQuickSpells",
+    spells,
+    async (s) => {
+      await api(`/characters/${id}/spells/${s.id}`, { method: "DELETE" });
+      await loadSheet(false);
+    },
+    { icon: "bi-stars", clamp: true, onUse: async (s) => applyCostToCharacter(s.cost) }
+  );
+
+  // Умения (use = списать cost)
+  renderList(
+    "combatQuickAbilities",
+    abilities,
+    async (a) => {
+      await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
+      await loadSheet(false);
+    },
+    { icon: "bi-lightning-fill", clamp: true, onUse: async (a) => applyCostToCharacter(a.cost) }
+  );
+}
+
+function wireCombatSheet() {
+  document.addEventListener("click", (e) => {
+    const tabBtn = e.target.closest("[data-combat-tab]");
+    if (!tabBtn) return;
+
+    document.querySelectorAll("[data-combat-tab]").forEach(b => b.classList.remove("active"));
+    tabBtn.classList.add("active");
+
+    const tab = tabBtn.getAttribute("data-combat-tab");
+    el("combatQuickSpells")?.classList.toggle("d-none", tab !== "spells");
+    el("combatQuickAbilities")?.classList.toggle("d-none", tab !== "abilities");
+  });
+
+  el("combatSearch")?.addEventListener("input", renderCombatQuickLists);
+}

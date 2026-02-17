@@ -1046,3 +1046,61 @@ body{
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================
+   COMBAT HUD (sticky)
+   ========================= */
+.combat-hud{
+  position: sticky;
+  top: 62px;              /* ниже topbar */
+  z-index: 110;
+  margin-top: 10px;
+  margin-bottom: 10px;
+
+  background: rgba(10, 14, 26, .82);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 10px;
+}
+
+.combat-hud-row{
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.combat-hud-row::-webkit-scrollbar{ height: 0; }
+
+.combat-chip{
+  flex: 0 0 auto;
+  min-width: 122px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.combat-chip-title{
+  font-size: 11px;
+  color: rgba(255,255,255,.70);
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.combat-chip-body{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.combat-chip-val{
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
