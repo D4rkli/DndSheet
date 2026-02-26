@@ -1065,10 +1065,32 @@ body{
 }
 
 .combat-hud-row{
-  display: flex;
+  display: grid;
   gap: 10px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* телефон */
+}
+
+/* планшет: 3 в ряд */
+@media (min-width: 576px){
+  .combat-hud-row{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ПК: все 5 в один ряд */
+@media (min-width: 992px){
+  .combat-hud-row{
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* убираем скрытый скролл, он больше не нужен */
+.combat-hud-row::-webkit-scrollbar{ height: 0; }
+
+/* чипы пусть растягиваются */
+.combat-chip{
+  min-width: 0;     /* важно для grid, чтобы не раздувало */
+  width: 100%;
 }
 
 .combat-hud-row::-webkit-scrollbar{ height: 0; }
@@ -1102,5 +1124,23 @@ body{
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.combat-chip{
+  padding: 8px 10px;
+}
+
+.combat-chip-body{
+  gap: 6px;
+}
+
+.combat-chip .btn.step-btn{
+  padding: 2px 8px;
+  line-height: 1.1;
+  border-radius: 10px;
+}
+
+.combat-chip-val{
+  font-size: 16px;
 }
 
