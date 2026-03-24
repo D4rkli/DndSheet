@@ -73,7 +73,7 @@ async def init_db():
     async with engine.begin() as conn:
         try:
             await conn.run_sync(Base.metadata.create_all)
-            await _sqlite_self_heal(conn)
+            #await _sqlite_self_heal(conn)
         except RuntimeError as e:
             msg = str(e)
             if msg.startswith("SQLITE_SCHEMA_OUTDATED::"):
