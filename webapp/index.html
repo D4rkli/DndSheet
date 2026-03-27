@@ -173,29 +173,30 @@
               <label class="form-label">XP</label>
               <input id="f_xp" type="number" class="form-control" min="0" />
             </div>
-            <div class="col-6">
-              <label class="form-label">Осталось до следующего уровня</label>
-              <input id="f_xp_to_next" type="number" class="form-control" readonly />
+            <div class="xp-grid">
+
+              <div>
+                <label class="form-label">Осталось до уровня</label>
+                <input id="f_xp_to_next" type="number" class="form-control" readonly />
+              </div>
+
+              <div>
+                <label class="form-label">XP на уровень</label>
+                <input id="f_xp_per_level" type="number" class="form-control" min="1" />
+              </div>
+
+              <div class="xp-add">
+                <label class="form-label">Добавить XP</label>
+                <div class="input-group">
+                  <input id="f_xp_add" type="number" class="form-control" min="0" placeholder="например 250" />
+                  <button id="btnAddXp" class="btn btn-outline-light" type="button">+XP</button>
+                </div>
+              </div>
+
             </div>
 
-            <div class="col-6">
-              <label class="form-label">Добавить XP</label>
-              <div class="input-group">
-                <input id="f_xp_add" type="number" class="form-control" min="0" placeholder="например 250" />
-                <button id="btnAddXp" class="btn btn-outline-light" type="button">+XP</button>
-              </div>
-              <div class="hint">XP переносится на следующий уровень автоматически.</div>
-            </div>
-            <div class="col-6">
-              <label class="form-label">XP на уровень</label>
-              <input
-                id="f_xp_per_level"
-                type="number"
-                class="form-control"
-                min="1"
-                placeholder="например 100"
-              />
-            </div>
+            <div class="hint mt-1">XP переносится на следующий уровень автоматически.</div>
+
             <div class="col-12">
               <div class="money-wrap">
                 <div class="section-title">Кошелёк</div>

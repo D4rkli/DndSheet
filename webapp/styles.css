@@ -1197,3 +1197,25 @@ body{
 .combat-chip.energy .combat-chip-val {
   color: #ffe08a;
 }
+
+/* ===== XP блок ===== */
+
+.xp-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.xp-add{
+  grid-column: 1 / -1; /* растянуть на всю ширину */
+}
+
+@media (min-width: 768px){
+  .xp-grid{
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .xp-add{
+    grid-column: auto;
+  }
+}
