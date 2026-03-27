@@ -1051,56 +1051,48 @@ body{
    COMBAT HUD (sticky)
    ========================= */
 .combat-hud{
-  position: sticky;
-  top: 62px;              /* ниже topbar */
-  z-index: 110;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  position: static;
+  margin: 0;
+  background: transparent;
+  backdrop-filter: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
 
-  background: rgba(10, 14, 26, .82);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 16px;
-  padding: 10px;
+.combat-hud--inside{
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.combat-mode-card{
+  overflow: hidden;
 }
 
 .combat-hud-row{
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(2, minmax(0, 1fr)); /* телефон */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* планшет: 3 в ряд */
 @media (min-width: 576px){
   .combat-hud-row{
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-/* ПК: все 5 в один ряд */
 @media (min-width: 992px){
   .combat-hud-row{
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
-/* убираем скрытый скролл, он больше не нужен */
-.combat-hud-row::-webkit-scrollbar{ height: 0; }
-
-/* чипы пусть растягиваются */
 .combat-chip{
-  min-width: 0;     /* важно для grid, чтобы не раздувало */
+  min-width: 0;
   width: 100%;
-}
-
-.combat-hud-row::-webkit-scrollbar{ height: 0; }
-
-.combat-chip{
-  flex: 0 0 auto;
-  min-width: 122px;
-  padding: 8px 10px;
+  padding: 10px;
   border-radius: 14px;
-  background: rgba(255,255,255,.06);
+  background: rgba(255,255,255,.05);
   border: 1px solid rgba(255,255,255,.08);
 }
 
@@ -1117,30 +1109,13 @@ body{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-}
-
-.combat-chip-val{
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.combat-chip{
-  padding: 8px 10px;
-}
-
-.combat-chip-body{
   gap: 6px;
-}
-
-.combat-chip .btn.step-btn{
-  padding: 2px 8px;
-  line-height: 1.1;
-  border-radius: 10px;
 }
 
 .combat-chip-val{
   font-size: 16px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
