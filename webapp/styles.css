@@ -1119,3 +1119,33 @@ body{
   white-space: nowrap;
 }
 
+.combat-mode-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  cursor:pointer;
+  user-select:none;
+}
+
+.combat-mode-head:active{
+  opacity:.9;
+}
+
+.combat-mode-head .section-title{
+  margin-bottom: 0;
+}
+
+.combat-mode-body{
+  margin-top: 14px;
+}
+
+#combatModeChevron{
+  font-size: 20px;
+  opacity: .85;
+  transition: transform .2s ease;
+}
+
+.combat-mode-card.is-open #combatModeChevron{
+  transform: rotate(180deg);
+}

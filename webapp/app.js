@@ -2065,9 +2065,15 @@ async function boot() {
     if (state.characters.length === 0) setStatus("Персонажей нет. Создай нового 👆");
     await loadSheet();
 
+    wireCombatHud();
+    wireCombatSheet();
+    wireCombatModeCollapse();
+    updateCombatModeSummary();
+
     fillMoneyInputsFromState();
     wireFabMenu();
     wireMoneyInputs();
+
       // XP / Level wiring
       el("btnAddXp")?.addEventListener("click", addXpAndHandleLevelUp);
 
@@ -2083,10 +2089,6 @@ async function boot() {
 
 boot();
 
-wireCombatHud();
-wireCombatSheet();
-updateCombatHudFromSheet();
-renderCombatQuickLists();
 
 // +/- для ресурсов (HP/Mana/Energy) — кнопки с data-target/data-step
 document.addEventListener("click", (e) => {
@@ -2498,6 +2500,8 @@ function updateCombatHudFromSheet() {
 
   el("hud_attack").textContent = String(atk);
   el("hud_armor").textContent = `${perm}+${temp}`;
+
+  updateCombatModeSummary();
 }
 
 function wireCombatHud() {
@@ -2565,4 +2569,52 @@ function wireCombatSheet() {
   });
 
   el("combatSearch")?.addEventListener("input", renderCombatQuickLists);
+}
+
+function updateCombatModeSummary() {
+  const hp = Number(el("f_hp")?.value || 0);
+  const hpMax = Number(el("f_hp_max")?.value || 0);
+
+  const mana = Number(el("f_mana")?.value || 0);
+  const manaMax = Number(el("f_mana_max")?.value || 0);
+
+  const energy = Number(el("f_energy")?.value || 0);
+  const energyMax = Number(el("f_energy_max")?.value || 0);
+
+  const atk = Number(state.sheet?.character?.attack || 0);
+  const perm = Number(state.sheet?.character?.perm_armor || 0);
+  const temp = Number(state.sheet?.character?.temp_armor || 0);
+
+  const node = el("combatModeSummary");
+  if (!node) return;
+
+  node.textContent = `HP ${hp}/${hpMax} · Mana ${mana}/${manaMax} · Energy ${energy}/${energyMax} · DMG ${atk} · Armor ${perm}+${temp}`;
+}
+
+function wireCombatModeCollapse() {
+  const toggle = el("combatModeToggle");
+  const body = el("combatModeBody");
+  const card = document.querySelector(".combat-mode-card");
+  if (!toggle || !body || !card) return;
+
+  const setOpen = (open) => {
+    body.classList.toggle("d-none", !open);
+    card.classList.toggle("is-open", open);
+  };
+
+  // по умолчанию свернуто
+  setOpen(false);
+
+  toggle.addEventListener("click", () => {
+    const open = body.classList.contains("d-none");
+    setOpen(open);
+  });
+
+  toggle.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      const open = body.classList.contains("d-none");
+      setOpen(open);
+    }
+  });
 }

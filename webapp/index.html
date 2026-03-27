@@ -73,52 +73,57 @@
     <section class="tab" id="tab-main">
       <div class="card card-soft mt-3 combat-mode-card">
         <div class="card-body">
-          <div class="section-title mb-2">Боевой режим</div>
-
+          <div class="combat-mode-head" id="combatModeToggle" role="button" tabindex="0">
+            <div>
+              <div class="section-title mb-1">Боевой режим</div>
+              <div id="combatModeSummary" class="hint">HP 0/0 · Mana 0/0 · Energy 0/0 · DMG 0 · Armor 0+0</div>
+            </div>
+            <i id="combatModeChevron" class="bi bi-chevron-down"></i>
+          </div>
           <div id="combatHud" class="combat-hud combat-hud--inside">
-            <div class="combat-hud-row">
+            <div id="combatModeBody" class="combat-mode-body d-none">
+              <div class="combat-hud-row">
 
-              <div class="combat-chip">
-                <div class="combat-chip-title">HP</div>
-                <div class="combat-chip-body">
-                  <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_hp" data-step="-1">−</button>
-                  <span id="hud_hp" class="combat-chip-val">0/0</span>
-                  <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_hp" data-step="+1">+</button>
+                <div class="combat-chip">
+                  <div class="combat-chip-title">HP</div>
+                  <div class="combat-chip-body">
+                    <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_hp" data-step="-1">−</button>
+                    <span id="hud_hp" class="combat-chip-val">0/0</span>
+                    <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_hp" data-step="+1">+</button>
+                  </div>
                 </div>
-              </div>
 
-              <div class="combat-chip">
-                <div class="combat-chip-title">Mana</div>
-                <div class="combat-chip-body">
-                  <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_mana" data-step="-1">−</button>
-                  <span id="hud_mana" class="combat-chip-val">0/0</span>
-                  <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_mana" data-step="+1">+</button>
+                <div class="combat-chip">
+                  <div class="combat-chip-title">Mana</div>
+                  <div class="combat-chip-body">
+                    <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_mana" data-step="-1">−</button>
+                    <span id="hud_mana" class="combat-chip-val">0/0</span>
+                    <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_mana" data-step="+1">+</button>
+                  </div>
                 </div>
-              </div>
 
-              <div class="combat-chip">
-                <div class="combat-chip-title">Energy</div>
-                <div class="combat-chip-body">
-                  <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_energy" data-step="-1">−</button>
-                  <span id="hud_energy" class="combat-chip-val">0/0</span>
-                  <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_energy" data-step="+1">+</button>
+                <div class="combat-chip">
+                  <div class="combat-chip-title">Energy</div>
+                  <div class="combat-chip-body">
+                    <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_energy" data-step="-1">−</button>
+                    <span id="hud_energy" class="combat-chip-val">0/0</span>
+                    <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_energy" data-step="+1">+</button>
+                  </div>
                 </div>
-              </div>
 
-              <div class="combat-chip">
-                <div class="combat-chip-title">DMG</div>
-                <div class="combat-chip-body">
-                  <span id="hud_attack" class="combat-chip-val">0</span>
+                <div class="combat-chip">
+                  <div class="combat-chip-title">DMG</div>
+                  <div class="combat-chip-body">
+                    <span id="hud_attack" class="combat-chip-val">0</span>
+                  </div>
                 </div>
-              </div>
 
-              <div class="combat-chip">
-                <div class="combat-chip-title">Armor</div>
-                <div class="combat-chip-body">
-                  <span id="hud_armor" class="combat-chip-val">0+0</span>
+                <div class="combat-chip">
+                  <div class="combat-chip-title">Armor</div>
+                  <div class="combat-chip-body">
+                    <span id="hud_armor" class="combat-chip-val">0+0</span>
+                  </div>
                 </div>
-              </div>
-
             </div>
           </div>
 
@@ -136,6 +141,7 @@
           </div>
         </div>
       </div>
+    </div>
       <div class="card card-soft">
         <div class="card-body">
           <div class="row g-2">
