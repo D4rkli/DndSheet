@@ -561,7 +561,7 @@ function parseIntSafe(v) {
 }
 
 function coinsToCp({ gold = 0, silver = 0, copper = 0 }) {
-  return gold * 100 + silver * 10 + copper;
+  return gold * 1000 + silver * 10 + copper;
 }
 
 function updateMoneyPreview(coins) {
@@ -570,15 +570,12 @@ function updateMoneyPreview(coins) {
 
   const { gold = 0, silver = 0, copper = 0 } = coins || {};
   const totalCp = coinsToCp({ gold, silver, copper });
-  const totalGp = (totalCp / 100).toFixed(2);
+  const totalGold = (totalCp / 1000).toFixed(3);
 
   node.innerHTML = `
-    <div class="wallet-preview-row">
-      <span class="coin-ico coin-gold"></span><span class="wallet-num">${gold}</span>
-      <span class="coin-ico coin-silver"></span><span class="wallet-num">${silver}</span>
-      <span class="coin-ico coin-copper"></span><span class="wallet-num">${copper}</span>
-      <span class="coin-total">≈ ${totalGp} gp</span>
-    </div>
+    Всего: <b>${gold}</b> 🟡 · <b>${silver}</b> ⚪ · <b>${copper}</b> 🟤
+    <br>
+    Эквивалент: <b>${totalGold}</b> золота
   `;
 }
 
@@ -2043,6 +2040,7 @@ async function loadSheet(showStatus = true) {
     }
   }
   updateCombatHudFromSheet();
+  updateCombatHudFromSheet();
   renderCombatQuickLists();
   setStatus("Ок ✅");
 }
@@ -2070,6 +2068,7 @@ async function boot() {
     wireCombatModeCollapse();
     wireCombatModeLongTap();
     updateCombatModeSummary();
+    updateCombatHudFromSheet();
 
     fillMoneyInputsFromState();
     wireFabMenu();

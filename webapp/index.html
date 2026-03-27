@@ -80,11 +80,12 @@
             </div>
             <i id="combatModeChevron" class="bi bi-chevron-down"></i>
           </div>
-          <div id="combatHud" class="combat-hud combat-hud--inside">
-            <div id="combatModeBody" class="combat-mode-body d-none">
+
+          <div id="combatModeBody" class="combat-mode-body d-none">
+            <div id="combatHud" class="combat-hud combat-hud--inside">
               <div class="combat-hud-row">
 
-                <div class="combat-chip">
+                <div class="combat-chip hp">
                   <div class="combat-chip-title">HP</div>
                   <div class="combat-chip-body">
                     <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_hp" data-step="-1">−</button>
@@ -93,7 +94,7 @@
                   </div>
                 </div>
 
-                <div class="combat-chip">
+                <div class="combat-chip mana">
                   <div class="combat-chip-title">Mana</div>
                   <div class="combat-chip-body">
                     <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_mana" data-step="-1">−</button>
@@ -102,7 +103,7 @@
                   </div>
                 </div>
 
-                <div class="combat-chip">
+                <div class="combat-chip energy">
                   <div class="combat-chip-title">Energy</div>
                   <div class="combat-chip-body">
                     <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_energy" data-step="-1">−</button>
@@ -124,24 +125,26 @@
                     <span id="hud_armor" class="combat-chip-val">0+0</span>
                   </div>
                 </div>
-            </div>
-          </div>
 
-          <div class="mt-3">
-            <div class="d-flex gap-2 align-items-center mb-2">
-              <div class="btn-group" role="group">
-                <button class="btn btn-outline-light btn-sm active" data-combat-tab="spells">Заклинания</button>
-                <button class="btn btn-outline-light btn-sm" data-combat-tab="abilities">Умения</button>
               </div>
-              <input id="combatSearch" class="form-control form-control-sm" placeholder="Поиск…" />
             </div>
 
-            <div id="combatQuickSpells" class="list"></div>
-            <div id="combatQuickAbilities" class="list d-none"></div>
+            <div class="mt-3">
+              <div class="combat-actions-row">
+                <div class="btn-group combat-switch" role="group">
+                  <button class="btn btn-outline-light btn-sm active" data-combat-tab="spells">Заклинания</button>
+                  <button class="btn btn-outline-light btn-sm" data-combat-tab="abilities">Умения</button>
+                </div>
+                <input id="combatSearch" class="form-control form-control-sm combat-search" placeholder="Поиск..." />
+              </div>
+
+              <div id="combatQuickSpells" class="list mt-2"></div>
+              <div id="combatQuickAbilities" class="list d-none mt-2"></div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
       <div class="card card-soft">
         <div class="card-body">
           <div class="row g-2">
@@ -201,26 +204,34 @@
               <div class="money-wrap">
                 <div class="section-title">Кошелёк</div>
 
-                <div class="wallet-row">
-                  <div class="wallet-pair">
-                    <span class="coin-ico coin-gold" title="Золото"></span>
+                <div class="wallet-grid">
+                  <div class="wallet-card wallet-gold">
+                    <div class="wallet-head">
+                      <span class="coin-ico coin-gold"></span>
+                      <span>Золото</span>
+                    </div>
                     <input id="f_gold" type="number" class="form-control wallet-input" min="0" inputmode="numeric" />
                   </div>
 
-                  <div class="wallet-pair">
-                    <span class="coin-ico coin-silver" title="Серебро"></span>
+                  <div class="wallet-card wallet-silver">
+                    <div class="wallet-head">
+                      <span class="coin-ico coin-silver"></span>
+                      <span>Серебро</span>
+                    </div>
                     <input id="f_silver" type="number" class="form-control wallet-input" min="0" inputmode="numeric" />
                   </div>
 
-                  <div class="wallet-pair">
-                    <span class="coin-ico coin-copper" title="Медь"></span>
+                  <div class="wallet-card wallet-copper">
+                    <div class="wallet-head">
+                      <span class="coin-ico coin-copper"></span>
+                      <span>Медь</span>
+                    </div>
                     <input id="f_copper" type="number" class="form-control wallet-input" min="0" inputmode="numeric" />
                   </div>
                 </div>
 
-                <div id="moneyPreview" class="money-preview muted">—</div>
-                <div class="hint">Конвертация показывается только в превью: 10 🟤 = 1 ⚪, 10 ⚪ = 1 🟡</div>
-
+                <div id="moneyPreview" class="money-preview muted mt-2">—</div>
+                <div class="hint mt-1">1 золото = 100 серебряных = 1000 медных</div>
               </div>
             </div>
           </div>
