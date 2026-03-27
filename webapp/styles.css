@@ -1271,3 +1271,18 @@ body{
   font-size: 14px;
   line-height: 1.45;
 }
+
+/* ===== FIX: боевой режим кликается нормально ===== */
+
+.combat-mode-head{
+  position: relative;
+  z-index: 2;
+}
+
+#combatModeChevron{
+  pointer-events: none;
+}
+
+#combatModeSummary{
+  pointer-events: none;
+}

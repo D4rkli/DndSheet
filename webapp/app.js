@@ -2572,18 +2572,18 @@ function wireCombatSheet() {
 }
 
 function updateCombatModeSummary() {
-  const hp = Number(el("f_hp")?.value || 0);
-  const hpMax = Number(el("f_hp_max")?.value || 0);
+  const hp = Number(el("f_hp")?.value || state.sheet?.character?.hp || 0);
+  const hpMax = Number(el("f_hp_max")?.value || state.sheet?.character?.hp_max || 0);
 
-  const mana = Number(el("f_mana")?.value || 0);
-  const manaMax = Number(el("f_mana_max")?.value || 0);
+  const mana = Number(el("f_mana")?.value || state.sheet?.character?.mana || 0);
+  const manaMax = Number(el("f_mana_max")?.value || state.sheet?.character?.mana_max || 0);
 
-  const energy = Number(el("f_energy")?.value || 0);
-  const energyMax = Number(el("f_energy_max")?.value || 0);
+  const energy = Number(el("f_energy")?.value || state.sheet?.character?.energy || 0);
+  const energyMax = Number(el("f_energy_max")?.value || state.sheet?.character?.energy_max || 0);
 
-  const atk = Number(state.sheet?.character?.attack || 0);
-  const perm = Number(state.sheet?.character?.perm_armor || 0);
-  const temp = Number(state.sheet?.character?.temp_armor || 0);
+  const atk = Number(el("f_attack")?.value || state.sheet?.character?.attack || 0);
+  const perm = Number(el("f_perm_armor")?.value || state.sheet?.character?.perm_armor || 0);
+  const temp = Number(el("f_temp_armor")?.value || state.sheet?.character?.temp_armor || 0);
 
   const node = el("combatModeSummary");
   if (!node) return;
@@ -2595,6 +2595,7 @@ function wireCombatModeCollapse() {
   const toggle = el("combatModeToggle");
   const body = el("combatModeBody");
   const card = document.querySelector(".combat-mode-card");
+
   if (!toggle || !body || !card) return;
 
   const setOpen = (open) => {
@@ -2603,18 +2604,19 @@ function wireCombatModeCollapse() {
   };
 
   // по умолчанию свернуто
-  setOpen(true);
+  setOpen(false);
 
-  toggle.addEventListener("click", () => {
-    const open = body.classList.contains("d-none");
-    setOpen(open);
-  });
+  const onToggle = () => {
+    const shouldOpen = body.classList.contains("d-none");
+    setOpen(shouldOpen);
+  };
+
+  toggle.addEventListener("click", onToggle);
 
   toggle.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      const open = body.classList.contains("d-none");
-      setOpen(open);
+      onToggle();
     }
   });
 }
