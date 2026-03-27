@@ -2479,7 +2479,6 @@ function updateCombatHudFromSheet() {
   const ch = state.sheet?.character;
   if (!ch) return;
 
-  // текущее/макс — читаем из инпутов, потому что ты их меняешь кнопками
   const hp = Number(el("f_hp")?.value || 0);
   const hpMax = Number(el("f_hp_max")?.value || 0);
 
@@ -2489,11 +2488,17 @@ function updateCombatHudFromSheet() {
   const energy = Number(el("f_energy")?.value || 0);
   const energyMax = Number(el("f_energy_max")?.value || 0);
 
+  ch.hp = hp;
+  ch.hp_max = hpMax;
+  ch.mana = mana;
+  ch.mana_max = manaMax;
+  ch.energy = energy;
+  ch.energy_max = energyMax;
+
   el("hud_hp").textContent = `${hp}/${hpMax}`;
   el("hud_mana").textContent = `${mana}/${manaMax}`;
   el("hud_energy").textContent = `${energy}/${energyMax}`;
 
-  // атака/броня берём из ch (они у тебя в statsCombat)
   const atk = Number(ch.attack || 0);
   const perm = Number(ch.perm_armor || 0);
   const temp = Number(ch.temp_armor || 0);
@@ -2572,21 +2577,22 @@ function wireCombatSheet() {
 }
 
 function updateCombatModeSummary() {
-  const hp = Number(el("f_hp")?.value || state.sheet?.character?.hp || 0);
-  const hpMax = Number(el("f_hp_max")?.value || state.sheet?.character?.hp_max || 0);
-
-  const mana = Number(el("f_mana")?.value || state.sheet?.character?.mana || 0);
-  const manaMax = Number(el("f_mana_max")?.value || state.sheet?.character?.mana_max || 0);
-
-  const energy = Number(el("f_energy")?.value || state.sheet?.character?.energy || 0);
-  const energyMax = Number(el("f_energy_max")?.value || state.sheet?.character?.energy_max || 0);
-
-  const atk = Number(el("f_attack")?.value || state.sheet?.character?.attack || 0);
-  const perm = Number(el("f_perm_armor")?.value || state.sheet?.character?.perm_armor || 0);
-  const temp = Number(el("f_temp_armor")?.value || state.sheet?.character?.temp_armor || 0);
-
+  const ch = state.sheet?.character;
   const node = el("combatModeSummary");
-  if (!node) return;
+  if (!ch || !node) return;
+
+  const hp = Number(ch.hp || 0);
+  const hpMax = Number(ch.hp_max || 0);
+
+  const mana = Number(ch.mana || 0);
+  const manaMax = Number(ch.mana_max || 0);
+
+  const energy = Number(ch.energy || 0);
+  const energyMax = Number(ch.energy_max || 0);
+
+  const atk = Number(ch.attack || 0);
+  const perm = Number(ch.perm_armor || 0);
+  const temp = Number(ch.temp_armor || 0);
 
   node.textContent = `HP ${hp}/${hpMax} · Mana ${mana}/${manaMax} · Energy ${energy}/${energyMax} · DMG ${atk} · Armor ${perm}+${temp}`;
 }
