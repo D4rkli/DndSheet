@@ -2068,6 +2068,7 @@ async function boot() {
     wireCombatHud();
     wireCombatSheet();
     wireCombatModeCollapse();
+    wireCombatModeLongTap();
     updateCombatModeSummary();
 
     fillMoneyInputsFromState();
@@ -2603,7 +2604,7 @@ function wireCombatModeCollapse() {
   };
 
   // по умолчанию свернуто
-  setOpen(false);
+  setOpen(true);
 
   toggle.addEventListener("click", () => {
     const open = body.classList.contains("d-none");
@@ -2617,4 +2618,43 @@ function wireCombatModeCollapse() {
       setOpen(open);
     }
   });
+}
+
+function wireCombatModeLongTap() {
+  const elToggle = el("combatModeToggle");
+  if (!elToggle) return;
+
+  let timer = null;
+  let isLong = false;
+
+  const start = () => {
+    isLong = false;
+    timer = setTimeout(() => {
+      isLong = true;
+
+      // 👉 открываем блок
+      const body = el("combatModeBody");
+      const card = document.querySelector(".combat-mode-card");
+
+      if (body && card) {
+        body.classList.remove("d-none");
+        card.classList.add("is-open");
+      }
+
+      // 👉 переключаемся на заклинания
+      document.querySelector('[data-combat-tab="spells"]')?.click();
+
+      // 👉 скроллим к списку
+      el("combatQuickSpells")?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    }, 500); // 500мс — long tap
+  };
+
+  const cancel = () => {
+    clearTimeout(timer);
+  };
+
+  elToggle.addEventListener("touchstart", start);
+  elToggle.addEventListener("touchend", cancel);
+  elToggle.addEventListener("touchmove", cancel);
 }

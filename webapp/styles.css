@@ -1141,11 +1141,59 @@ body{
 }
 
 #combatModeChevron{
-  font-size: 20px;
-  opacity: .85;
+  font-size: 22px;
+  opacity: 1;
   transition: transform .2s ease;
+}
+
+#combatModeSummary{
+  font-size: 13px;
+  opacity: .85;
 }
 
 .combat-mode-card.is-open #combatModeChevron{
   transform: rotate(180deg);
+}
+
+/* ===== Цвета ресурсов ===== */
+
+.combat-chip.hp {
+  border: 1px solid rgba(255, 80, 80, 0.25);
+  background: rgba(255, 80, 80, 0.08);
+}
+
+.combat-chip.hp .combat-chip-title {
+  color: #ff6b6b;
+}
+
+.combat-chip.hp .combat-chip-val {
+  color: #ff8787;
+}
+
+
+.combat-chip.mana {
+  border: 1px solid rgba(80, 160, 255, 0.25);
+  background: rgba(80, 160, 255, 0.08);
+}
+
+.combat-chip.mana .combat-chip-title {
+  color: #6bb4ff;
+}
+
+.combat-chip.mana .combat-chip-val {
+  color: #9ccfff;
+}
+
+
+.combat-chip.energy {
+  border: 1px solid rgba(255, 200, 80, 0.25);
+  background: rgba(255, 200, 80, 0.08);
+}
+
+.combat-chip.energy .combat-chip-title {
+  color: #ffd36b;
+}
+
+.combat-chip.energy .combat-chip-val {
+  color: #ffe08a;
 }
