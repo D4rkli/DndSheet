@@ -1296,3 +1296,50 @@ body{
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ===== combat mode polish ===== */
+
+.combat-mode-card{
+  margin-bottom: 16px;
+}
+
+.combat-mode-head{
+  padding-bottom: 6px;
+}
+
+.combat-mode-body{
+  margin-top: 16px;
+}
+
+#combatModeSummary{
+  line-height: 1.45;
+}
+
+.combat-chip:not(.hp):not(.mana):not(.energy) .combat-chip-val{
+  color: rgba(255,255,255,.92);
+}
+
+#hud_attack,
+#hud_armor{
+  color: rgba(255,255,255,.92) !important;
+}
+
+@media (max-width: 575px){
+  .combat-hud-row{
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .combat-chip{
+    min-height: 124px;
+  }
+
+  /* DMG и Armor пусть выглядят не "обрубками" */
+  .combat-chip:nth-child(4),
+  .combat-chip:nth-child(5){
+    min-height: 124px;
+  }
+}
+
+#tab-main > .card + .card{
+  margin-top: 16px;
+}

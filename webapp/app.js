@@ -2604,25 +2604,26 @@ function wireCombatModeCollapse() {
 
   if (!toggle || !body || !card) return;
 
+  let isOpen = false;
+
   const setOpen = (open) => {
+    isOpen = open;
     body.classList.toggle("d-none", !open);
     card.classList.toggle("is-open", open);
   };
 
-  // по умолчанию свернуто
   setOpen(false);
 
-  const onToggle = () => {
-    const shouldOpen = body.classList.contains("d-none");
-    setOpen(shouldOpen);
+  const onToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOpen(!isOpen);
   };
 
   toggle.addEventListener("click", onToggle);
-
   toggle.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      onToggle();
+      onToggle(e);
     }
   });
 }
@@ -2632,14 +2633,13 @@ function wireCombatModeLongTap() {
   if (!elToggle) return;
 
   let timer = null;
-  let isLong = false;
+  let longTriggered = false;
 
   const start = () => {
-    isLong = false;
+    longTriggered = false;
     timer = setTimeout(() => {
-      isLong = true;
+      longTriggered = true;
 
-      // 👉 открываем блок
       const body = el("combatModeBody");
       const card = document.querySelector(".combat-mode-card");
 
@@ -2648,22 +2648,19 @@ function wireCombatModeLongTap() {
         card.classList.add("is-open");
       }
 
-      // 👉 переключаемся на заклинания
       document.querySelector('[data-combat-tab="spells"]')?.click();
-
-      // 👉 скроллим к списку
-      el("combatQuickSpells")?.scrollIntoView({ behavior: "smooth", block: "center" });
-
-    }, 500); // 500мс — long tap
+      el("combatQuickSpells")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 500);
   };
 
   const cancel = () => {
     clearTimeout(timer);
   };
 
-  elToggle.addEventListener("touchstart", start);
+  elToggle.addEventListener("touchstart", start, { passive: true });
   elToggle.addEventListener("touchend", cancel);
   elToggle.addEventListener("touchmove", cancel);
+  elToggle.addEventListener("touchcancel", cancel);
 }
 
 // ===== Combat mode toggle =====
