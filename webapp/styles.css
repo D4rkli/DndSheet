@@ -1339,7 +1339,3 @@ body{
     min-height: 124px;
   }
 }
-
-#tab-main > .card + .card{
-  margin-top: 16px;
-}
