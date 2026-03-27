@@ -2665,3 +2665,22 @@ function wireCombatModeLongTap() {
   elToggle.addEventListener("touchend", cancel);
   elToggle.addEventListener("touchmove", cancel);
 }
+
+// ===== Combat mode toggle =====
+const combatToggle = document.getElementById('combatModeToggle');
+const combatBody = document.getElementById('combatModeBody');
+const combatCard = document.querySelector('.combat-mode-card');
+
+if (combatToggle && combatBody && combatCard) {
+  combatToggle.addEventListener('click', () => {
+    const isOpen = !combatBody.classList.contains('d-none');
+
+    combatBody.classList.toggle('d-none');
+
+    if (isOpen) {
+      combatCard.classList.remove('is-open');
+    } else {
+      combatCard.classList.add('is-open');
+    }
+  });
+}
