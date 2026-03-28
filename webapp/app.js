@@ -1828,6 +1828,7 @@ document.getElementById("btnAddSpell")?.addEventListener("click", () => openSpel
 document.getElementById("btnAddAbility")?.addEventListener("click", () => openSpellModal("ability"));
 document.getElementById("btnAddPassiveAbility")?.addEventListener("click", () => openSpellModal("passive"));
 document.getElementById("btnAddState")?.addEventListener("click", () => openStateModal());
+document.getElementById("btnCombatAddState")?.addEventListener("click", () => openStateModal());
 
 // ===== Loaders
 async function loadMe() {
@@ -2689,20 +2690,33 @@ async function combatClearStates() {
 function wireCombatStates() {
   el("btnNextTurn")?.addEventListener("click", combatNextTurn);
   el("btnClearStates")?.addEventListener("click", combatClearStates);
+  el("btnCombatAddState")?.addEventListener("click", () => openStateModal());
 
   document.addEventListener("click", async (e) => {
     const btn = e.target.closest("[data-state-act]");
-    if (!btn) return;
+    if (btn) {
+      const chip = btn.closest("[data-state-id]");
+      const stateId = chip?.getAttribute("data-state-id");
+      const act = btn.getAttribute("data-state-act");
 
-    const chip = btn.closest("[data-state-id]");
-    const stateId = chip?.getAttribute("data-state-id");
-    const act = btn.getAttribute("data-state-act");
+      if (!stateId) return;
 
+      if (act === "tick") return combatStateTick(stateId);
+      if (act === "toggle") return combatStateToggle(stateId);
+      if (act === "delete") return combatStateDelete(stateId);
+      return;
+    }
+
+    const chip = e.target.closest(".combat-state-chip");
+    if (!chip) return;
+
+    const stateId = Number(chip.getAttribute("data-state-id"));
     if (!stateId) return;
 
-    if (act === "tick") return combatStateTick(stateId);
-    if (act === "toggle") return combatStateToggle(stateId);
-    if (act === "delete") return combatStateDelete(stateId);
+    const st = (state.sheet?.states || []).find((x) => Number(x.id) === stateId);
+    if (!st) return;
+
+    openStateModal(st);
   });
 }
 
@@ -2807,23 +2821,4 @@ function wireCombatModeLongTap() {
   elToggle.addEventListener("touchend", cancel);
   elToggle.addEventListener("touchmove", cancel);
   elToggle.addEventListener("touchcancel", cancel);
-}
-
-// ===== Combat mode toggle =====
-const combatToggle = document.getElementById('combatModeToggle');
-const combatBody = document.getElementById('combatModeBody');
-const combatCard = document.querySelector('.combat-mode-card');
-
-if (combatToggle && combatBody && combatCard) {
-  combatToggle.addEventListener('click', () => {
-    const isOpen = !combatBody.classList.contains('d-none');
-
-    combatBody.classList.toggle('d-none');
-
-    if (isOpen) {
-      combatCard.classList.remove('is-open');
-    } else {
-      combatCard.classList.add('is-open');
-    }
-  });
 }
