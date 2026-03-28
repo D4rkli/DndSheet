@@ -1470,3 +1470,7 @@ body{
     padding: 0 6px;
   }
 }
+
+#btnRest{
+  white-space: nowrap;
+}

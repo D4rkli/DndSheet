@@ -815,6 +815,8 @@ function escapeAttr(s) {
 // ===== Modal helpers
 const modalEl = el("editModal");
 const modal = new bootstrap.Modal(modalEl);
+const restModalEl = el("restModal");
+const restModal = restModalEl ? new bootstrap.Modal(restModalEl) : null;
 let modalOnSave = null;
 
 // JSON modal (import/export)
@@ -2057,10 +2059,11 @@ async function boot() {
       // XP / Level wiring
       el("btnAddXp")?.addEventListener("click", addXpAndHandleLevelUp);
       el("btnRest")?.addEventListener("click", () => {
-        new bootstrap.Modal(el("restModal")).show();
+        restModal?.show();
       });
-      el("btnRest")?.addEventListener("click", () => {
-        new bootstrap.Modal(el("restModal")).show();
+      el("applyRest")?.addEventListener("click", async () => {
+        await applyRest();
+        restModal?.hide();
       });
 
       // чтобы "осталось до уровня" обновлялось при правке XP и XP-per-level
@@ -2495,33 +2498,33 @@ function updateCombatHudFromSheet() {
   updateCombatModeSummary();
 }
 
-function applyRest() {
-  const hpPercent = Number(el("rest_hp").value || 0);
-  const manaPercent = Number(el("rest_mana").value || 0);
-  const energyPercent = Number(el("rest_energcay").value || 0);
+async function applyRest() {
+  const hpPercent = Number(el("rest_hp")?.value || 0);
+  const manaPercent = Number(el("rest_mana")?.value || 0);
+  const energyPercent = Number(el("rest_energy")?.value || 0);
 
-  const hpMax = Number(el("f_hp_max").value || 0);
-  const manaMax = Number(el("f_mana_max").value || 0);
-  const energyMax = Number(el("f_energy_max").value || 0);
+  const hpMax = Number(el("f_hp_max")?.value || 0);
+  const manaMax = Number(el("f_mana_max")?.value || 0);
+  const energyMax = Number(el("f_energy_max")?.value || 0);
 
-  const hp = Number(el("f_hp").value || 0);
-  const mana = Number(el("f_mana").value || 0);
-  const energy = Number(el("f_energy").value || 0);
+  const hp = Number(el("f_hp")?.value || 0);
+  const mana = Number(el("f_mana")?.value || 0);
+  const energy = Number(el("f_energy")?.value || 0);
 
   const newHp = Math.min(hpMax, hp + Math.floor(hpMax * hpPercent / 100));
   const newMana = Math.min(manaMax, mana + Math.floor(manaMax * manaPercent / 100));
   const newEnergy = Math.min(energyMax, energy + Math.floor(energyMax * energyPercent / 100));
 
-  el("f_hp").value = newHp;
-  el("f_mana").value = newMana;
-  el("f_energy").value = newEnergy;
+  el("f_hp").value = String(newHp);
+  el("f_mana").value = String(newMana);
+  el("f_energy").value = String(newEnergy);
 
   el("f_hp").dispatchEvent(new Event("input", { bubbles: true }));
   el("f_mana").dispatchEvent(new Event("input", { bubbles: true }));
   el("f_energy").dispatchEvent(new Event("input", { bubbles: true }));
 
   updateCombatHudFromSheet();
-  saveMain();
+  await saveMain();
 }
 
 function wireCombatHud() {
