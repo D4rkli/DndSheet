@@ -281,11 +281,16 @@
             <div class="col-12">
               <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                 <div class="section-title mb-0">Ресурсы</div>
-                <button class="btn btn-outline-light btn-sm" id="btnRest" type="button">
-                  🛌 Отдых
-                </button>
+
+                <div class="d-flex gap-2 flex-wrap">
+                  <button class="btn btn-outline-light btn-sm" id="btnRest" type="button">
+                    🛌 Отдых
+                  </button>
+                  <button class="btn btn-outline-light btn-sm" id="btnMove" type="button">
+                    👣 Перемещение
+                  </button>
+                </div>
               </div>
-            </div>
 
             <div class="col-12 col-md-4">
               <label class="form-label">HP</label>
@@ -700,6 +705,31 @@
         </button>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="moveModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Перемещение</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <label class="form-label">Затраты энергии (%)</label>
+        <input type="number" id="move_energy_percent" class="form-control" min="0" max="100" value="10" />
+
+        <div class="hint mt-2">
+          Будет списано указанное количество процентов от максимальной энергии.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary" id="applyMove">Применить</button>
+      </div>
     </div>
   </div>
 </div>

@@ -817,6 +817,22 @@ const modalEl = el("editModal");
 const modal = new bootstrap.Modal(modalEl);
 const restModalEl = el("restModal");
 const restModal = restModalEl ? new bootstrap.Modal(restModalEl) : null;
+const moveModalEl = el("moveModal");
+const moveModal = moveModalEl ? new bootstrap.Modal(moveModalEl) : null;
+
+// 🔧 FIX: чтобы экран не блокировался после закрытия модалок
+restModalEl?.addEventListener("hidden.bs.modal", () => {
+  document.querySelectorAll(".modal-backdrop").forEach((node) => node.remove());
+  document.body.classList.remove("modal-open");
+  document.body.style.removeProperty("padding-right");
+});
+
+moveModalEl?.addEventListener("hidden.bs.modal", () => {
+  document.querySelectorAll(".modal-backdrop").forEach((node) => node.remove());
+  document.body.classList.remove("modal-open");
+  document.body.style.removeProperty("padding-right");
+});
+
 let modalOnSave = null;
 
 // JSON modal (import/export)
@@ -2061,11 +2077,17 @@ async function boot() {
       el("btnRest")?.addEventListener("click", () => {
         restModal?.show();
       });
+      el("btnMove")?.addEventListener("click", () => {
+        moveModal?.show();
+      });
       el("applyRest")?.addEventListener("click", async () => {
         await applyRest();
         restModal?.hide();
       });
-
+      el("applyMove")?.addEventListener("click", async () => {
+        await applyMovement();
+        moveModal?.hide();
+      });
       // чтобы "осталось до уровня" обновлялось при правке XP и XP-per-level
       el("f_xp")?.addEventListener("input", updateXpToNextUI);
       el("f_xp_per_level")?.addEventListener("input", updateXpToNextUI);
@@ -2521,6 +2543,22 @@ async function applyRest() {
 
   el("f_hp").dispatchEvent(new Event("input", { bubbles: true }));
   el("f_mana").dispatchEvent(new Event("input", { bubbles: true }));
+  el("f_energy").dispatchEvent(new Event("input", { bubbles: true }));
+
+  updateCombatHudFromSheet();
+  await saveMain();
+}
+
+async function applyMovement() {
+  const percent = Number(el("move_energy_percent")?.value || 0);
+
+  const energyMax = Number(el("f_energy_max")?.value || 0);
+  const energy = Number(el("f_energy")?.value || 0);
+
+  const cost = Math.floor(energyMax * percent / 100);
+  const newEnergy = Math.max(0, energy - cost);
+
+  el("f_energy").value = String(newEnergy);
   el("f_energy").dispatchEvent(new Event("input", { bubbles: true }));
 
   updateCombatHudFromSheet();

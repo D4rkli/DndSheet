@@ -1471,6 +1471,7 @@ body{
   }
 }
 
-#btnRest{
+#btnRest,
+#btnMove{
   white-space: nowrap;
 }
