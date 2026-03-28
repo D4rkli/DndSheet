@@ -2040,8 +2040,8 @@ async function loadSheet(showStatus = true) {
     }
   }
   updateCombatHudFromSheet();
-  updateCombatHudFromSheet();
   renderCombatQuickLists();
+  renderCombatStates();
   setStatus("Ок ✅");
 }
 
@@ -2065,6 +2065,7 @@ async function boot() {
 
     wireCombatHud();
     wireCombatSheet();
+    wireCombatStates();
     wireCombatModeCollapse();
     wireCombatModeLongTap();
     updateCombatModeSummary();
@@ -2558,6 +2559,151 @@ function renderCombatQuickLists() {
     },
     { icon: "bi-lightning-fill", clamp: true, onUse: async (a) => applyCostToCharacter(a.cost) }
   );
+}
+
+function renderCombatStates() {
+  const root = el("combatStatesList");
+  const states = state.sheet?.states || [];
+  if (!root) return;
+
+  if (!states.length) {
+    root.innerHTML = `<div class="combat-state-empty">Нет активных состояний.</div>`;
+    return;
+  }
+
+  root.innerHTML = states.map((s) => {
+    const duration = String(s.duration || "").trim();
+    const hpCost = Number(s.hp_cost || 0);
+    const active = !!s.is_active;
+
+    return `
+      <div class="combat-state-chip" data-state-id="${s.id}">
+        <span class="combat-state-name">${escapeHtml(s.name || "Состояние")}</span>
+        <span class="combat-state-meta">
+          ${active ? "активно" : "неактивно"}
+          ${duration ? ` · ${escapeHtml(duration)}` : ""}
+          ${hpCost ? ` · HP ${hpCost}` : ""}
+        </span>
+
+        <div class="combat-state-actions">
+          <button class="combat-state-btn" type="button" data-state-act="tick" title="Минус ход">−1</button>
+          <button class="combat-state-btn" type="button" data-state-act="toggle" title="Вкл/выкл">⟳</button>
+          <button class="combat-state-btn" type="button" data-state-act="delete" title="Удалить">×</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function parseDurationValue(raw) {
+  const s = String(raw || "").trim();
+  const m = s.match(/^(\d+)(.*)$/);
+  if (!m) return null;
+
+  return {
+    value: Number(m[1]),
+    suffix: m[2] || "",
+  };
+}
+
+async function combatStateTick(stateId) {
+  const chId = currentChId();
+  const states = state.sheet?.states || [];
+  const st = states.find((x) => Number(x.id) === Number(stateId));
+  if (!chId || !st) return;
+
+  const parsed = parseDurationValue(st.duration);
+  if (!parsed) return;
+
+  const nextValue = parsed.value - 1;
+
+  if (nextValue <= 0) {
+    await api(`/characters/${chId}/states/${stateId}`, { method: "DELETE" });
+  } else {
+    await api(`/characters/${chId}/states/${stateId}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        duration: `${nextValue}${parsed.suffix}`,
+      }),
+    });
+  }
+
+  await loadSheet(false);
+}
+
+async function combatStateToggle(stateId) {
+  const chId = currentChId();
+  const states = state.sheet?.states || [];
+  const st = states.find((x) => Number(x.id) === Number(stateId));
+  if (!chId || !st) return;
+
+  await api(`/characters/${chId}/states/${stateId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      is_active: !st.is_active,
+    }),
+  });
+
+  await loadSheet(false);
+}
+
+async function combatStateDelete(stateId) {
+  const chId = currentChId();
+  if (!chId) return;
+
+  await api(`/characters/${chId}/states/${stateId}`, { method: "DELETE" });
+  await loadSheet(false);
+}
+
+async function combatNextTurn() {
+  const states = state.sheet?.states || [];
+  for (const st of states) {
+    const parsed = parseDurationValue(st.duration);
+    if (!parsed) continue;
+
+    const nextValue = parsed.value - 1;
+    if (nextValue <= 0) {
+      await api(`/characters/${currentChId()}/states/${st.id}`, { method: "DELETE" });
+    } else {
+      await api(`/characters/${currentChId()}/states/${st.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          duration: `${nextValue}${parsed.suffix}`,
+        }),
+      });
+    }
+  }
+
+  await loadSheet(false);
+}
+
+async function combatClearStates() {
+  const states = state.sheet?.states || [];
+  for (const st of states) {
+    await api(`/characters/${currentChId()}/states/${st.id}`, { method: "DELETE" });
+  }
+
+  await loadSheet(false);
+}
+
+function wireCombatStates() {
+  el("btnNextTurn")?.addEventListener("click", combatNextTurn);
+  el("btnClearStates")?.addEventListener("click", combatClearStates);
+
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-state-act]");
+    if (!btn) return;
+
+    const chip = btn.closest("[data-state-id]");
+    const stateId = chip?.getAttribute("data-state-id");
+    const act = btn.getAttribute("data-state-act");
+
+    if (!stateId) return;
+
+    if (act === "tick") return combatStateTick(stateId);
+    if (act === "toggle") return combatStateToggle(stateId);
+    if (act === "delete") return combatStateDelete(stateId);
+  });
 }
 
 function wireCombatSheet() {

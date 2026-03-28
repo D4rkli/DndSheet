@@ -1339,3 +1339,76 @@ body{
     min-height: 124px;
   }
 }
+
+/* ===== Combat states ===== */
+
+.combat-states-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.combat-turn-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.combat-states-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.combat-state-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  color: rgba(255,255,255,.92);
+  font-size: 13px;
+}
+
+.combat-state-name{
+  font-weight: 700;
+}
+
+.combat-state-meta{
+  color: rgba(255,255,255,.68);
+  font-size: 12px;
+}
+
+.combat-state-actions{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.combat-state-btn{
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.9);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  line-height:1;
+}
+
+.combat-state-btn:active{
+  transform: translateY(1px);
+}
+
+.combat-state-empty{
+  color: rgba(255,255,255,.58);
+  font-size: 13px;
+}
