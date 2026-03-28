@@ -871,14 +871,9 @@ function updateXpToNextUI() {
 function applyLevelUps(delta) {
   if (delta <= 0) return;
 
-  // per-level
   const hpPL = intOrNull(el("f_hp_per_level")?.value) ?? 0;
   const manaPL = intOrNull(el("f_mana_per_level")?.value) ?? 0;
   const energyPL = intOrNull(el("f_energy_per_level")?.value) ?? 0;
-  const atkPL = intOrNull(el("f_attack_per_level")?.value) ?? 0;
-
-  // текущие значения
-  const lvl = intOrNull(el("f_level")?.value) ?? 1;
 
   const hpMax = intOrNull(el("f_hp_max")?.value) ?? 0;
   const manaMax = intOrNull(el("f_mana_max")?.value) ?? 0;
@@ -888,29 +883,17 @@ function applyLevelUps(delta) {
   const mana = intOrNull(el("f_mana")?.value) ?? 0;
   const energy = intOrNull(el("f_energy")?.value) ?? 0;
 
-  const atk = intOrNull(el("f_attack")?.value) ?? 0;
-
-  // суммарные прибавки
   const addHp = hpPL * delta;
   const addMana = manaPL * delta;
   const addEnergy = energyPL * delta;
-  const addAtk = atkPL * delta;
 
-  // новый уровень
-  el("f_level").value = String(lvl + delta);
-
-  // max увеличиваем
   el("f_hp_max").value = String(hpMax + addHp);
   el("f_mana_max").value = String(manaMax + addMana);
   el("f_energy_max").value = String(energyMax + addEnergy);
 
-  // текущие тоже увеличиваем (как “получил” ресурсы)
   el("f_hp").value = String(hp + addHp);
   el("f_mana").value = String(mana + addMana);
   el("f_energy").value = String(energy + addEnergy);
-
-  // атака
-  el("f_attack").value = String(atk + addAtk);
 }
 
 async function addXpAndHandleLevelUp() {
@@ -942,11 +925,10 @@ async function addXpAndHandleLevelUp() {
 
   if (levelUps > 0) {
     applyLevelUps(levelUps);
-    // applyLevelUps тоже меняет уровень, поэтому после него ещё раз фиксируем
-    el("f_level").value = String(level);
   }
 
   updateXpToNextUI();
+  updateCombatHudFromSheet();
   await saveMain();
 }
 
