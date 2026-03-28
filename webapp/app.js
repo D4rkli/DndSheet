@@ -2065,6 +2065,8 @@ async function loadSheet(showStatus = true) {
   updateCombatHudFromSheet();
   renderCombatQuickLists();
   renderCombatStates();
+  renderCombatRound();
+  renderCombatLog();
   setStatus("Ок ✅");
 }
 
