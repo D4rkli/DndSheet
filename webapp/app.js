@@ -2531,15 +2531,17 @@ function quickApplyResource(targetId, delta) {
   input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-function quickApplyResource(targetId, delta) {
-  const input = el(targetId);
-  if (!input) return;
+function wireCombatQuickButtons() {
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-quick-target]");
+    if (!btn) return;
 
-  const current = Number(input.value || 0);
-  const next = Math.max(0, current + Number(delta || 0));
+    const targetId = btn.getAttribute("data-quick-target");
+    const step = Number(btn.getAttribute("data-quick-step") || 0);
 
-  input.value = String(next);
-  input.dispatchEvent(new Event("input", { bubbles: true }));
+    if (!targetId || !Number.isFinite(step)) return;
+    quickApplyResource(targetId, step);
+  });
 }
 
 function renderCombatQuickLists() {
