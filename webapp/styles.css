@@ -1475,3 +1475,66 @@ body{
 #btnMove{
   white-space: nowrap;
 }
+
+#btnBattle,
+#btnRest,
+#btnMove{
+  white-space: nowrap;
+}
+
+.combat-meta-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.combat-meta-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.combat-round-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.combat-log{
+  display:grid;
+  gap:8px;
+}
+
+.combat-log-item{
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  color: rgba(255,255,255,.88);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.combat-log-empty{
+  color: rgba(255,255,255,.55);
+  font-size: 13px;
+}
+
+.combat-chip.is-low{
+  box-shadow: inset 0 0 0 1px rgba(255,120,120,.22);
+}
+
+.combat-chip.is-empty{
+  opacity: .78;
+}

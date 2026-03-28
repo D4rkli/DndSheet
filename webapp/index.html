@@ -283,12 +283,9 @@
                 <div class="section-title mb-0">Ресурсы</div>
 
                 <div class="d-flex gap-2 flex-wrap">
-                  <button class="btn btn-outline-light btn-sm" id="btnRest" type="button">
-                    🛌 Отдых
-                  </button>
-                  <button class="btn btn-outline-light btn-sm" id="btnMove" type="button">
-                    👣 Перемещение
-                  </button>
+                  <button class="btn btn-outline-light btn-sm" id="btnBattle" type="button">⚔️ Бой</button>
+                  <button class="btn btn-outline-light btn-sm" id="btnRest" type="button">🛌 Отдых</button>
+                  <button class="btn btn-outline-light btn-sm" id="btnMove" type="button">👣 Перемещение</button>
                 </div>
               </div>
             </div>
@@ -398,6 +395,20 @@
         </div>
       </div>
     </section>
+
+    <div class="combat-meta-block mt-3">
+      <div class="combat-meta-head">
+        <div class="section-title mb-0">Бой</div>
+
+        <div class="combat-meta-actions">
+          <span id="combatRoundBadge" class="combat-round-badge">Раунд 1</span>
+          <button id="btnPrevRound" class="btn btn-outline-light btn-sm" type="button">− Раунд</button>
+          <button id="btnNextRound" class="btn btn-outline-light btn-sm" type="button">+ Раунд</button>
+        </div>
+      </div>
+
+      <div id="combatLog" class="combat-log mt-2"></div>
+    </div>
 
     <!-- SPELLS -->
     <section class="tab d-none" id="tab-spells">

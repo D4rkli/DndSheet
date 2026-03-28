@@ -38,6 +38,8 @@ const state = {
   sheet: null,
   templates: [],
   activeTemplateId: null,
+  battleRound: 1,
+  battleLog: [],
 };
 
 const DEFAULT_TABS = [
@@ -539,19 +541,44 @@ function parseCost(costStr, character) {
   return result;
 }
 
-async function applyCostToCharacter(costStr) {
+async function applyCostToCharacter(costStr, sourceName = "Способность") {
   const id = currentChId();
   if (!id || !state.sheet?.character) return;
 
   const ch = state.sheet.character;
   const delta = parseCost(costStr, ch);
 
+  const hp = Number(ch.hp || 0);
+  const mana = Number(ch.mana || 0);
+  const energy = Number(ch.energy || 0);
+
+  if (delta.hp > hp) {
+    showBattleError("Недостаточно HP");
+    return;
+  }
+  if (delta.mana > mana) {
+    showBattleError("Недостаточно маны");
+    return;
+  }
+  if (delta.energy > energy) {
+    showBattleError("Недостаточно энергии");
+    return;
+  }
+
   const payload = {};
-  if (delta.hp) payload.hp = Math.max(0, (Number(ch.hp || 0) - delta.hp));
-  if (delta.mana) payload.mana = Math.max(0, (Number(ch.mana || 0) - delta.mana));
-  if (delta.energy) payload.energy = Math.max(0, (Number(ch.energy || 0) - delta.energy));
+  if (delta.hp) payload.hp = hp - delta.hp;
+  if (delta.mana) payload.mana = mana - delta.mana;
+  if (delta.energy) payload.energy = energy - delta.energy;
 
   if (Object.keys(payload).length === 0) return;
+
+  appendBattleLog(
+    `✨ ${sourceName}:` +
+    `${delta.hp ? ` HP -${delta.hp}` : ""}` +
+    `${delta.mana ? ` Mana -${delta.mana}` : ""}` +
+    `${delta.energy ? ` Energy -${delta.energy}` : ""}`
+  );
+
   await saveMain(payload);
 }
 
@@ -2059,6 +2086,11 @@ async function boot() {
     if (state.characters.length === 0) setStatus("Персонажей нет. Создай нового 👆");
     await loadSheet();
 
+    loadBattleUiState();
+    wireBattleControls();
+    renderCombatRound();
+    renderCombatLog();
+
     wireCombatHud();
     wireCombatQuickButtons();
     wireCombatSheet();
@@ -2486,6 +2518,103 @@ document.addEventListener("click", (e) => {
   }
 });
 
+function getResourceMax(targetId) {
+  const map = {
+    f_hp: "f_hp_max",
+    f_mana: "f_mana_max",
+    f_energy: "f_energy_max",
+  };
+  const maxId = map[targetId];
+  return maxId ? Number(el(maxId)?.value || 0) : null;
+}
+
+function clampResourceValue(targetId, value) {
+  const min = 0;
+  const max = getResourceMax(targetId);
+
+  if (max === null) return Math.max(min, value);
+  return Math.min(max, Math.max(min, value));
+}
+
+function appendBattleLog(text) {
+  if (!text) return;
+  state.battleLog = [String(text), ...(state.battleLog || [])].slice(0, 8);
+  try {
+    localStorage.setItem("battleLog", JSON.stringify(state.battleLog));
+  } catch {}
+  renderCombatLog();
+}
+
+function loadBattleUiState() {
+  try {
+    const savedRound = Number(localStorage.getItem("battleRound") || 1);
+    state.battleRound = Number.isFinite(savedRound) && savedRound > 0 ? savedRound : 1;
+  } catch {
+    state.battleRound = 1;
+  }
+
+  try {
+    const savedLog = JSON.parse(localStorage.getItem("battleLog") || "[]");
+    state.battleLog = Array.isArray(savedLog) ? savedLog : [];
+  } catch {
+    state.battleLog = [];
+  }
+}
+
+function saveBattleRound() {
+  try {
+    localStorage.setItem("battleRound", String(state.battleRound || 1));
+  } catch {}
+}
+
+function renderCombatLog() {
+  const root = el("combatLog");
+  if (!root) return;
+
+  const rows = state.battleLog || [];
+  if (!rows.length) {
+    root.innerHTML = `<div class="combat-log-empty">Лог пуст.</div>`;
+    return;
+  }
+
+  root.innerHTML = rows
+    .map((row) => `<div class="combat-log-item">${escapeHtml(row)}</div>`)
+    .join("");
+}
+
+function renderCombatRound() {
+  const node = el("combatRoundBadge");
+  if (!node) return;
+  node.textContent = `Раунд ${state.battleRound || 1}`;
+}
+
+function showBattleError(text) {
+  appendBattleLog(`⛔ ${text}`);
+  alert(text);
+}
+
+function focusBattleMode() {
+  const body = el("combatModeBody");
+  const card = document.querySelector(".combat-mode-card");
+  if (!body || !card) return;
+
+  body.classList.remove("d-none");
+  card.classList.add("is-open");
+  document.querySelector('[data-combat-tab="spells"]')?.click();
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setResourceValue(targetId, value, logText = "") {
+  const input = el(targetId);
+  if (!input) return;
+
+  const next = clampResourceValue(targetId, Number(value || 0));
+  input.value = String(next);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+
+  if (logText) appendBattleLog(logText);
+}
+
 function updateCombatHudFromSheet() {
   const ch = state.sheet?.character;
   if (!ch) return;
@@ -2518,6 +2647,22 @@ function updateCombatHudFromSheet() {
   el("hud_armor").textContent = `${perm}+${temp}`;
 
   updateCombatModeSummary();
+
+  const hpChip = document.querySelector(".combat-chip.hp");
+  const manaChip = document.querySelector(".combat-chip.mana");
+  const energyChip = document.querySelector(".combat-chip.energy");
+
+  const hpRatio = hpMax > 0 ? hp / hpMax : 0;
+  const manaRatio = manaMax > 0 ? mana / manaMax : 0;
+  const energyRatio = energyMax > 0 ? energy / energyMax : 0;
+
+  hpChip?.classList.toggle("is-low", hpRatio > 0 && hpRatio <= 0.3);
+  manaChip?.classList.toggle("is-low", manaRatio > 0 && manaRatio <= 0.25);
+  energyChip?.classList.toggle("is-low", energyRatio > 0 && energyRatio <= 0.25);
+
+  hpChip?.classList.toggle("is-empty", hp <= 0);
+  manaChip?.classList.toggle("is-empty", mana <= 0);
+  energyChip?.classList.toggle("is-empty", energy <= 0);
 }
 
 async function applyRest() {
@@ -2533,9 +2678,13 @@ async function applyRest() {
   const mana = Number(el("f_mana")?.value || 0);
   const energy = Number(el("f_energy")?.value || 0);
 
-  const newHp = Math.min(hpMax, hp + Math.floor(hpMax * hpPercent / 100));
-  const newMana = Math.min(manaMax, mana + Math.floor(manaMax * manaPercent / 100));
-  const newEnergy = Math.min(energyMax, energy + Math.floor(energyMax * energyPercent / 100));
+  const addHp = Math.floor(hpMax * hpPercent / 100);
+  const addMana = Math.floor(manaMax * manaPercent / 100);
+  const addEnergy = Math.floor(energyMax * energyPercent / 100);
+
+  const newHp = Math.min(hpMax, hp + addHp);
+  const newMana = Math.min(manaMax, mana + addMana);
+  const newEnergy = Math.min(energyMax, energy + addEnergy);
 
   el("f_hp").value = String(newHp);
   el("f_mana").value = String(newMana);
@@ -2544,6 +2693,8 @@ async function applyRest() {
   el("f_hp").dispatchEvent(new Event("input", { bubbles: true }));
   el("f_mana").dispatchEvent(new Event("input", { bubbles: true }));
   el("f_energy").dispatchEvent(new Event("input", { bubbles: true }));
+
+  appendBattleLog(`🛌 Отдых: HP +${newHp - hp}, Mana +${newMana - mana}, Energy +${newEnergy - energy}`);
 
   updateCombatHudFromSheet();
   await saveMain();
@@ -2558,8 +2709,15 @@ async function applyMovement() {
   const cost = Math.floor(energyMax * percent / 100);
   const newEnergy = Math.max(0, energy - cost);
 
+  if (cost <= 0) {
+    showBattleError("Задай корректный процент перемещения");
+    return;
+  }
+
   el("f_energy").value = String(newEnergy);
   el("f_energy").dispatchEvent(new Event("input", { bubbles: true }));
+
+  appendBattleLog(`👣 Перемещение: Energy -${energy - newEnergy}`);
 
   updateCombatHudFromSheet();
   await saveMain();
@@ -2578,10 +2736,19 @@ function quickApplyResource(targetId, delta) {
   if (!input) return;
 
   const current = Number(input.value || 0);
-  const next = Math.max(0, current + Number(delta || 0));
+  const next = clampResourceValue(targetId, current + Number(delta || 0));
 
   input.value = String(next);
   input.dispatchEvent(new Event("input", { bubbles: true }));
+
+  const names = {
+    f_hp: "HP",
+    f_mana: "Mana",
+    f_energy: "Energy",
+  };
+
+  const sign = Number(delta) > 0 ? "+" : "";
+  appendBattleLog(`${sign}${delta} ${names[targetId] || targetId}`);
 }
 
 function wireCombatQuickButtons() {
@@ -2625,7 +2792,7 @@ function renderCombatQuickLists() {
       await api(`/characters/${id}/spells/${s.id}`, { method: "DELETE" });
       await loadSheet(false);
     },
-    { icon: "bi-stars", clamp: true, onUse: async (s) => applyCostToCharacter(s.cost) }
+    { icon: "bi-stars", clamp: true, onUse: async (s) => applyCostToCharacter(s.cost, s.name || "Заклинание") }
   );
 
   // Умения (use = списать cost)
@@ -2636,7 +2803,7 @@ function renderCombatQuickLists() {
       await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
       await loadSheet(false);
     },
-    { icon: "bi-lightning-fill", clamp: true, onUse: async (a) => applyCostToCharacter(a.cost) }
+    { icon: "bi-lightning-fill", clamp: true, onUse: async (a) => applyCostToCharacter(a.cost, a.name || "Умение") }
   );
 }
 
@@ -2899,4 +3066,25 @@ function wireCombatModeLongTap() {
   elToggle.addEventListener("touchend", cancel);
   elToggle.addEventListener("touchmove", cancel);
   elToggle.addEventListener("touchcancel", cancel);
+}
+
+function wireBattleControls() {
+  el("btnBattle")?.addEventListener("click", () => {
+    focusBattleMode();
+    appendBattleLog("⚔️ Вход в боевой режим");
+  });
+
+  el("btnNextRound")?.addEventListener("click", () => {
+    state.battleRound = (state.battleRound || 1) + 1;
+    saveBattleRound();
+    renderCombatRound();
+    appendBattleLog(`🔄 Раунд ${state.battleRound}`);
+  });
+
+  el("btnPrevRound")?.addEventListener("click", () => {
+    state.battleRound = Math.max(1, (state.battleRound || 1) - 1);
+    saveBattleRound();
+    renderCombatRound();
+    appendBattleLog(`↩️ Раунд ${state.battleRound}`);
+  });
 }
