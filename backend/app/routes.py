@@ -835,11 +835,27 @@ async def get_full_sheet(
             for i in sheet["items"]
         ],
         "spells": [
-            {"id": s.id, "name": s.name, "description": s.description, "range": s.range, "duration": s.duration, "cost": s.cost}
+            {
+                "id": s.id,
+                "name": s.name,
+                "level": s.level,
+                "description": s.description,
+                "range": s.range,
+                "duration": s.duration,
+                "cost": s.cost,
+            }
             for s in sheet["spells"]
         ],
         "abilities": [
-            {"id": a.id, "name": a.name, "description": a.description, "range": a.range, "duration": a.duration, "cost": a.cost}
+            {
+                "id": a.id,
+                "name": a.name,
+                "level": a.level,
+                "description": a.description,
+                "range": a.range,
+                "duration": a.duration,
+                "cost": a.cost,
+            }
             for a in sheet["abilities"]
         ],
         "states": [
