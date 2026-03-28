@@ -846,6 +846,8 @@ const restModalEl = el("restModal");
 const restModal = restModalEl ? new bootstrap.Modal(restModalEl) : null;
 const moveModalEl = el("moveModal");
 const moveModal = moveModalEl ? new bootstrap.Modal(moveModalEl) : null;
+const armorModalEl = el("armorModal");
+const armorModal = armorModalEl ? new bootstrap.Modal(armorModalEl) : null;
 
 // 🔧 FIX: чтобы экран не блокировался после закрытия модалок
 restModalEl?.addEventListener("hidden.bs.modal", () => {
@@ -855,6 +857,12 @@ restModalEl?.addEventListener("hidden.bs.modal", () => {
 });
 
 moveModalEl?.addEventListener("hidden.bs.modal", () => {
+  document.querySelectorAll(".modal-backdrop").forEach((node) => node.remove());
+  document.body.classList.remove("modal-open");
+  document.body.style.removeProperty("padding-right");
+});
+
+armorModalEl?.addEventListener("hidden.bs.modal", () => {
   document.querySelectorAll(".modal-backdrop").forEach((node) => node.remove());
   document.body.classList.remove("modal-open");
   document.body.style.removeProperty("padding-right");
@@ -2090,6 +2098,7 @@ async function boot() {
 
     loadBattleUiState();
     wireBattleControls();
+    wireArmorEditor();
     renderCombatRound();
     renderCombatLog();
 
@@ -2642,8 +2651,11 @@ function updateCombatHudFromSheet() {
   el("hud_energy").textContent = `${energy}/${energyMax}`;
 
   const atk = Number(ch.attack || 0);
-  const perm = Number(ch.perm_armor || 0);
-  const temp = Number(ch.temp_armor || 0);
+  const perm = Number(el("f_perm_armor")?.value || ch.perm_armor || 0);
+  const temp = Number(el("f_temp_armor")?.value || ch.temp_armor || 0);
+
+  ch.perm_armor = perm;
+  ch.temp_armor = temp;
 
   el("hud_attack").textContent = String(atk);
   el("hud_armor").textContent = `${perm}+${temp}`;
@@ -3088,5 +3100,76 @@ function wireBattleControls() {
     saveBattleRound();
     renderCombatRound();
     appendBattleLog(`↩️ Раунд ${state.battleRound}`);
+  });
+}
+
+function syncArmorModalInputs() {
+  el("armor_perm_input").value = String(intOrNull(el("f_perm_armor")?.value) ?? 0);
+  el("armor_temp_input").value = String(intOrNull(el("f_temp_armor")?.value) ?? 0);
+}
+
+function updateArmorHudFromInputs() {
+  const perm = Math.max(0, intOrNull(el("f_perm_armor")?.value) ?? 0);
+  const temp = Math.max(0, intOrNull(el("f_temp_armor")?.value) ?? 0);
+
+  if (state.sheet?.character) {
+    state.sheet.character.perm_armor = perm;
+    state.sheet.character.temp_armor = temp;
+  }
+
+  el("hud_armor").textContent = `${perm}+${temp}`;
+  updateCombatModeSummary();
+}
+
+function openArmorModal() {
+  syncArmorModalInputs();
+  armorModal?.show();
+}
+
+async function applyArmorChanges() {
+  const perm = Math.max(0, intOrNull(el("armor_perm_input")?.value) ?? 0);
+  const temp = Math.max(0, intOrNull(el("armor_temp_input")?.value) ?? 0);
+
+  el("f_perm_armor").value = String(perm);
+  el("f_temp_armor").value = String(temp);
+
+  updateArmorHudFromInputs();
+  appendBattleLog(`🛡 Броня: ${perm}+${temp}`);
+  await saveMain({
+    perm_armor: perm,
+    temp_armor: temp,
+  });
+}
+
+function wireArmorEditor() {
+  const armorChip = document.querySelector("#hud_armor")?.closest(".combat-chip");
+  armorChip?.classList.add("armor-clickable");
+
+  document.querySelector("#hud_armor")?.addEventListener("click", openArmorModal);
+  armorChip?.addEventListener("click", openArmorModal);
+
+  el("applyArmor")?.addEventListener("click", async () => {
+    await applyArmorChanges();
+    armorModal?.hide();
+  });
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-armor-act]");
+    if (!btn) return;
+
+    const [kind, action] = String(btn.getAttribute("data-armor-act") || "").split(":");
+    const inputId = kind === "perm" ? "armor_perm_input" : "armor_temp_input";
+    const input = el(inputId);
+    if (!input) return;
+
+    let current = intOrNull(input.value) ?? 0;
+
+    if (action === "reset") {
+      current = 0;
+    } else {
+      current = Math.max(0, current + Number(action || 0));
+    }
+
+    input.value = String(current);
   });
 }

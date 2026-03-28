@@ -1538,3 +1538,11 @@ body{
 .combat-chip.is-empty{
   opacity: .78;
 }
+
+#hud_armor{
+  cursor: pointer;
+}
+
+.combat-chip.armor-clickable{
+  cursor: pointer;
+}

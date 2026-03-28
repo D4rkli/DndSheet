@@ -641,6 +641,49 @@
   </div>
 </div>
 
+<div class="modal fade" id="armorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Редактирование брони</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label">Постоянная броня</label>
+            <input id="armor_perm_input" type="number" class="form-control" />
+          </div>
+          <div class="col-6">
+            <label class="form-label">Временная броня</label>
+            <input id="armor_temp_input" type="number" class="form-control" />
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <div class="hint mb-2">Быстрые действия</div>
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-light btn-sm" data-armor-act="perm:+1">Пост. +1</button>
+            <button type="button" class="btn btn-outline-light btn-sm" data-armor-act="perm:+5">Пост. +5</button>
+            <button type="button" class="btn btn-outline-light btn-sm" data-armor-act="perm:-1">Пост. -1</button>
+
+            <button type="button" class="btn btn-outline-light btn-sm" data-armor-act="temp:+1">Врем. +1</button>
+            <button type="button" class="btn btn-outline-light btn-sm" data-armor-act="temp:+5">Врем. +5</button>
+            <button type="button" class="btn btn-outline-light btn-sm" data-armor-act="temp:-1">Врем. -1</button>
+            <button type="button" class="btn btn-outline-warning btn-sm" data-armor-act="temp:reset">Сброс временной</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary" id="applyArmor">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="app.js?v=200"></script>
 
