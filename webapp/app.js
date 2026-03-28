@@ -863,8 +863,7 @@ function updateXpToNextUI() {
     return;
   }
 
-  const mod = xp % per;
-  const left = (mod === 0) ? per : (per - mod);
+  const left = Math.max(0, per - xp);
   out.value = String(left);
 }
 
@@ -914,21 +913,6 @@ function applyLevelUps(delta) {
   el("f_attack").value = String(atk + addAtk);
 }
 
-function recalcLevelFromTotalXp(oldLevel) {
-  const per = getXpPerLevel();
-  if (!per) return 0;
-
-  const xp = intOrNull(el("f_xp")?.value) ?? 0;
-  const newLevel = Math.max(1, Math.floor(xp / per) + 1);
-
-  const delta = newLevel - (oldLevel ?? (intOrNull(el("f_level")?.value) ?? 1));
-  if (delta > 0) applyLevelUps(delta);
-
-  // синхроним поле уровня на всякий
-  el("f_level").value = String(newLevel);
-  return delta;
-}
-
 async function addXpAndHandleLevelUp() {
   const per = getXpPerLevel();
   if (!per) {
@@ -939,19 +923,30 @@ async function addXpAndHandleLevelUp() {
   const add = intOrNull(el("f_xp_add")?.value) ?? 0;
   if (add <= 0) return;
 
-  const oldLevel = intOrNull(el("f_level")?.value) ?? 1;
-  const xp = intOrNull(el("f_xp")?.value) ?? 0;
+  let level = intOrNull(el("f_level")?.value) ?? 1;
+  let xp = intOrNull(el("f_xp")?.value) ?? 0;
 
-  el("f_xp").value = String(xp + add);
+  xp += add;
   el("f_xp_add").value = "";
 
-  // если перешли пороги — поднимаем уровень (и прибавляем статы)
-  recalcLevelFromTotalXp(oldLevel);
+  let levelUps = 0;
 
-  // обновляем “осталось”
+  while (xp >= per) {
+    xp -= per;
+    level += 1;
+    levelUps += 1;
+  }
+
+  el("f_xp").value = String(xp);
+  el("f_level").value = String(level);
+
+  if (levelUps > 0) {
+    applyLevelUps(levelUps);
+    // applyLevelUps тоже меняет уровень, поэтому после него ещё раз фиксируем
+    el("f_level").value = String(level);
+  }
+
   updateXpToNextUI();
-
-  // сохраняем на сервер
   await saveMain();
 }
 
