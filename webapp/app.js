@@ -2498,7 +2498,7 @@ function updateCombatHudFromSheet() {
 function applyRest() {
   const hpPercent = Number(el("rest_hp").value || 0);
   const manaPercent = Number(el("rest_mana").value || 0);
-  const energyPercent = Number(el("rest_energy").value || 0);
+  const energyPercent = Number(el("rest_energcay").value || 0);
 
   const hpMax = Number(el("f_hp_max").value || 0);
   const manaMax = Number(el("f_mana_max").value || 0);
