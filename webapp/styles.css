@@ -1412,3 +1412,61 @@ body{
   color: rgba(255,255,255,.58);
   font-size: 13px;
 }
+
+/* ===== Quick combat buttons ===== */
+
+.combat-quick-row{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.combat-quick-btn{
+  min-width: 42px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.92);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.combat-quick-btn:active{
+  transform: translateY(1px);
+}
+
+.combat-chip.hp .combat-quick-btn{
+  border-color: rgba(255, 110, 110, .22);
+  background: rgba(255, 90, 90, .08);
+}
+
+.combat-chip.mana .combat-quick-btn{
+  border-color: rgba(90, 170, 255, .22);
+  background: rgba(80, 160, 255, .08);
+}
+
+.combat-chip.energy .combat-quick-btn{
+  border-color: rgba(255, 210, 90, .22);
+  background: rgba(255, 210, 90, .08);
+}
+
+.combat-quick-btn.is-heal{
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
+
+@media (max-width: 575px){
+  .combat-quick-row{
+    gap: 5px;
+  }
+
+  .combat-quick-btn{
+    min-width: 38px;
+    height: 26px;
+    font-size: 11px;
+    padding: 0 6px;
+  }
+}

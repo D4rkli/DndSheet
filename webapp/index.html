@@ -87,28 +87,53 @@
 
                 <div class="combat-chip hp">
                   <div class="combat-chip-title">HP</div>
+
                   <div class="combat-chip-body">
                     <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_hp" data-step="-1">−</button>
                     <span id="hud_hp" class="combat-chip-val">0/0</span>
                     <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_hp" data-step="+1">+</button>
                   </div>
+
+                  <div class="combat-quick-row">
+                    <button class="combat-quick-btn" type="button" data-quick-target="f_hp" data-quick-step="-1">-1</button>
+                    <button class="combat-quick-btn" type="button" data-quick-target="f_hp" data-quick-step="-5">-5</button>
+                    <button class="combat-quick-btn" type="button" data-quick-target="f_hp" data-quick-step="-10">-10</button>
+                    <button class="combat-quick-btn is-heal" type="button" data-quick-target="f_hp" data-quick-step="1">+1</button>
+                    <button class="combat-quick-btn is-heal" type="button" data-quick-target="f_hp" data-quick-step="5">+5</button>
+                  </div>
                 </div>
 
                 <div class="combat-chip mana">
                   <div class="combat-chip-title">Mana</div>
+
                   <div class="combat-chip-body">
                     <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_mana" data-step="-1">−</button>
                     <span id="hud_mana" class="combat-chip-val">0/0</span>
                     <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_mana" data-step="+1">+</button>
                   </div>
+
+                  <div class="combat-quick-row">
+                    <button class="combat-quick-btn" type="button" data-quick-target="f_mana" data-quick-step="-1">-1</button>
+                    <button class="combat-quick-btn" type="button" data-quick-target="f_mana" data-quick-step="-5">-5</button>
+                    <button class="combat-quick-btn is-heal" type="button" data-quick-target="f_mana" data-quick-step="1">+1</button>
+                    <button class="combat-quick-btn is-heal" type="button" data-quick-target="f_mana" data-quick-step="5">+5</button>
+                  </div>
                 </div>
 
                 <div class="combat-chip energy">
                   <div class="combat-chip-title">Energy</div>
+
                   <div class="combat-chip-body">
                     <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_energy" data-step="-1">−</button>
                     <span id="hud_energy" class="combat-chip-val">0/0</span>
                     <button class="btn btn-outline-light btn-sm step-btn" type="button" data-target="f_energy" data-step="+1">+</button>
+                  </div>
+
+                  <div class="combat-quick-row">
+                    <button class="combat-quick-btn" type="button" data-quick-target="f_energy" data-quick-step="-1">-1</button>
+                    <button class="combat-quick-btn" type="button" data-quick-target="f_energy" data-quick-step="-3">-3</button>
+                    <button class="combat-quick-btn is-heal" type="button" data-quick-target="f_energy" data-quick-step="1">+1</button>
+                    <button class="combat-quick-btn is-heal" type="button" data-quick-target="f_energy" data-quick-step="3">+3</button>
                   </div>
                 </div>
 

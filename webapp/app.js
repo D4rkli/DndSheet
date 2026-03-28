@@ -2065,6 +2065,7 @@ async function boot() {
     await loadSheet();
 
     wireCombatHud();
+    wireCombatQuickButtons();
     wireCombatSheet();
     wireCombatStates();
     wireCombatModeCollapse();
@@ -2517,6 +2518,28 @@ function wireCombatHud() {
     el(id)?.addEventListener("input", updateCombatHudFromSheet);
     el(id)?.addEventListener("change", updateCombatHudFromSheet);
   });
+}
+
+function quickApplyResource(targetId, delta) {
+  const input = el(targetId);
+  if (!input) return;
+
+  const current = Number(input.value || 0);
+  const next = Math.max(0, current + Number(delta || 0));
+
+  input.value = String(next);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function quickApplyResource(targetId, delta) {
+  const input = el(targetId);
+  if (!input) return;
+
+  const current = Number(input.value || 0);
+  const next = Math.max(0, current + Number(delta || 0));
+
+  input.value = String(next);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 function renderCombatQuickLists() {
