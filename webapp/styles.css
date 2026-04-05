@@ -1546,3 +1546,32 @@ body{
 .combat-chip.armor-clickable{
   cursor: pointer;
 }
+
+.combat-log-wrap{
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding-top: 10px;
+}
+
+.combat-log-summary{
+  cursor: pointer;
+  color: rgba(255,255,255,.82);
+  font-size: 13px;
+  font-weight: 700;
+  list-style: none;
+}
+
+.combat-log-summary::-webkit-details-marker{
+  display: none;
+}
+
+.combat-log-summary::before{
+  content: "▸";
+  display: inline-block;
+  margin-right: 8px;
+  transition: transform .18s ease;
+  opacity: .8;
+}
+
+.combat-log-wrap[open] .combat-log-summary::before{
+  transform: rotate(90deg);
+}

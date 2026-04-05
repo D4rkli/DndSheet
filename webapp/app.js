@@ -2651,8 +2651,7 @@ function updateCombatHudFromSheet() {
   el("hud_energy").textContent = `${energy}/${energyMax}`;
 
   const atk = Number(ch.attack || 0);
-  const perm = Number(el("f_perm_armor")?.value || ch.perm_armor || 0);
-  const temp = Number(el("f_temp_armor")?.value || ch.temp_armor || 0);
+  const { perm, temp } = getArmorValues();
 
   ch.perm_armor = perm;
   ch.temp_armor = temp;
@@ -3103,14 +3102,32 @@ function wireBattleControls() {
   });
 }
 
+function getStatInputByKey(key) {
+  return document.querySelector(`#statsCombat input[data-key="${key}"]`);
+}
+
+function getArmorValues() {
+  const perm = Math.max(0, intOrNull(getStatInputByKey("perm_armor")?.value) ?? 0);
+  const temp = Math.max(0, intOrNull(getStatInputByKey("temp_armor")?.value) ?? 0);
+  return { perm, temp };
+}
+
+function setArmorValues(perm, temp) {
+  const permInput = getStatInputByKey("perm_armor");
+  const tempInput = getStatInputByKey("temp_armor");
+
+  if (permInput) permInput.value = String(Math.max(0, perm));
+  if (tempInput) tempInput.value = String(Math.max(0, temp));
+}
+
 function syncArmorModalInputs() {
-  el("armor_perm_input").value = String(intOrNull(el("f_perm_armor")?.value) ?? 0);
-  el("armor_temp_input").value = String(intOrNull(el("f_temp_armor")?.value) ?? 0);
+  const { perm, temp } = getArmorValues();
+  el("armor_perm_input").value = String(perm);
+  el("armor_temp_input").value = String(temp);
 }
 
 function updateArmorHudFromInputs() {
-  const perm = Math.max(0, intOrNull(el("f_perm_armor")?.value) ?? 0);
-  const temp = Math.max(0, intOrNull(el("f_temp_armor")?.value) ?? 0);
+  const { perm, temp } = getArmorValues();
 
   if (state.sheet?.character) {
     state.sheet.character.perm_armor = perm;
@@ -3130,11 +3147,10 @@ async function applyArmorChanges() {
   const perm = Math.max(0, intOrNull(el("armor_perm_input")?.value) ?? 0);
   const temp = Math.max(0, intOrNull(el("armor_temp_input")?.value) ?? 0);
 
-  el("f_perm_armor").value = String(perm);
-  el("f_temp_armor").value = String(temp);
-
+  setArmorValues(perm, temp);
   updateArmorHudFromInputs();
   appendBattleLog(`🛡 Броня: ${perm}+${temp}`);
+
   await saveMain({
     perm_armor: perm,
     temp_armor: temp,
@@ -3145,8 +3161,11 @@ function wireArmorEditor() {
   const armorChip = document.querySelector("#hud_armor")?.closest(".combat-chip");
   armorChip?.classList.add("armor-clickable");
 
-  document.querySelector("#hud_armor")?.addEventListener("click", openArmorModal);
-  armorChip?.addEventListener("click", openArmorModal);
+  armorChip?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openArmorModal();
+  });
 
   el("applyArmor")?.addEventListener("click", async () => {
     await applyArmorChanges();
