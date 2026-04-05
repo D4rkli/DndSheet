@@ -2650,6 +2650,18 @@ function updateCombatHudFromSheet() {
   el("hud_mana").textContent = `${mana}/${manaMax}`;
   el("hud_energy").textContent = `${energy}/${energyMax}`;
 
+  const hpBar = el("hud_hp_bar");
+  const manaBar = el("hud_mana_bar");
+  const energyBar = el("hud_energy_bar");
+
+  const hpRatio = hpMax > 0 ? Math.max(0, Math.min(100, (hp / hpMax) * 100)) : 0;
+  const manaRatio = manaMax > 0 ? Math.max(0, Math.min(100, (mana / manaMax) * 100)) : 0;
+  const energyRatio = energyMax > 0 ? Math.max(0, Math.min(100, (energy / energyMax) * 100)) : 0;
+
+  if (hpBar) hpBar.style.width = `${hpRatio}%`;
+  if (manaBar) manaBar.style.width = `${manaRatio}%`;
+  if (energyBar) energyBar.style.width = `${energyRatio}%`;
+
   const atk = Number(ch.attack || 0);
   const { perm, temp } = getArmorValues();
 
@@ -2665,13 +2677,13 @@ function updateCombatHudFromSheet() {
   const manaChip = document.querySelector(".combat-chip.mana");
   const energyChip = document.querySelector(".combat-chip.energy");
 
-  const hpRatio = hpMax > 0 ? hp / hpMax : 0;
-  const manaRatio = manaMax > 0 ? mana / manaMax : 0;
-  const energyRatio = energyMax > 0 ? energy / energyMax : 0;
+  const hpRatioState = hpMax > 0 ? hp / hpMax : 0;
+  const manaRatioState = manaMax > 0 ? mana / manaMax : 0;
+  const energyRatioState = energyMax > 0 ? energy / energyMax : 0;
 
-  hpChip?.classList.toggle("is-low", hpRatio > 0 && hpRatio <= 0.3);
-  manaChip?.classList.toggle("is-low", manaRatio > 0 && manaRatio <= 0.25);
-  energyChip?.classList.toggle("is-low", energyRatio > 0 && energyRatio <= 0.25);
+  hpChip?.classList.toggle("is-low", hpRatioState > 0 && hpRatio <= 0.3);
+  manaChip?.classList.toggle("is-low", manaRatioState > 0 && manaRatio <= 0.25);
+  energyChip?.classList.toggle("is-low", energyRatioState > 0 && energyRatio <= 0.25);
 
   hpChip?.classList.toggle("is-empty", hp <= 0);
   manaChip?.classList.toggle("is-empty", mana <= 0);
