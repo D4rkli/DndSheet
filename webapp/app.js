@@ -2646,13 +2646,21 @@ function updateCombatHudFromSheet() {
   ch.energy = energy;
   ch.energy_max = energyMax;
 
-  el("hud_hp").textContent = `${hp}/${hpMax}`;
-  el("hud_mana").textContent = `${mana}/${manaMax}`;
-  el("hud_energy").textContent = `${energy}/${energyMax}`;
+  const hpEl = el("hud_hp");
+  if (hpEl) hpEl.textContent = `${hp}/${hpMax}`;
+  const manaEl = el("hud_mana");
+  if (manaEl) manaEl.textContent = `${mana}/${manaMax}`;
+  const energyEl = el("hud_energy");
+  if (energyEl) energyEl.textContent = `${energy}/${energyMax}`;
 
   const hpBar = el("hud_hp_bar");
+  if (hpBar) hpBar.style.width = `${hpRatio}%`;
+
   const manaBar = el("hud_mana_bar");
+  if (manaBar) manaBar.style.width = `${manaRatio}%`;
+
   const energyBar = el("hud_energy_bar");
+  if (energyBar) energyBar.style.width = `${energyRatio}%`;
 
   const hpRatio = hpMax > 0 ? Math.max(0, Math.min(100, (hp / hpMax) * 100)) : 0;
   const manaRatio = manaMax > 0 ? Math.max(0, Math.min(100, (mana / manaMax) * 100)) : 0;
