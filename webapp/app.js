@@ -2175,12 +2175,12 @@ document.addEventListener("click", (e) => {
   const max = getResourceMax(targetId);
 
   if (next < 0) {
-    showBattleError("Недостаточно ресурса");
+    showBattleError("Недостаточно HP / маны / энергии");
     return;
   }
 
   if (max !== null && next > max) {
-    showBattleError("Нельзя выше максимума");
+    showBattleError("Нельзя восстановить выше максимума");
     return;
   }
 
@@ -2565,7 +2565,7 @@ function clampResourceValue(targetId, value) {
 
 function appendBattleLog(text) {
   if (!text) return;
-  state.battleLog = [String(text), ...(state.battleLog || [])].slice(0, 8);
+  state.battleLog = [String(text), ...(state.battleLog || [])].slice(0, 20);
   try {
     localStorage.setItem("battleLog", JSON.stringify(state.battleLog));
   } catch {}
@@ -2617,7 +2617,6 @@ function renderCombatRound() {
 
 function showBattleError(text) {
   appendBattleLog(`⛔ ${text}`);
-  alert(text);
 }
 
 function focusBattleMode() {
@@ -2786,9 +2785,20 @@ function quickApplyResource(targetId, delta) {
   if (!input) return;
 
   const current = Number(input.value || 0);
-  const next = clampResourceValue(targetId, current + Number(delta || 0));
+  const nextRaw = current + Number(delta || 0);
+  const max = getResourceMax(targetId);
 
-  input.value = String(next);
+  if (nextRaw < 0) {
+    showBattleError("Недостаточно ресурса");
+    return;
+  }
+
+  if (max !== null && nextRaw > max) {
+    showBattleError("Нельзя выше максимума");
+    return;
+  }
+
+  input.value = String(nextRaw);
   input.dispatchEvent(new Event("input", { bubbles: true }));
 
   const names = {
