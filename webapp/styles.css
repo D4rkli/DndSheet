@@ -1554,9 +1554,9 @@ body{
 
 .combat-log-summary{
   cursor: pointer;
-  color: rgba(255,255,255,.82);
-  font-size: 13px;
-  font-weight: 700;
+  color: rgba(255,255,255,.96);
+  font-size: 15px;
+  font-weight: 800;
   list-style: none;
 }
 
@@ -1602,4 +1602,16 @@ body{
 
 .combat-bar-fill.energy{
   background: linear-gradient(90deg, #ffd36b, #ffe08a);
+}
+
+#btnClearCombatLog{
+  white-space: nowrap;
+}
+
+.combat-log-wrap{
+  margin-top: 10px;
+}
+
+.combat-log-wrap .d-flex{
+  margin-bottom: 10px;
 }

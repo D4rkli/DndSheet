@@ -40,6 +40,7 @@ const state = {
   activeTemplateId: null,
   battleRound: 1,
   battleLog: [],
+  inBattle: false,
 };
 
 const DEFAULT_TABS = [
@@ -2097,6 +2098,7 @@ async function boot() {
     await loadSheet();
 
     loadBattleUiState();
+    updateBattleButton();
     wireBattleControls();
     wireArmorEditor();
     renderCombatRound();
@@ -2586,6 +2588,19 @@ function loadBattleUiState() {
   } catch {
     state.battleLog = [];
   }
+
+    try {
+    const savedInBattle = localStorage.getItem("inBattle");
+    state.inBattle = savedInBattle === "1";
+  } catch {
+    state.inBattle = false;
+  }
+}
+
+function saveBattleMode() {
+  try {
+    localStorage.setItem("inBattle", state.inBattle ? "1" : "0");
+  } catch {}
 }
 
 function saveBattleRound() {
@@ -2617,6 +2632,43 @@ function renderCombatRound() {
 
 function showBattleError(text) {
   appendBattleLog(`⛔ ${text}`);
+}
+
+function updateBattleButton() {
+  const btn = el("btnBattle");
+  if (!btn) return;
+  btn.textContent = state.inBattle ? "🛑 Закончить бой" : "⚔️ Начать бой";
+}
+
+function startBattle() {
+  state.inBattle = true;
+  state.battleRound = 1;
+  state.battleLog = ["⚔️ Бой начат"];
+  saveBattleRound();
+  saveBattleMode();
+  try {
+    localStorage.setItem("battleLog", JSON.stringify(state.battleLog));
+  } catch {}
+
+  renderCombatRound();
+  renderCombatLog();
+  updateBattleButton();
+  focusBattleMode();
+}
+
+function endBattle() {
+  state.inBattle = false;
+  state.battleRound = 1;
+  state.battleLog = ["🏁 Бой завершён"];
+  saveBattleRound();
+  saveBattleMode();
+  try {
+    localStorage.setItem("battleLog", JSON.stringify(state.battleLog));
+  } catch {}
+
+  renderCombatRound();
+  renderCombatLog();
+  updateBattleButton();
 }
 
 function focusBattleMode() {
@@ -3130,11 +3182,19 @@ function wireCombatModeLongTap() {
 
 function wireBattleControls() {
   el("btnBattle")?.addEventListener("click", () => {
-    focusBattleMode();
-    appendBattleLog("⚔️ Вход в боевой режим");
+    if (state.inBattle) {
+      endBattle();
+    } else {
+      startBattle();
+    }
   });
 
   el("btnNextRound")?.addEventListener("click", () => {
+    if (!state.inBattle) {
+      showBattleError("Сначала начни бой");
+      return;
+    }
+
     state.battleRound = (state.battleRound || 1) + 1;
     saveBattleRound();
     renderCombatRound();
@@ -3142,6 +3202,11 @@ function wireBattleControls() {
   });
 
   el("btnPrevRound")?.addEventListener("click", () => {
+    if (!state.inBattle) {
+      showBattleError("Сначала начни бой");
+      return;
+    }
+
     state.battleRound = Math.max(1, (state.battleRound || 1) - 1);
     saveBattleRound();
     renderCombatRound();
