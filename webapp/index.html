@@ -181,14 +181,20 @@
               <div class="combat-meta-head">
                 <div class="section-title mb-0">Бой</div>
 
-                  <div class="combat-meta-actions">
-                    <span id="combatRoundBadge" class="combat-round-badge">Раунд 1</span>
-                    <button id="btnPrevRound" class="btn btn-outline-light btn-sm" type="button">− Раунд</button>
-                    <button id="btnNextRound" class="btn btn-outline-light btn-sm" type="button">+ Раунд</button>
-                  </div>
+                <div class="combat-meta-actions">
+                  <span id="combatRoundBadge" class="combat-round-badge">Раунд 1</span>
+                  <button id="btnPrevRound" class="btn btn-outline-light btn-sm" type="button">− Раунд</button>
+                  <button id="btnNextRound" class="btn btn-outline-light btn-sm" type="button">+ Раунд</button>
+                </div>
               </div>
 
-              <div id="combatLog" class="combat-log mt-2"></div>
+              <details class="combat-log-wrap mt-2" open>
+                <summary class="combat-log-summary">Лог боя</summary>
+                <div class="d-flex justify-content-end mt-2">
+                  <button id="btnClearCombatLog" class="btn btn-outline-light btn-sm" type="button">Очистить лог</button>
+                </div>
+                <div id="combatLog" class="combat-log mt-2"></div>
+              </details>
             </div>
 
             <div class="mt-3">

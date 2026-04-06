@@ -3147,6 +3147,14 @@ function wireBattleControls() {
     renderCombatRound();
     appendBattleLog(`↩️ Раунд ${state.battleRound}`);
   });
+
+  el("btnClearCombatLog")?.addEventListener("click", () => {
+    state.battleLog = [];
+    try {
+      localStorage.setItem("battleLog", JSON.stringify(state.battleLog));
+    } catch {}
+    renderCombatLog();
+  });
 }
 
 function getStatInputByKey(key) {
