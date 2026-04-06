@@ -2627,6 +2627,12 @@ function renderCombatLog() {
 function renderCombatRound() {
   const node = el("combatRoundBadge");
   if (!node) return;
+
+  if (!state.inBattle) {
+    node.textContent = "Бой не начат";
+    return;
+  }
+
   node.textContent = `Раунд ${state.battleRound || 1}`;
 }
 
@@ -2643,15 +2649,17 @@ function updateBattleButton() {
 function startBattle() {
   state.inBattle = true;
   state.battleRound = 1;
-  state.battleLog = ["⚔️ Бой начат"];
+  state.battleLog = [];
+
   saveBattleRound();
   saveBattleMode();
+
   try {
     localStorage.setItem("battleLog", JSON.stringify(state.battleLog));
   } catch {}
 
+  appendBattleLog("⚔️ Бой начат");
   renderCombatRound();
-  renderCombatLog();
   updateBattleButton();
   focusBattleMode();
 }
@@ -2659,15 +2667,17 @@ function startBattle() {
 function endBattle() {
   state.inBattle = false;
   state.battleRound = 1;
-  state.battleLog = ["🏁 Бой завершён"];
+  state.battleLog = [];
+
   saveBattleRound();
   saveBattleMode();
+
   try {
-    localStorage.setItem("battleLog", JSON.stringify(state.battleLog));
+    localStorage.removeItem("battleLog");
   } catch {}
 
-  renderCombatRound();
   renderCombatLog();
+  renderCombatRound();
   updateBattleButton();
 }
 
@@ -3212,15 +3222,23 @@ function wireBattleControls() {
     renderCombatRound();
     appendBattleLog(`↩️ Раунд ${state.battleRound}`);
   });
-
-  el("btnClearCombatLog")?.addEventListener("click", () => {
-    state.battleLog = [];
-    try {
-      localStorage.setItem("battleLog", JSON.stringify(state.battleLog));
-    } catch {}
-    renderCombatLog();
-  });
 }
+
+document.addEventListener("click", (e) => {
+  const clearBtn = e.target.closest("#btnClearCombatLog");
+  if (!clearBtn) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  state.battleLog = [];
+
+  try {
+    localStorage.removeItem("battleLog");
+  } catch {}
+
+  renderCombatLog();
+});
 
 function getStatInputByKey(key) {
   return document.querySelector(`#statsCombat input[data-key="${key}"]`);
