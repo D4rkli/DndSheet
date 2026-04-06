@@ -2646,10 +2646,16 @@ function updateCombatHudFromSheet() {
   ch.energy = energy;
   ch.energy_max = energyMax;
 
+  const hpRatio = hpMax > 0 ? Math.max(0, Math.min(100, (hp / hpMax) * 100)) : 0;
+  const manaRatio = manaMax > 0 ? Math.max(0, Math.min(100, (mana / manaMax) * 100)) : 0;
+  const energyRatio = energyMax > 0 ? Math.max(0, Math.min(100, (energy / energyMax) * 100)) : 0;
+
   const hpEl = el("hud_hp");
   if (hpEl) hpEl.textContent = `${hp}/${hpMax}`;
+
   const manaEl = el("hud_mana");
   if (manaEl) manaEl.textContent = `${mana}/${manaMax}`;
+
   const energyEl = el("hud_energy");
   if (energyEl) energyEl.textContent = `${energy}/${energyMax}`;
 
@@ -2662,22 +2668,17 @@ function updateCombatHudFromSheet() {
   const energyBar = el("hud_energy_bar");
   if (energyBar) energyBar.style.width = `${energyRatio}%`;
 
-  const hpRatio = hpMax > 0 ? Math.max(0, Math.min(100, (hp / hpMax) * 100)) : 0;
-  const manaRatio = manaMax > 0 ? Math.max(0, Math.min(100, (mana / manaMax) * 100)) : 0;
-  const energyRatio = energyMax > 0 ? Math.max(0, Math.min(100, (energy / energyMax) * 100)) : 0;
-
-  if (hpBar) hpBar.style.width = `${hpRatio}%`;
-  if (manaBar) manaBar.style.width = `${manaRatio}%`;
-  if (energyBar) energyBar.style.width = `${energyRatio}%`;
-
   const atk = Number(ch.attack || 0);
   const { perm, temp } = getArmorValues();
 
   ch.perm_armor = perm;
   ch.temp_armor = temp;
 
-  el("hud_attack").textContent = String(atk);
-  el("hud_armor").textContent = `${perm}+${temp}`;
+  const atkEl = el("hud_attack");
+  if (atkEl) atkEl.textContent = String(atk);
+
+  const armorEl = el("hud_armor");
+  if (armorEl) armorEl.textContent = `${perm}+${temp}`;
 
   updateCombatModeSummary();
 
@@ -2689,9 +2690,9 @@ function updateCombatHudFromSheet() {
   const manaRatioState = manaMax > 0 ? mana / manaMax : 0;
   const energyRatioState = energyMax > 0 ? energy / energyMax : 0;
 
-  hpChip?.classList.toggle("is-low", hpRatioState > 0 && hpRatio <= 0.3);
-  manaChip?.classList.toggle("is-low", manaRatioState > 0 && manaRatio <= 0.25);
-  energyChip?.classList.toggle("is-low", energyRatioState > 0 && energyRatio <= 0.25);
+  hpChip?.classList.toggle("is-low", hpRatioState > 0 && hpRatioState <= 0.3);
+  manaChip?.classList.toggle("is-low", manaRatioState > 0 && manaRatioState <= 0.25);
+  energyChip?.classList.toggle("is-low", energyRatioState > 0 && energyRatioState <= 0.25);
 
   hpChip?.classList.toggle("is-empty", hp <= 0);
   manaChip?.classList.toggle("is-empty", mana <= 0);
