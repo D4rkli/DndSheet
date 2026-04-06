@@ -2151,12 +2151,10 @@ document.addEventListener("click", (e) => {
 
   const step = parseInt(btn.dataset.step || "0", 10);
 
-  // 1) Если указан data-target — работаем как раньше (ресурсы)
   let input = null;
   if (btn.dataset.target) {
     input = document.getElementById(btn.dataset.target);
   } else {
-    // 2) Иначе — ищем инпут рядом (для статов)
     input = btn.parentElement?.querySelector("input");
   }
   if (!input) return;
@@ -2164,11 +2162,29 @@ document.addEventListener("click", (e) => {
   const current = parseInt(String(input.value || "0"), 10) || 0;
   const next = current + step;
 
-  // ✅ ВАЖНО: разрешаем отрицательные значения для статов
-  // а ресурсы можно оставить неотрицательными
-  const isStat = !btn.dataset.target; // если без target — это стат
-  input.value = String(isStat ? next : Math.max(0, next));
+  // если это стат — оставляем как раньше, можно в минус
+  const isStat = !btn.dataset.target;
+  if (isStat) {
+    input.value = String(next);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return;
+  }
 
+  // если это ресурс — ограничиваем от 0 до max
+  const targetId = btn.dataset.target;
+  const max = getResourceMax(targetId);
+
+  if (next < 0) {
+    showBattleError("Недостаточно ресурса");
+    return;
+  }
+
+  if (max !== null && next > max) {
+    showBattleError("Нельзя выше максимума");
+    return;
+  }
+
+  input.value = String(next);
   input.dispatchEvent(new Event("input", { bubbles: true }));
 });
 
