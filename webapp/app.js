@@ -582,6 +582,16 @@ async function applyCostToCharacter(costStr, sourceName = "Способност�
 
   showBattleToast(`${sourceName}: действие применено`, "success");
 
+  if (delta.hp) {
+    playCombatChipFx(".combat-chip.hp", delta.hp > 0 ? "is-hit" : "is-heal-flash");
+  }
+  if (delta.mana) {
+    playCombatChipFx(".combat-chip.mana", "is-mana-flash");
+  }
+  if (delta.energy) {
+    playCombatChipFx(".combat-chip.energy", "is-energy-flash");
+  }
+
   await saveMain(payload);
 }
 
@@ -2586,6 +2596,73 @@ function appendBattleLog(text) {
   renderCombatLog();
 }
 
+function getCombatLogType(text) {
+  const s = String(text || "").toLowerCase();
+
+  if (!s) return "system";
+
+  if (
+    s.includes("⛔") ||
+    s.includes("недостаточно") ||
+    s.includes("нельзя")
+  ) {
+    return "error";
+  }
+
+  if (
+    s.includes("💥") ||
+    s.includes("урона") ||
+    s.includes("получено")
+  ) {
+    return "damage";
+  }
+
+  if (
+    s.includes("💚") ||
+    s.includes("восстановлено") ||
+    s.includes("лечение")
+  ) {
+    return "heal";
+  }
+
+  if (
+    s.includes("🔷") ||
+    s.includes("маны")
+  ) {
+    return "mana";
+  }
+
+  if (
+    s.includes("🟡") ||
+    s.includes("энергии")
+  ) {
+    return "energy";
+  }
+
+  if (
+    s.includes("✨") ||
+    s.includes("заклин") ||
+    s.includes("умение")
+  ) {
+    return "magic";
+  }
+
+  return "system";
+}
+
+function playCombatChipFx(selector, className) {
+  const chip = document.querySelector(selector);
+  if (!chip) return;
+
+  chip.classList.remove(className);
+  void chip.offsetWidth;
+  chip.classList.add(className);
+
+  setTimeout(() => {
+    chip.classList.remove(className);
+  }, 500);
+}
+
 function loadBattleUiState() {
   try {
     const savedRound = Number(localStorage.getItem("battleRound") || 1);
@@ -2632,7 +2709,10 @@ function renderCombatLog() {
   }
 
   root.innerHTML = rows
-    .map((row) => `<div class="combat-log-item">${escapeHtml(row)}</div>`)
+    .map((row) => {
+      const type = getCombatLogType(row);
+      return `<div class="combat-log-item ${type}">${escapeHtml(row)}</div>`;
+    })
     .join("");
 }
 
@@ -2849,6 +2929,10 @@ async function applyRest() {
   el("f_mana").value = String(newMana);
   el("f_energy").value = String(newEnergy);
 
+  if (newHp > hp) playCombatChipFx(".combat-chip.hp", "is-heal-flash");
+  if (newMana > mana) playCombatChipFx(".combat-chip.mana", "is-mana-flash");
+  if (newEnergy > energy) playCombatChipFx(".combat-chip.energy", "is-energy-flash");
+
   el("f_hp").dispatchEvent(new Event("input", { bubbles: true }));
   el("f_mana").dispatchEvent(new Event("input", { bubbles: true }));
   el("f_energy").dispatchEvent(new Event("input", { bubbles: true }));
@@ -2875,6 +2959,10 @@ async function applyMovement() {
 
   el("f_energy").value = String(newEnergy);
   el("f_energy").dispatchEvent(new Event("input", { bubbles: true }));
+
+    if (newEnergy < energy) {
+    playCombatChipFx(".combat-chip.energy", "is-energy-flash");
+  }
 
   appendBattleLog(`👣 Перемещение: Energy -${energy - newEnergy}`);
 
@@ -2911,6 +2999,18 @@ function quickApplyResource(targetId, delta) {
   input.value = String(nextRaw);
   input.dispatchEvent(new Event("input", { bubbles: true }));
 
+    if (targetId === "f_hp") {
+    if (delta < 0) playCombatChipFx(".combat-chip.hp", "is-hit");
+    if (delta > 0) playCombatChipFx(".combat-chip.hp", "is-heal-flash");
+  }
+
+  if (targetId === "f_mana") {
+    playCombatChipFx(".combat-chip.mana", "is-mana-flash");
+  }
+
+  if (targetId === "f_energy") {
+    playCombatChipFx(".combat-chip.energy", "is-energy-flash");
+  }
   if (targetId === "f_hp" && delta < 0 && navigator.vibrate) {
     navigator.vibrate(30);
   }
