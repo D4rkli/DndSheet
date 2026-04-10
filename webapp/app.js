@@ -71,9 +71,9 @@ function setActiveTemplateId(id) {
 
 function activeTabs() {
   // что выбрано в шаблоне (или дефолт)
-  const base = (state.template && Array.isArray(state.template.tabs) && state.template.tabs.length)
-    ? state.template.tabs
-    : DEFAULT_TABS;
+  const base = (state.sheet?.template?.config?.tabs && Array.isArray(state.sheet.template.config.tabs) && state.sheet.template.config.tabs.length)
+  ? state.sheet.template.config.tabs
+  : DEFAULT_TABS;
 
   // 👇 важное: добавляем новые вкладки, чтобы старые шаблоны не ломались
   const mustHave = ["passive-abilities", "abilities", "summons"]; // на будущее можно сюда докидывать новые
@@ -1547,7 +1547,7 @@ function wireFabMenu() {
 
     // вызываем то, что у тебя точно есть:
     if (action === "add-spell") return openSpellModal("spell");
-    if (action === "add-ability") return openSpellModal("ability");
+    if (action === "add-ability") return openSpellModal("passive");
 
     // а вот это попробуем дернуть через существующие кнопки (если есть)
     if (action === "add-item") return document.getElementById("btnAddItem")?.click();
@@ -2080,13 +2080,18 @@ async function loadSheet(showStatus = true) {
 }
 
 function fillMoneyInputsFromState() {
-  if (!state.character?.money) return;
+  const ch = state.sheet?.character;
+  if (!ch) return;
 
-  el("f_gold").value = String(state.character.money.gold ?? 0);
-  el("f_silver").value = String(state.character.money.silver ?? 0);
-  el("f_copper").value = String(state.character.money.copper ?? 0);
+  el("f_gold").value = String(ch.gold ?? 0);
+  el("f_silver").value = String(ch.silver ?? 0);
+  el("f_copper").value = String(ch.copper ?? 0);
 
-  updateMoneyPreview(state.character.money);
+  updateMoneyPreview({
+    gold: ch.gold ?? 0,
+    silver: ch.silver ?? 0,
+    copper: ch.copper ?? 0,
+  });
 }
 
 async function boot() {
@@ -2669,6 +2674,7 @@ function startBattle() {
 
   appendBattleLog("⚔️ Бой начат");
   renderCombatRound();
+  renderCombatLog();
   updateBattleButton();
   focusBattleMode();
 }
@@ -2783,6 +2789,12 @@ function updateCombatHudFromSheet() {
   hpChip?.classList.toggle("is-empty", hp <= 0);
   manaChip?.classList.toggle("is-empty", mana <= 0);
   energyChip?.classList.toggle("is-empty", energy <= 0);
+
+  hpChip?.classList.remove("is-critical");
+
+  if (hpRatioState > 0 && hpRatioState <= 0.25) {
+    hpChip?.classList.add("is-critical");
+  }
 }
 
 async function applyRest() {
@@ -2872,14 +2884,19 @@ function quickApplyResource(targetId, delta) {
   input.value = String(nextRaw);
   input.dispatchEvent(new Event("input", { bubbles: true }));
 
-  const names = {
-    f_hp: "HP",
-    f_mana: "Mana",
-    f_energy: "Energy",
-  };
-
-  const sign = Number(delta) > 0 ? "+" : "";
-  appendBattleLog(`${sign}${delta} ${names[targetId] || targetId}`);
+  if (targetId === "f_hp" && delta < 0 && navigator.vibrate) {
+    navigator.vibrate(30);
+  }
+  if (targetId === "f_hp") {
+    if (delta < 0) appendBattleLog(`💥 Получено ${Math.abs(delta)} урона`);
+    if (delta > 0) appendBattleLog(`💚 Восстановлено ${delta} HP`);
+  } else if (targetId === "f_mana") {
+    if (delta < 0) appendBattleLog(`🔷 Потрачено ${Math.abs(delta)} маны`);
+    if (delta > 0) appendBattleLog(`🔷 Восстановлено ${delta} маны`);
+  } else if (targetId === "f_energy") {
+    if (delta < 0) appendBattleLog(`🟡 Потрачено ${Math.abs(delta)} энергии`);
+    if (delta > 0) appendBattleLog(`🟡 Восстановлено ${delta} энергии`);
+  }
 }
 
 function wireCombatQuickButtons() {
@@ -3339,3 +3356,21 @@ function wireArmorEditor() {
     input.value = String(current);
   });
 }
+
+el("btnFullRestore")?.addEventListener("click", async () => {
+  const hpMax = Number(el("f_hp_max")?.value || 0);
+  const manaMax = Number(el("f_mana_max")?.value || 0);
+  const energyMax = Number(el("f_energy_max")?.value || 0);
+
+  el("f_hp").value = String(hpMax);
+  el("f_mana").value = String(manaMax);
+  el("f_energy").value = String(energyMax);
+
+  el("f_hp").dispatchEvent(new Event("input", { bubbles: true }));
+  el("f_mana").dispatchEvent(new Event("input", { bubbles: true }));
+  el("f_energy").dispatchEvent(new Event("input", { bubbles: true }));
+
+  appendBattleLog("🛌 Полный отдых: все ресурсы восстановлены");
+  updateCombatHudFromSheet();
+  await saveMain();
+});

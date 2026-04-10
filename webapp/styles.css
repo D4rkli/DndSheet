@@ -1641,3 +1641,34 @@ body{
   font-size: 20px;
   font-weight: 900;
 }
+
+.combat-chip.is-critical{
+  animation: pulseRed 1s infinite;
+  box-shadow: 0 0 12px rgba(255,80,80,.5);
+}
+
+@keyframes pulseRed{
+  0%{ box-shadow: 0 0 6px rgba(255,80,80,.3); }
+  50%{ box-shadow: 0 0 16px rgba(255,80,80,.7); }
+  100%{ box-shadow: 0 0 6px rgba(255,80,80,.3); }
+}
+
+.combat-chip-val{
+  transition: transform .15s ease;
+}
+
+.combat-chip-val.updated{
+  transform: scale(1.1);
+}
+
+.combat-log-item{
+  border-left: 3px solid rgba(255,255,255,.2);
+}
+
+.combat-log-item.damage{
+  border-color: #ff6b6b;
+}
+
+.combat-log-item.heal{
+  border-color: #6bff9a;
+}
