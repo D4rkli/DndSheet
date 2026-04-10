@@ -2142,6 +2142,7 @@ async function boot() {
     wireCombatHud();
     wireCombatQuickButtons();
     wireCombatSwipe();
+    wireCombatExpandableQuickRows();
     wireLongPressRepeat();
     wireCombatSheet();
     wireCombatStates();
@@ -3180,6 +3181,46 @@ function wireCombatSwipe() {
   wireSwipeForCombatChip(".combat-chip.hp", "f_hp");
   wireSwipeForCombatChip(".combat-chip.mana", "f_mana");
   wireSwipeForCombatChip(".combat-chip.energy", "f_energy");
+}
+
+function wireCombatExpandableQuickRows() {
+  const selectors = [
+    ".combat-chip.hp",
+    ".combat-chip.mana",
+    ".combat-chip.energy",
+  ];
+
+  const chips = selectors
+    .map((selector) => document.querySelector(selector))
+    .filter(Boolean);
+
+  if (!chips.length) return;
+
+  const collapseAllExcept = (currentChip = null) => {
+    chips.forEach((chip) => {
+      if (chip !== currentChip) {
+        chip.classList.remove("is-expanded");
+      }
+    });
+  };
+
+  chips.forEach((chip) => {
+    chip.addEventListener("click", (e) => {
+      // если нажали на кнопку внутри карточки — не переключаем раскрытие
+      if (e.target.closest("button")) return;
+
+      const willOpen = !chip.classList.contains("is-expanded");
+      collapseAllExcept(willOpen ? chip : null);
+      chip.classList.toggle("is-expanded", willOpen);
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    const insideChip = e.target.closest(".combat-chip.hp, .combat-chip.mana, .combat-chip.energy");
+    if (!insideChip) {
+      collapseAllExcept(null);
+    }
+  });
 }
 
 function triggerRepeatableAction(btn) {

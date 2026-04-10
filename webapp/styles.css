@@ -2095,3 +2095,55 @@ body{
     transform: translateX(-50%) translateY(-26px) scale(1.02);
   }
 }
+
+/* =========================
+   COMBAT CHIP EXPANDABLE QUICK ROW
+   ========================= */
+
+.combat-chip{
+  cursor: pointer;
+}
+
+.combat-chip button{
+  cursor: pointer;
+}
+
+.combat-chip .combat-quick-row{
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin-top: 0;
+  pointer-events: none;
+  transition:
+    max-height .22s ease,
+    opacity .18s ease,
+    margin-top .18s ease;
+}
+
+.combat-chip.is-expanded .combat-quick-row{
+  max-height: 64px;
+  opacity: 1;
+  margin-top: 10px;
+  pointer-events: auto;
+}
+
+.combat-chip.is-expanded{
+  box-shadow: 0 10px 28px rgba(0,0,0,.18);
+}
+
+.combat-chip.hp.is-expanded{
+  border-color: rgba(255, 110, 110, .34);
+}
+
+.combat-chip.mana.is-expanded{
+  border-color: rgba(90, 170, 255, .34);
+}
+
+.combat-chip.energy.is-expanded{
+  border-color: rgba(255, 210, 90, .34);
+}
+
+/* в компактном режиме оставляем скрытыми */
+.combat-mode-body.is-compact .combat-chip .combat-quick-row{
+  display: none !important;
+}
