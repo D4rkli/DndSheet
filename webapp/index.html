@@ -356,35 +356,44 @@
 
       <div class="card card-soft">
         <div class="card-body">
-          <div class="section-title">Основные данные</div>
+          <div class="section-title">Редактирование</div>
+          <div class="main-edit-kicker">Настройка листа персонажа</div>
           <div class="row g-2">
             <div class="col-12">
               <label class="form-label">Имя</label>
               <input id="f_name" class="form-control" placeholder="Напр. Элвин" />
             </div>
-            <div class="col-6">
-              <label class="form-label">Раса</label>
-              <input id="f_race" class="form-control" placeholder="Эльф" />
-            </div>
-            <div class="col-6">
-              <label class="form-label">Класс</label>
-              <input id="f_klass" class="form-control" placeholder="Плут" />
-            </div>
-            <div class="col-6">
-              <label class="form-label">Пол</label>
-              <select id="f_gender" class="form-select">
-                <option value="">Не указывать</option>
-                <option value="female">Женщина</option>
-                <option value="male">Мужчина</option>
-              </select>
-            </div>
-            <div class="col-3">
-              <label class="form-label">Уровень</label>
-              <input id="f_level" type="number" class="form-control" min="1" />
-            </div>
-            <div class="col-3">
-              <label class="form-label">XP</label>
-              <input id="f_xp" type="number" class="form-control" min="0" />
+            <div class="col-12">
+              <div class="main-identity-grid">
+                <div class="main-identity-card">
+                  <label class="form-label">Раса</label>
+                  <input id="f_race" class="form-control" placeholder="Эльф" />
+                </div>
+
+                <div class="main-identity-card">
+                  <label class="form-label">Класс</label>
+                  <input id="f_klass" class="form-control" placeholder="Плут" />
+                </div>
+
+                <div class="main-identity-card">
+                  <label class="form-label">Пол</label>
+                  <select id="f_gender" class="form-select">
+                    <option value="">Не указывать</option>
+                    <option value="female">Женщина</option>
+                    <option value="male">Мужчина</option>
+                  </select>
+                </div>
+
+                <div class="main-identity-card">
+                  <label class="form-label">Уровень</label>
+                  <input id="f_level" type="number" class="form-control" min="1" />
+                </div>
+
+                <div class="main-identity-card main-identity-card--xp">
+                  <label class="form-label">XP</label>
+                  <input id="f_xp" type="number" class="form-control" min="0" />
+                </div>
+              </div>
             </div>
             <div class="col-12">
               <div class="main-subsection-title">Прогресс</div>
