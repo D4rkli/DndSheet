@@ -2166,8 +2166,10 @@ async function boot() {
     wireCombatModeCollapse();
     wireCombatModeLongTap();
     wireCombatCompactMode();
+    wireBaseResourcesToggle();
     updateCombatModeSummary();
     updateCombatHudFromSheet();
+    syncBaseResourcesWithCombatMode();
 
     fillMoneyInputsFromState();
     wireFabMenu();
@@ -3661,6 +3663,10 @@ function wireCombatModeCollapse() {
     isOpen = open;
     body.classList.toggle("d-none", !open);
     card.classList.toggle("is-open", open);
+
+    if (open) {
+      setBaseResourcesCollapsed(true);
+    }
   };
 
   setOpen(false);
@@ -3725,6 +3731,10 @@ function setCombatCompactMode(enabled) {
   card.classList.toggle("is-compact", !!enabled);
   btn.setAttribute("aria-pressed", enabled ? "true" : "false");
   btn.textContent = enabled ? "Полный режим" : "Мини-режим";
+
+  if (enabled) {
+    setBaseResourcesCollapsed(true);
+  }
 
   try {
     localStorage.setItem("combatCompactMode", enabled ? "1" : "0");
@@ -3976,6 +3986,54 @@ function wireArmorEditor() {
     }
 
     input.value = String(current);
+  });
+}
+
+function setBaseResourcesCollapsed(collapsed) {
+  const block = el("baseResourcesBlock");
+  const btn = el("btnToggleBaseResources");
+  if (!block || !btn) return;
+
+  block.classList.toggle("is-collapsed", !!collapsed);
+  btn.textContent = collapsed ? "Развернуть" : "Свернуть";
+
+  try {
+    localStorage.setItem("baseResourcesCollapsed", collapsed ? "1" : "0");
+  } catch {}
+}
+
+function getBaseResourcesCollapsed() {
+  try {
+    return localStorage.getItem("baseResourcesCollapsed") === "1";
+  } catch {
+    return false;
+  }
+}
+
+function syncBaseResourcesWithCombatMode() {
+  const combatBody = el("combatModeBody");
+  if (!combatBody) return;
+
+  const combatOpen = !combatBody.classList.contains("d-none");
+  const combatCompact = combatBody.classList.contains("is-compact");
+
+  if (combatOpen || combatCompact) {
+    setBaseResourcesCollapsed(true);
+  }
+}
+
+function wireBaseResourcesToggle() {
+  const btn = el("btnToggleBaseResources");
+  const block = el("baseResourcesBlock");
+  if (!btn || !block) return;
+
+  setBaseResourcesCollapsed(getBaseResourcesCollapsed());
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const next = !block.classList.contains("is-collapsed");
+    setBaseResourcesCollapsed(next);
   });
 }
 

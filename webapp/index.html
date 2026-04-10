@@ -358,10 +358,15 @@
 
           <hr class="hr-soft" />
 
-          <div class="row g-2 resources-grid">
+          <div id="baseResourcesBlock" class="row g-2 resources-grid">
             <div class="col-12">
               <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                <div class="section-title mb-0">Ресурсы</div>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="section-title mb-0">Ресурсы</div>
+                  <button id="btnToggleBaseResources" class="btn btn-outline-light btn-sm base-resources-toggle" type="button">
+                    Свернуть
+                  </button>
+                </div>
 
                 <div class="d-flex gap-2 flex-wrap">
                   <button class="btn btn-outline-light btn-sm" id="btnBattle" type="button">⚔️ Начать бой</button>
