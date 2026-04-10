@@ -2117,6 +2117,7 @@ async function boot() {
     wireCombatStates();
     wireCombatModeCollapse();
     wireCombatModeLongTap();
+    wireCombatCompactMode();
     updateCombatModeSummary();
     updateCombatHudFromSheet();
 
@@ -3238,6 +3239,74 @@ function wireCombatModeLongTap() {
   elToggle.addEventListener("touchend", cancel);
   elToggle.addEventListener("touchmove", cancel);
   elToggle.addEventListener("touchcancel", cancel);
+}
+
+function setCombatCompactMode(enabled) {
+  const body = el("combatModeBody");
+  const card = document.querySelector(".combat-mode-card");
+  const btn = el("btnCombatCompact");
+
+  if (!body || !card || !btn) return;
+
+  body.classList.toggle("is-compact", !!enabled);
+  card.classList.toggle("is-compact", !!enabled);
+  btn.setAttribute("aria-pressed", enabled ? "true" : "false");
+  btn.textContent = enabled ? "Полный режим" : "Мини-режим";
+
+  try {
+    localStorage.setItem("combatCompactMode", enabled ? "1" : "0");
+  } catch {}
+}
+
+function getCombatCompactMode() {
+  try {
+    return localStorage.getItem("combatCompactMode") === "1";
+  } catch {
+    return false;
+  }
+}
+
+function wireCombatCompactMode() {
+  const btn = el("btnCombatCompact");
+  const body = el("combatModeBody");
+
+  if (!btn || !body) return;
+
+  setCombatCompactMode(getCombatCompactMode());
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const next = !body.classList.contains("is-compact");
+    setCombatCompactMode(next);
+  });
+
+  document.addEventListener("click", (e) => {
+    const compactBtn = e.target.closest("[data-compact-action]");
+    if (!compactBtn) return;
+
+    const action = compactBtn.getAttribute("data-compact-action");
+
+    if (action === "hit") {
+      quickApplyResource("f_hp", -10);
+      return;
+    }
+
+    if (action === "rest") {
+      el("btnRest")?.click();
+      return;
+    }
+
+    if (action === "move") {
+      el("btnMove")?.click();
+      return;
+    }
+
+    if (action === "armor") {
+      openArmorModal();
+    }
+  });
 }
 
 function wireBattleControls() {

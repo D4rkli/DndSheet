@@ -1731,3 +1731,119 @@ body{
 .combat-action-btn--hit:active{
   transform: translateY(1px) scale(.98);
 }
+
+/* =========================
+   COMBAT MINI MODE
+   ========================= */
+
+.combat-mode-head-actions{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.combat-compact-toggle{
+  white-space: nowrap;
+}
+
+.combat-mini-actions{
+  display: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.combat-mini-btn{
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.94);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.combat-mini-btn:active{
+  transform: translateY(1px) scale(.98);
+}
+
+.combat-mini-btn--hit{
+  background: rgba(255, 90, 90, .12);
+  border-color: rgba(255, 110, 110, .28);
+  color: #ffd0d0;
+}
+
+/* сам компактный режим */
+.combat-mode-body.is-compact .combat-states-block,
+.combat-mode-body.is-compact .combat-meta-block,
+.combat-mode-body.is-compact .combat-actions-row,
+.combat-mode-body.is-compact #combatQuickSpells,
+.combat-mode-body.is-compact #combatQuickAbilities{
+  display: none !important;
+}
+
+.combat-mode-body.is-compact .combat-mini-actions{
+  display: grid;
+}
+
+.combat-mode-body.is-compact .combat-hud-row{
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.combat-mode-body.is-compact .combat-chip{
+  min-height: 96px;
+  padding: 10px;
+}
+
+.combat-mode-body.is-compact .combat-chip-title{
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.combat-mode-body.is-compact .combat-chip-val{
+  font-size: 15px;
+}
+
+.combat-mode-body.is-compact .combat-bar{
+  margin-top: 10px;
+  height: 8px;
+}
+
+.combat-mode-body.is-compact .combat-quick-row{
+  display: none;
+}
+
+.combat-mode-body.is-compact .combat-chip .step-btn{
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.combat-mode-body.is-compact .combat-chip-body{
+  gap: 8px;
+}
+
+.combat-mode-card.is-compact .combat-compact-toggle{
+  background: rgba(110,168,254,.18);
+  border-color: rgba(110,168,254,.42);
+  color: #ffffff;
+}
+
+@media (max-width: 575px){
+  .combat-mode-body.is-compact .combat-hud-row{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .combat-mode-body.is-compact .combat-chip{
+    min-height: 92px;
+  }
+
+  .combat-mini-btn{
+    min-height: 40px;
+    font-size: 13px;
+  }
+}

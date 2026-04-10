@@ -78,7 +78,18 @@
               <div class="section-title mb-1">Боевой режим</div>
               <div id="combatModeSummary" class="hint">HP 0/0 · Mana 0/0 · Energy 0/0 · DMG 0 · Armor 0+0</div>
             </div>
-            <i id="combatModeChevron" class="bi bi-chevron-down"></i>
+
+            <div class="combat-mode-head-actions">
+              <button
+                id="btnCombatCompact"
+                class="btn btn-outline-light btn-sm combat-compact-toggle"
+                type="button"
+                aria-pressed="false"
+              >
+                Мини-режим
+              </button>
+              <i id="combatModeChevron" class="bi bi-chevron-down"></i>
+            </div>
           </div>
 
           <div id="combatModeBody" class="combat-mode-body d-none">
@@ -213,6 +224,20 @@
               <div id="combatQuickAbilities" class="list d-none mt-2"></div>
             </div>
           </div>
+        </div>
+        <div class="combat-mini-actions mt-3">
+          <button class="combat-mini-btn combat-mini-btn--hit" type="button" data-compact-action="hit">
+            ⚔️ Удар
+          </button>
+          <button class="combat-mini-btn" type="button" data-compact-action="rest">
+            🛌 Отдых
+          </button>
+          <button class="combat-mini-btn" type="button" data-compact-action="move">
+            👣 Перемещение
+          </button>
+          <button class="combat-mini-btn" type="button" data-compact-action="armor">
+            🛡 Броня
+          </button>
         </div>
       </div>
 
