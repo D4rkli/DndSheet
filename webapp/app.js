@@ -2113,6 +2113,7 @@ async function boot() {
 
     wireCombatHud();
     wireCombatQuickButtons();
+    wireCombatSwipe();
     wireCombatSheet();
     wireCombatStates();
     wireCombatModeCollapse();
@@ -2935,6 +2936,110 @@ function wireCombatQuickButtons() {
     if (!targetId || !Number.isFinite(step)) return;
     quickApplyResource(targetId, step);
   });
+}
+
+function clearCombatSwipeState(chip) {
+  if (!chip) return;
+  chip.classList.remove("is-swiping", "swipe-left", "swipe-right");
+  chip.style.removeProperty("transform");
+}
+
+function resolveCombatSwipeDelta(dx) {
+  const abs = Math.abs(dx);
+
+  if (abs < 36) return 0;
+  if (abs >= 90) return dx > 0 ? 5 : -5;
+  return dx > 0 ? 1 : -1;
+}
+
+function wireSwipeForCombatChip(selector, targetId) {
+  const chip = document.querySelector(selector);
+  if (!chip) return;
+
+  chip.classList.add("swipe-enabled");
+
+  let startX = 0;
+  let startY = 0;
+  let currentX = 0;
+  let active = false;
+  let locked = false;
+
+  const onPointerDown = (e) => {
+    // не начинаем свайп с кнопок
+    if (e.target.closest("button")) return;
+
+    active = true;
+    locked = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    currentX = 0;
+
+    chip.classList.add("is-swiping");
+  };
+
+  const onPointerMove = (e) => {
+    if (!active) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    // если это скорее вертикальный жест — отпускаем
+    if (!locked) {
+      if (Math.abs(dy) > 14 && Math.abs(dy) > Math.abs(dx)) {
+        active = false;
+        clearCombatSwipeState(chip);
+        return;
+      }
+      if (Math.abs(dx) > 8) {
+        locked = true;
+      }
+    }
+
+    if (!locked) return;
+
+    currentX = dx;
+    const limited = Math.max(-42, Math.min(42, dx));
+
+    chip.classList.toggle("swipe-left", limited < -10);
+    chip.classList.toggle("swipe-right", limited > 10);
+    chip.style.transform = `translateX(${limited}px) scale(.985)`;
+  };
+
+  const finish = () => {
+    if (!active && !locked) {
+      clearCombatSwipeState(chip);
+      return;
+    }
+
+    const delta = resolveCombatSwipeDelta(currentX);
+    clearCombatSwipeState(chip);
+
+    active = false;
+    locked = false;
+    currentX = 0;
+
+    if (!delta) return;
+    quickApplyResource(targetId, delta);
+  };
+
+  const cancel = () => {
+    active = false;
+    locked = false;
+    currentX = 0;
+    clearCombatSwipeState(chip);
+  };
+
+  chip.addEventListener("pointerdown", onPointerDown);
+  chip.addEventListener("pointermove", onPointerMove);
+  chip.addEventListener("pointerup", finish);
+  chip.addEventListener("pointercancel", cancel);
+  chip.addEventListener("lostpointercapture", cancel);
+}
+
+function wireCombatSwipe() {
+  wireSwipeForCombatChip(".combat-chip.hp", "f_hp");
+  wireSwipeForCombatChip(".combat-chip.mana", "f_mana");
+  wireSwipeForCombatChip(".combat-chip.energy", "f_energy");
 }
 
 function renderCombatQuickLists() {

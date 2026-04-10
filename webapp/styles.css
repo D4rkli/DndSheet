@@ -1847,3 +1847,54 @@ body{
     font-size: 13px;
   }
 }
+
+/* =========================
+   COMBAT SWIPE
+   ========================= */
+
+.combat-chip.swipe-enabled{
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    transform .14s ease,
+    box-shadow .18s ease,
+    border-color .18s ease,
+    background .18s ease;
+}
+
+.combat-chip.is-swiping{
+  z-index: 2;
+}
+
+.combat-chip.swipe-left{
+  transform: translateX(-14px) scale(.985);
+}
+
+.combat-chip.swipe-right{
+  transform: translateX(14px) scale(.985);
+}
+
+.combat-chip.swipe-left.hp{
+  box-shadow: 0 10px 26px rgba(255, 90, 90, .18);
+}
+
+.combat-chip.swipe-right.hp{
+  box-shadow: 0 10px 26px rgba(120, 255, 170, .18);
+}
+
+.combat-chip.swipe-left.mana{
+  box-shadow: 0 10px 26px rgba(90, 170, 255, .18);
+}
+
+.combat-chip.swipe-right.mana{
+  box-shadow: 0 10px 26px rgba(120, 210, 255, .18);
+}
+
+.combat-chip.swipe-left.energy{
+  box-shadow: 0 10px 26px rgba(255, 210, 90, .18);
+}
+
+.combat-chip.swipe-right.energy{
+  box-shadow: 0 10px 26px rgba(255, 235, 140, .18);
+}
