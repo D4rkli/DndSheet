@@ -2174,6 +2174,7 @@ async function boot() {
 
     fillMoneyInputsFromState();
     wireFabMenu();
+    wireTopbarMenu();
     wireMoneyInputs();
 
       // XP / Level wiring
@@ -3720,6 +3721,54 @@ function wireCombatModeLongTap() {
   elToggle.addEventListener("touchend", cancel);
   elToggle.addEventListener("touchmove", cancel);
   elToggle.addEventListener("touchcancel", cancel);
+}
+
+function setTopbarMenuOpen(open) {
+  const menu = el("topbarMenu");
+  const btn = el("btnTopbarMenu");
+  if (!menu || !btn) return;
+
+  menu.classList.toggle("d-none", !open);
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function wireTopbarMenu() {
+  const btn = el("btnTopbarMenu");
+  const menu = el("topbarMenu");
+
+  if (!btn || !menu) return;
+
+  setTopbarMenuOpen(false);
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const willOpen = menu.classList.contains("d-none");
+    setTopbarMenuOpen(willOpen);
+  });
+
+  menu.addEventListener("click", (e) => {
+    const item = e.target.closest(".topbar-menu-item");
+    if (!item) return;
+
+    setTopbarMenuOpen(false);
+  });
+
+  document.addEventListener("click", (e) => {
+    const insideMenu = e.target.closest("#topbarMenu");
+    const insideBtn = e.target.closest("#btnTopbarMenu");
+
+    if (!insideMenu && !insideBtn) {
+      setTopbarMenuOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      setTopbarMenuOpen(false);
+    }
+  });
 }
 
 function setCombatCompactMode(enabled) {

@@ -2572,3 +2572,115 @@ body{
 .combat-panel-actions .combat-mini-actions{
   margin-top: 12px;
 }
+
+/* =========================
+   TOPBAR ACTION MENU
+   ========================= */
+
+.topbar-menu-wrap{
+  position: relative;
+  flex-shrink: 0;
+}
+
+.topbar-menu-btn{
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0 !important;
+  border-radius: 999px !important;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbar-menu-btn i{
+  font-size: 18px;
+  line-height: 1;
+}
+
+.topbar-menu{
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 300;
+
+  width: min(220px, calc(100vw - 24px));
+  padding: 8px;
+  border-radius: 16px;
+
+  background: rgba(15, 20, 35, .96);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 20px 50px rgba(0,0,0,.32);
+  backdrop-filter: blur(12px);
+
+  display: grid;
+  gap: 6px;
+
+  animation: topbarMenuIn .14s ease-out;
+}
+
+.topbar-menu-item{
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.92);
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.topbar-menu-item i{
+  font-size: 15px;
+  color: rgba(170,205,255,.95);
+}
+
+.topbar-menu-item:active{
+  transform: translateY(1px);
+}
+
+@keyframes topbarMenuIn{
+  from{
+    opacity: 0;
+    transform: translateY(6px) scale(.98);
+  }
+  to{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* старый горизонтальный контейнер кнопок больше не нужен */
+header.topbar .topbar-menu-wrap + .d-flex.gap-2{
+  overflow: visible !important;
+}
+
+@media (max-width: 575px){
+  .topbar-menu{
+    right: 0;
+    width: min(210px, calc(100vw - 20px));
+  }
+}
+
+.topbar .app-title{
+  max-width: 100%;
+}
+
+.topbar .min-w-0{
+  min-width: 0;
+}
+
+.topbar .app-title,
+.topbar #status{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

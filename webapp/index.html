@@ -19,12 +19,37 @@
         <div class="app-title">🧙 Лист персонажа</div>
         <div id="status" class="muted">Подключение…</div>
       </div>
-      <div class="d-flex gap-2">
-        <button id="btnExport" class="btn btn-sm btn-outline-light">Экспорт</button>
-        <button id="btnImport" class="btn btn-sm btn-outline-light">Импорт</button>
-        <button id="btnSync" class="btn btn-sm btn-outline-light">Синхр.</button>
-        <button id="btnTemplates" class="btn btn-sm btn-light">Шаблоны</button>
-        <button id="btnBuilder" class="btn btn-outline-light btn-sm">Конструктор</button>
+      <div class="topbar-menu-wrap">
+        <button id="btnTopbarMenu" class="btn btn-sm btn-outline-light topbar-menu-btn" type="button" aria-expanded="false" aria-label="Открыть меню">
+          <i class="bi bi-three-dots"></i>
+        </button>
+
+        <div id="topbarMenu" class="topbar-menu d-none" role="menu" aria-label="Меню действий">
+          <button id="btnExport" class="topbar-menu-item" type="button">
+            <i class="bi bi-box-arrow-up"></i>
+            <span>Экспорт</span>
+          </button>
+
+          <button id="btnImport" class="topbar-menu-item" type="button">
+            <i class="bi bi-box-arrow-in-down"></i>
+            <span>Импорт</span>
+          </button>
+
+          <button id="btnSync" class="topbar-menu-item" type="button">
+            <i class="bi bi-arrow-repeat"></i>
+            <span>Синхр.</span>
+          </button>
+
+          <button id="btnTemplates" class="topbar-menu-item" type="button">
+            <i class="bi bi-grid"></i>
+            <span>Шаблоны</span>
+          </button>
+
+          <button id="btnBuilder" class="topbar-menu-item" type="button">
+            <i class="bi bi-sliders"></i>
+            <span>Конструктор</span>
+          </button>
+        </div>
       </div>
     </div>
 
