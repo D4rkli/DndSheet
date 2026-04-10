@@ -1898,3 +1898,15 @@ body{
 .combat-chip.swipe-right.energy{
   box-shadow: 0 10px 26px rgba(255, 235, 140, .18);
 }
+
+/* =========================
+   LONG PRESS FEEDBACK
+   ========================= */
+
+.step-btn.is-holding,
+.combat-quick-btn.is-holding,
+.combat-action-btn.is-holding{
+  transform: scale(.97);
+  filter: brightness(1.08);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+}

@@ -2114,6 +2114,7 @@ async function boot() {
     wireCombatHud();
     wireCombatQuickButtons();
     wireCombatSwipe();
+    wireLongPressRepeat();
     wireCombatSheet();
     wireCombatStates();
     wireCombatModeCollapse();
@@ -3040,6 +3041,160 @@ function wireCombatSwipe() {
   wireSwipeForCombatChip(".combat-chip.hp", "f_hp");
   wireSwipeForCombatChip(".combat-chip.mana", "f_mana");
   wireSwipeForCombatChip(".combat-chip.energy", "f_energy");
+}
+
+function triggerRepeatableAction(btn) {
+  if (!btn) return;
+
+  // step-btn
+  if (btn.classList.contains("step-btn")) {
+    const step = parseInt(btn.dataset.step || "0", 10);
+
+    let input = null;
+    if (btn.dataset.target) {
+      input = document.getElementById(btn.dataset.target);
+    } else {
+      input = btn.parentElement?.querySelector("input");
+    }
+    if (!input) return;
+
+    const current = parseInt(String(input.value || "0"), 10) || 0;
+    const next = current + step;
+
+    const isStat = !btn.dataset.target;
+    if (isStat) {
+      input.value = String(next);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      return;
+    }
+
+    const targetId = btn.dataset.target;
+    const max = getResourceMax(targetId);
+
+    if (next < 0) return;
+    if (max !== null && next > max) return;
+
+    input.value = String(next);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return;
+  }
+
+  // quick buttons
+  if (btn.hasAttribute("data-quick-target")) {
+    const targetId = btn.getAttribute("data-quick-target");
+    const step = Number(btn.getAttribute("data-quick-step") || 0);
+
+    if (!targetId || !Number.isFinite(step)) return;
+    quickApplyResource(targetId, step);
+    return;
+  }
+
+  // compact-mode buttons
+  if (btn.hasAttribute("data-compact-action")) {
+    const action = btn.getAttribute("data-compact-action");
+
+    if (action === "hit") {
+      quickApplyResource("f_hp", -10);
+      return;
+    }
+
+    if (action === "rest") {
+      el("btnRest")?.click();
+      return;
+    }
+
+    if (action === "move") {
+      el("btnMove")?.click();
+      return;
+    }
+
+    if (action === "armor") {
+      openArmorModal();
+    }
+    return;
+  }
+}
+
+function wireLongPressRepeat() {
+  const HOLD_DELAY = 300;
+  const REPEAT_EVERY = 120;
+
+  let holdTimer = null;
+  let repeatTimer = null;
+  let activeBtn = null;
+  let longPressTriggered = false;
+
+  const clearTimers = () => {
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+    if (repeatTimer) {
+      clearInterval(repeatTimer);
+      repeatTimer = null;
+    }
+  };
+
+  const stopHold = () => {
+    clearTimers();
+
+    if (activeBtn) {
+      activeBtn.classList.remove("is-holding");
+    }
+
+    activeBtn = null;
+    longPressTriggered = false;
+  };
+
+  const startHold = (btn) => {
+    if (!btn) return;
+
+    activeBtn = btn;
+    longPressTriggered = false;
+    activeBtn.classList.add("is-holding");
+
+    holdTimer = setTimeout(() => {
+      longPressTriggered = true;
+
+      triggerRepeatableAction(activeBtn);
+
+      repeatTimer = setInterval(() => {
+        triggerRepeatableAction(activeBtn);
+      }, REPEAT_EVERY);
+    }, HOLD_DELAY);
+  };
+
+  document.addEventListener("pointerdown", (e) => {
+    const btn = e.target.closest(".step-btn, .combat-quick-btn, .combat-action-btn, .combat-mini-btn");
+    if (!btn) return;
+
+    // не трогаем кнопки, которые не стоит повторять
+    const compactAction = btn.getAttribute("data-compact-action");
+    if (compactAction === "rest" || compactAction === "move" || compactAction === "armor") return;
+
+    startHold(btn);
+  });
+
+  document.addEventListener("pointerup", stopHold);
+  document.addEventListener("pointercancel", stopHold);
+  document.addEventListener("pointerleave", stopHold);
+
+  document.addEventListener("dragstart", stopHold);
+  window.addEventListener("blur", stopHold);
+
+  // блокируем "обычный клик" после long-press,
+  // чтобы не было лишнего +1 / -1 при отпускании
+  document.addEventListener("click", (e) => {
+    if (!longPressTriggered) return;
+
+    const btn = e.target.closest(".step-btn, .combat-quick-btn, .combat-action-btn, .combat-mini-btn");
+    if (!btn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    longPressTriggered = false;
+  }, true);
 }
 
 function renderCombatQuickLists() {
