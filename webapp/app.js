@@ -2118,11 +2118,44 @@ async function loadSheet(showStatus = true) {
     }
   }
   updateCombatHudFromSheet();
+  updateCharacterHero();
   renderCombatQuickLists();
   renderCombatStates();
   renderCombatRound();
   renderCombatLog();
   setStatus("Ок ✅");
+}
+
+function formatGenderLabel(value) {
+  if (value === "female") return "Женщина";
+  if (value === "male") return "Мужчина";
+  return "Не указано";
+}
+
+function updateCharacterHero() {
+  const ch = state.sheet?.character;
+  if (!ch) return;
+
+  const name = String(el("f_name")?.value || ch.name || "Без имени").trim();
+  const race = String(el("f_race")?.value || ch.race || "—").trim() || "—";
+  const klass = String(el("f_klass")?.value || ch.klass || "—").trim() || "—";
+  const gender = el("f_gender")?.value || ch.gender || "";
+  const level = Number(el("f_level")?.value || ch.level || 1);
+  const xp = Number(el("f_xp")?.value || ch.xp || 0);
+
+  const heroName = el("heroCharacterName");
+  const heroRace = el("heroCharacterRace");
+  const heroClass = el("heroCharacterClass");
+  const heroGender = el("heroCharacterGender");
+  const heroLevel = el("heroCharacterLevel");
+  const heroXp = el("heroCharacterXp");
+
+  if (heroName) heroName.textContent = name || "Без имени";
+  if (heroRace) heroRace.textContent = race;
+  if (heroClass) heroClass.textContent = klass;
+  if (heroGender) heroGender.textContent = formatGenderLabel(gender);
+  if (heroLevel) heroLevel.textContent = String(level || 1);
+  if (heroXp) heroXp.textContent = String(xp || 0);
 }
 
 function fillMoneyInputsFromState() {
@@ -2196,6 +2229,10 @@ async function boot() {
       // чтобы "осталось до уровня" обновлялось при правке XP и XP-per-level
       el("f_xp")?.addEventListener("input", updateXpToNextUI);
       el("f_xp_per_level")?.addEventListener("input", updateXpToNextUI);
+      ["f_name", "f_race", "f_klass", "f_gender", "f_level", "f_xp"].forEach((id) => {
+        el(id)?.addEventListener("input", updateCharacterHero);
+        el(id)?.addEventListener("change", updateCharacterHero);
+      });
   } catch (e) {
     console.error(e);
     setStatus("Ошибка");

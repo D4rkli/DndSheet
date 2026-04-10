@@ -2684,3 +2684,165 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* =========================
+   CHARACTER HERO + MAIN POLISH
+   ========================= */
+
+.character-hero-card{
+  overflow: hidden;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(110,168,254,.16), rgba(110,168,254,0) 42%),
+    linear-gradient(180deg, rgba(20, 28, 52, .96), rgba(14, 22, 42, .96));
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.character-hero-head{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.character-hero-kicker{
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: rgba(255,255,255,.56);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.character-hero-name{
+  font-size: 28px;
+  line-height: 1.05;
+  font-weight: 900;
+  color: #ffffff;
+  word-break: break-word;
+}
+
+.character-hero-badge{
+  min-width: 68px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.character-hero-badge-label{
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: rgba(255,255,255,.56);
+  font-weight: 700;
+}
+
+.character-hero-badge-value{
+  font-size: 24px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  margin-top: 4px;
+}
+
+.character-hero-meta{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.character-meta-pill{
+  min-width: 0;
+  padding: 12px 12px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.character-meta-label{
+  display: block;
+  font-size: 11px;
+  color: rgba(255,255,255,.56);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  font-weight: 700;
+}
+
+.character-meta-value{
+  display: block;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 800;
+  color: rgba(255,255,255,.95);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.main-subsection-title{
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: rgba(255,255,255,.64);
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+
+#tab-main .card.card-soft:not(.combat-mode-card):not(.character-hero-card) .card-body{
+  padding-top: 14px;
+}
+
+#tab-main .col-6 > .form-control,
+#tab-main .col-6 > .form-select,
+#tab-main .col-3 > .form-control{
+  font-weight: 700;
+}
+
+.xp-grid{
+  margin-top: 2px;
+}
+
+.xp-grid > div{
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.xp-grid .input-group{
+  margin-top: 2px;
+}
+
+.xp-grid .input-group .form-control,
+.xp-grid .input-group .btn{
+  height: 44px;
+}
+
+@media (max-width: 575px){
+  .character-hero-name{
+    font-size: 24px;
+  }
+
+  .character-hero-meta{
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .character-meta-pill{
+    padding: 10px 10px;
+    border-radius: 14px;
+  }
+
+  .character-meta-value{
+    font-size: 14px;
+  }
+}

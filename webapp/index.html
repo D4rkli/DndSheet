@@ -104,6 +104,44 @@
               <div id="combatModeSummary" class="hint">HP 0/0 · Mana 0/0 · Energy 0/0 · DMG 0 · Armor 0+0</div>
             </div>
 
+            <div class="card card-soft character-hero-card mt-3">
+              <div class="card-body">
+                <div class="character-hero-head">
+                  <div>
+                    <div class="character-hero-kicker">Персонаж</div>
+                    <div id="heroCharacterName" class="character-hero-name">—</div>
+                  </div>
+
+                  <div class="character-hero-badge">
+                    <span class="character-hero-badge-label">lvl</span>
+                    <span id="heroCharacterLevel" class="character-hero-badge-value">1</span>
+                  </div>
+                </div>
+
+                <div class="character-hero-meta">
+                  <div class="character-meta-pill">
+                    <span class="character-meta-label">Раса</span>
+                    <span id="heroCharacterRace" class="character-meta-value">—</span>
+                  </div>
+
+                  <div class="character-meta-pill">
+                    <span class="character-meta-label">Класс</span>
+                    <span id="heroCharacterClass" class="character-meta-value">—</span>
+                  </div>
+
+                  <div class="character-meta-pill">
+                    <span class="character-meta-label">Пол</span>
+                    <span id="heroCharacterGender" class="character-meta-value">—</span>
+                  </div>
+
+                  <div class="character-meta-pill">
+                    <span class="character-meta-label">XP</span>
+                    <span id="heroCharacterXp" class="character-meta-value">0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="combat-mode-head-actions">
               <button
                 id="btnCombatCompact"
@@ -318,6 +356,7 @@
 
       <div class="card card-soft">
         <div class="card-body">
+          <div class="section-title">Основные данные</div>
           <div class="row g-2">
             <div class="col-12">
               <label class="form-label">Имя</label>
@@ -347,6 +386,9 @@
               <label class="form-label">XP</label>
               <input id="f_xp" type="number" class="form-control" min="0" />
             </div>
+            <div class="col-12">
+              <div class="main-subsection-title">Прогресс</div>
+            </div>
             <div class="xp-grid">
 
               <div>
@@ -371,6 +413,9 @@
 
             <div class="hint mt-1">XP переносится на следующий уровень автоматически.</div>
 
+            <div class="col-12">
+              <div class="main-subsection-title">Кошелёк</div>
+            </div>
             <div class="col-12">
               <div class="money-wrap">
                 <div class="section-title">Кошелёк</div>
