@@ -2161,6 +2161,7 @@ async function boot() {
     wireCombatExpandableQuickRows();
     wireLongPressRepeat();
     wireCombatHitMenus();
+    wireCombatInnerTabs();
     wireCombatSheet();
     wireCombatStates();
     wireCombatModeCollapse();
@@ -2848,6 +2849,7 @@ function focusBattleMode() {
 
   body.classList.remove("d-none");
   card.classList.add("is-open");
+  setCombatInnerTab("actions");
   document.querySelector('[data-combat-tab="spells"]')?.click();
   card.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -3705,8 +3707,8 @@ function wireCombatModeLongTap() {
         card.classList.add("is-open");
       }
 
+      setCombatInnerTab("actions");
       document.querySelector('[data-combat-tab="spells"]')?.click();
-      el("combatQuickSpells")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }, 500);
   };
 
@@ -4034,6 +4036,48 @@ function wireBaseResourcesToggle() {
     e.stopPropagation();
     const next = !block.classList.contains("is-collapsed");
     setBaseResourcesCollapsed(next);
+  });
+}
+
+function setCombatInnerTab(tabName) {
+  const tabs = document.querySelectorAll("[data-combat-inner-tab]");
+  const panels = document.querySelectorAll("[data-combat-inner-panel]");
+
+  tabs.forEach((tab) => {
+    tab.classList.toggle("active", tab.getAttribute("data-combat-inner-tab") === tabName);
+  });
+
+  panels.forEach((panel) => {
+    panel.classList.toggle("d-none", panel.getAttribute("data-combat-inner-panel") !== tabName);
+  });
+
+  try {
+    localStorage.setItem("combatInnerTab", tabName);
+  } catch {}
+}
+
+function getCombatInnerTab() {
+  try {
+    return localStorage.getItem("combatInnerTab") || "actions";
+  } catch {
+    return "actions";
+  }
+}
+
+function wireCombatInnerTabs() {
+  const tabs = document.querySelectorAll("[data-combat-inner-tab]");
+  if (!tabs.length) return;
+
+  setCombatInnerTab(getCombatInnerTab());
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const next = tab.getAttribute("data-combat-inner-tab");
+      if (!next) return;
+      setCombatInnerTab(next);
+    });
   });
 }
 

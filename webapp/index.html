@@ -192,7 +192,23 @@
               </div>
             </div>
 
-            <div class="combat-states-block mt-3">
+            <div class="combat-inner-tabs">
+              <button class="combat-inner-tab active" type="button" data-combat-inner-tab="actions">
+                Действия
+              </button>
+              <button class="combat-inner-tab" type="button" data-combat-inner-tab="states">
+                Состояния
+              </button>
+              <button class="combat-inner-tab" type="button" data-combat-inner-tab="log">
+                Лог
+              </button>
+              <button class="combat-inner-tab" type="button" data-combat-inner-tab="magic">
+                Магия
+              </button>
+            </div>
+
+            <div class="combat-panel combat-panel-states mt-3 d-none" data-combat-inner-panel="states">
+              <div class="combat-states-block">
               <div class="combat-states-head">
                 <div class="section-title mb-0">Состояния</div>
 
@@ -202,11 +218,13 @@
                   <button id="btnClearStates" class="btn btn-outline-light btn-sm" type="button">Очистить</button>
                 </div>
               </div>
+              </div>
 
               <div id="combatStatesList" class="combat-states-list mt-2"></div>
             </div>
 
-            <div class="combat-meta-block mt-3">
+            <div class="combat-panel combat-panel-actions mt-3" data-combat-inner-panel="actions">
+              <div class="combat-meta-block">
               <div class="combat-meta-head">
                 <div class="section-title mb-0">Бой</div>
 
@@ -216,17 +234,47 @@
                   <button id="btnNextRound" class="btn btn-outline-light btn-sm" type="button">+ Раунд</button>
                 </div>
               </div>
+              </div>
 
-              <details class="combat-log-wrap mt-2" open>
-                <summary class="combat-log-summary">Лог боя</summary>
-                <div class="d-flex justify-content-end mt-2">
-                  <button id="btnClearCombatLog" class="btn btn-outline-light btn-sm" type="button">Очистить лог</button>
+              <div class="combat-mini-actions mt-3">
+                <div class="combat-hit-picker combat-hit-picker--mini">
+                  <button class="combat-mini-btn combat-mini-btn--hit" type="button" data-compact-action="hit-toggle">
+                    ⚔️ Удар
+                  </button>
+
+                  <div class="combat-hit-menu combat-hit-menu--mini d-none" id="combatHitMenuMini">
+                    <button type="button" class="combat-hit-option" data-hit-damage="1">-1</button>
+                    <button type="button" class="combat-hit-option" data-hit-damage="5">-5</button>
+                    <button type="button" class="combat-hit-option" data-hit-damage="10">-10</button>
+                    <button type="button" class="combat-hit-option" data-hit-damage="20">-20</button>
+                  </div>
                 </div>
-                <div id="combatLog" class="combat-log mt-2"></div>
-              </details>
+                <button class="combat-mini-btn" type="button" data-compact-action="rest">
+                  🛌 Отдых
+                </button>
+                <button class="combat-mini-btn" type="button" data-compact-action="move">
+                  👣 Перемещение
+                </button>
+                <button class="combat-mini-btn" type="button" data-compact-action="armor">
+                  🛡 Броня
+                </button>
+              </div>
             </div>
 
-            <div class="mt-3">
+            <div class="combat-panel combat-panel-log mt-3 d-none" data-combat-inner-panel="log">
+              <div class="combat-meta-block">
+                <div class="combat-meta-head">
+                  <div class="section-title mb-0">Лог боя</div>
+                  <div class="combat-meta-actions">
+                    <button id="btnClearCombatLog" class="btn btn-outline-light btn-sm" type="button">Очистить лог</button>
+                  </div>
+                </div>
+
+                <div id="combatLog" class="combat-log mt-3"></div>
+              </div>
+            </div>
+
+            <div class="combat-panel combat-panel-magic mt-3 d-none" data-combat-inner-panel="magic">
               <div class="combat-actions-row">
                 <div class="btn-group combat-switch" role="group">
                   <button class="btn btn-outline-light btn-sm active" data-combat-tab="spells">Заклинания</button>
@@ -238,30 +286,8 @@
               <div id="combatQuickSpells" class="list mt-2"></div>
               <div id="combatQuickAbilities" class="list d-none mt-2"></div>
             </div>
-          </div>
-        </div>
-        <div class="combat-mini-actions mt-3">
-          <div class="combat-hit-picker combat-hit-picker--mini">
-            <button class="combat-mini-btn combat-mini-btn--hit" type="button" data-compact-action="hit-toggle">
-              ⚔️ Удар
-            </button>
-
-            <div class="combat-hit-menu combat-hit-menu--mini d-none" id="combatHitMenuMini">
-              <button type="button" class="combat-hit-option" data-hit-damage="1">-1</button>
-              <button type="button" class="combat-hit-option" data-hit-damage="5">-5</button>
-              <button type="button" class="combat-hit-option" data-hit-damage="10">-10</button>
-              <button type="button" class="combat-hit-option" data-hit-damage="20">-20</button>
             </div>
           </div>
-          <button class="combat-mini-btn" type="button" data-compact-action="rest">
-            🛌 Отдых
-          </button>
-          <button class="combat-mini-btn" type="button" data-compact-action="move">
-            👣 Перемещение
-          </button>
-          <button class="combat-mini-btn" type="button" data-compact-action="armor">
-            🛡 Броня
-          </button>
         </div>
       </div>
 

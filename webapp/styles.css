@@ -2497,3 +2497,78 @@ body{
 .topbar.is-collapsed #status{
   display: none;
 }
+
+/* =========================
+   COMBAT INNER TABS
+   ========================= */
+
+.combat-inner-tabs{
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 14px;
+  padding-bottom: 2px;
+}
+
+.combat-inner-tabs::-webkit-scrollbar{
+  height: 0;
+}
+
+.combat-inner-tab{
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.82);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.combat-inner-tab.active{
+  background: rgba(110,168,254,.18);
+  border-color: rgba(110,168,254,.38);
+  color: #ffffff;
+}
+
+.combat-panel{
+  animation: fadeIn .18s ease;
+}
+
+.combat-panel .combat-meta-block,
+.combat-panel .combat-states-block{
+  margin-top: 0 !important;
+}
+
+.combat-panel-actions .combat-meta-block{
+  padding-top: 2px;
+}
+
+.combat-panel-log .combat-meta-block,
+.combat-panel-magic,
+.combat-panel-states{
+  border-top: 1px solid rgba(255,255,255,.06);
+  padding-top: 14px;
+}
+
+@media (max-width: 575px){
+  .combat-inner-tab{
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
+}
+
+.combat-mini-actions{
+  display: none;
+}
+
+.combat-mode-body.is-compact .combat-mini-actions{
+  display: grid;
+}
+
+.combat-panel-actions .combat-mini-actions{
+  margin-top: 12px;
+}
