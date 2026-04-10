@@ -104,44 +104,6 @@
               <div id="combatModeSummary" class="hint">HP 0/0 · Mana 0/0 · Energy 0/0 · DMG 0 · Armor 0+0</div>
             </div>
 
-            <div class="card card-soft character-hero-card mt-3">
-              <div class="card-body">
-                <div class="character-hero-head">
-                  <div>
-                    <div class="character-hero-kicker">Персонаж</div>
-                    <div id="heroCharacterName" class="character-hero-name">—</div>
-                  </div>
-
-                  <div class="character-hero-badge">
-                    <span class="character-hero-badge-label">lvl</span>
-                    <span id="heroCharacterLevel" class="character-hero-badge-value">1</span>
-                  </div>
-                </div>
-
-                <div class="character-hero-meta">
-                  <div class="character-meta-pill">
-                    <span class="character-meta-label">Раса</span>
-                    <span id="heroCharacterRace" class="character-meta-value">—</span>
-                  </div>
-
-                  <div class="character-meta-pill">
-                    <span class="character-meta-label">Класс</span>
-                    <span id="heroCharacterClass" class="character-meta-value">—</span>
-                  </div>
-
-                  <div class="character-meta-pill">
-                    <span class="character-meta-label">Пол</span>
-                    <span id="heroCharacterGender" class="character-meta-value">—</span>
-                  </div>
-
-                  <div class="character-meta-pill">
-                    <span class="character-meta-label">XP</span>
-                    <span id="heroCharacterXp" class="character-meta-value">0</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div class="combat-mode-head-actions">
               <button
                 id="btnCombatCompact"
@@ -272,18 +234,18 @@
 
             <div class="combat-panel combat-panel-states mt-3 d-none" data-combat-inner-panel="states">
               <div class="combat-states-block">
-              <div class="combat-states-head">
-                <div class="section-title mb-0">Состояния</div>
+                <div class="combat-states-head">
+                  <div class="section-title mb-0">Состояния</div>
 
-                <div class="combat-turn-actions">
-                  <button id="btnCombatAddState" class="btn btn-outline-light btn-sm" type="button">+ Состояние</button>
-                  <button id="btnNextTurn" class="btn btn-outline-light btn-sm" type="button">Следующий ход</button>
-                  <button id="btnClearStates" class="btn btn-outline-light btn-sm" type="button">Очистить</button>
+                  <div class="combat-turn-actions">
+                    <button id="btnCombatAddState" class="btn btn-outline-light btn-sm" type="button">+ Состояние</button>
+                    <button id="btnNextTurn" class="btn btn-outline-light btn-sm" type="button">Следующий ход</button>
+                    <button id="btnClearStates" class="btn btn-outline-light btn-sm" type="button">Очистить</button>
+                  </div>
                 </div>
-              </div>
-              </div>
 
-              <div id="combatStatesList" class="combat-states-list mt-2"></div>
+                <div id="combatStatesList" class="combat-states-list mt-2"></div>
+              </div>
             </div>
 
             <div class="combat-panel combat-panel-actions mt-3" data-combat-inner-panel="actions">
@@ -349,6 +311,44 @@
               <div id="combatQuickSpells" class="list mt-2"></div>
               <div id="combatQuickAbilities" class="list d-none mt-2"></div>
             </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-soft character-hero-card mt-3">
+        <div class="card-body">
+          <div class="character-hero-head">
+            <div>
+              <div class="character-hero-kicker">Персонаж</div>
+              <div id="heroCharacterName" class="character-hero-name">—</div>
+            </div>
+
+            <div class="character-hero-badge">
+              <span class="character-hero-badge-label">lvl</span>
+              <span id="heroCharacterLevel" class="character-hero-badge-value">1</span>
+            </div>
+          </div>
+
+          <div class="character-hero-meta">
+            <div class="character-meta-pill">
+              <span class="character-meta-label">Раса</span>
+              <span id="heroCharacterRace" class="character-meta-value">—</span>
+            </div>
+
+            <div class="character-meta-pill">
+              <span class="character-meta-label">Класс</span>
+              <span id="heroCharacterClass" class="character-meta-value">—</span>
+            </div>
+
+            <div class="character-meta-pill">
+              <span class="character-meta-label">Пол</span>
+              <span id="heroCharacterGender" class="character-meta-value">—</span>
+            </div>
+
+            <div class="character-meta-pill">
+              <span class="character-meta-label">XP</span>
+              <span id="heroCharacterXp" class="character-meta-value">0</span>
             </div>
           </div>
         </div>
@@ -463,9 +463,8 @@
 
           <hr class="hr-soft" />
 
-          <div id="baseResourcesBlock" class="row g-2 resources-grid">
             <div class="col-12">
-              <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+              <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-2">
                 <div class="d-flex align-items-center gap-2">
                   <div class="section-title mb-0">Ресурсы</div>
                   <button id="btnToggleBaseResources" class="btn btn-outline-light btn-sm base-resources-toggle" type="button">
@@ -495,6 +494,8 @@
                 </div>
               </div>
             </div>
+
+          <div id="baseResourcesBlock" class="row g-2 resources-grid">
 
             <div class="col-12 col-md-4">
               <label class="form-label">HP</label>
