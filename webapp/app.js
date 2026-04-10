@@ -580,6 +580,8 @@ async function applyCostToCharacter(costStr, sourceName = "Способност�
     `${delta.energy ? ` Energy -${delta.energy}` : ""}`
   );
 
+  showBattleToast(`${sourceName}: действие применено`, "success");
+
   await saveMain(payload);
 }
 
@@ -2652,6 +2654,28 @@ function renderCombatRound() {
 
 function showBattleError(text) {
   appendBattleLog(`⛔ ${text}`);
+  showBattleToast(text, "error");
+}
+
+let battleToastTimer = null;
+
+function showBattleToast(text, kind = "info") {
+  let node = el("battleToast");
+
+  if (!node) {
+    node = document.createElement("div");
+    node.id = "battleToast";
+    node.className = "battle-toast";
+    document.body.appendChild(node);
+  }
+
+  node.textContent = text;
+  node.className = `battle-toast show ${kind}`;
+
+  clearTimeout(battleToastTimer);
+  battleToastTimer = setTimeout(() => {
+    node.classList.remove("show");
+  }, 2200);
 }
 
 function updateBattleButton() {
