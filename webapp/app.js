@@ -2235,6 +2235,7 @@ const builderState = {
 function bEl(id) { return document.getElementById(id); }
 
 function openBuilder() {
+  document.body.classList.add("builder-open");
   bEl("builderModal").classList.remove("d-none");
   if (!bEl("builderTplName").value) {
     bEl("builderTplName").value = `Мой шаблон ${new Date().toLocaleDateString()}`;
@@ -2243,6 +2244,7 @@ function openBuilder() {
 }
 
 function closeBuilder() {
+  document.body.classList.remove("builder-open");
   bEl("builderModal").classList.add("d-none");
 }
 
@@ -2626,14 +2628,21 @@ function renderCombatLog() {
 
 function renderCombatRound() {
   const node = el("combatRoundBadge");
+  const prevBtn = el("btnPrevRound");
+  const nextBtn = el("btnNextRound");
+
   if (!node) return;
 
   if (!state.inBattle) {
     node.textContent = "Бой не начат";
+    prevBtn?.classList.add("d-none");
+    nextBtn?.classList.add("d-none");
     return;
   }
 
   node.textContent = `Раунд ${state.battleRound || 1}`;
+  prevBtn?.classList.remove("d-none");
+  nextBtn?.classList.remove("d-none");
 }
 
 function showBattleError(text) {
