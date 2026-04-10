@@ -582,17 +582,35 @@ async function applyCostToCharacter(costStr, sourceName = "Способност�
 
   showBattleToast(`${sourceName}: действие применено`, "success");
 
-  if (delta.hp) {
-    playCombatChipFx(".combat-chip.hp", delta.hp > 0 ? "is-hit" : "is-heal-flash");
-  }
-  if (delta.mana) {
-    playCombatChipFx(".combat-chip.mana", "is-mana-flash");
-  }
-  if (delta.energy) {
-    playCombatChipFx(".combat-chip.energy", "is-energy-flash");
-  }
+    if (delta.hp) {
+      playCombatChipFx(".combat-chip.hp", "is-hit");
+      showCombatFloat(".combat-chip.hp", `-${delta.hp}`, "damage");
+    }
+    if (delta.mana) {
+      playCombatChipFx(".combat-chip.mana", "is-mana-flash");
+      showCombatFloat(".combat-chip.mana", `-${delta.mana}`, "mana");
+    }
+    if (delta.energy) {
+      playCombatChipFx(".combat-chip.energy", "is-energy-flash");
+      showCombatFloat(".combat-chip.energy", `-${delta.energy}`, "energy");
+    }
 
   await saveMain(payload);
+}
+
+function showCombatFloat(selector, value, kind) {
+  const chip = document.querySelector(selector);
+  if (!chip) return;
+
+  const node = document.createElement("div");
+  node.className = `combat-float ${kind || "damage"}`;
+  node.textContent = value;
+
+  chip.appendChild(node);
+
+  setTimeout(() => {
+    node.remove();
+  }, 800);
 }
 
 function parseIntSafe(v) {
@@ -2929,9 +2947,20 @@ async function applyRest() {
   el("f_mana").value = String(newMana);
   el("f_energy").value = String(newEnergy);
 
-  if (newHp > hp) playCombatChipFx(".combat-chip.hp", "is-heal-flash");
-  if (newMana > mana) playCombatChipFx(".combat-chip.mana", "is-mana-flash");
-  if (newEnergy > energy) playCombatChipFx(".combat-chip.energy", "is-energy-flash");
+    if (newHp > hp) {
+      playCombatChipFx(".combat-chip.hp", "is-heal-flash");
+      showCombatFloat(".combat-chip.hp", `+${newHp - hp}`, "heal");
+    }
+
+    if (newMana > mana) {
+      playCombatChipFx(".combat-chip.mana", "is-mana-flash");
+      showCombatFloat(".combat-chip.mana", `+${newMana - mana}`, "mana");
+    }
+
+    if (newEnergy > energy) {
+      playCombatChipFx(".combat-chip.energy", "is-energy-flash");
+      showCombatFloat(".combat-chip.energy", `+${newEnergy - energy}`, "energy");
+    }
 
   el("f_hp").dispatchEvent(new Event("input", { bubbles: true }));
   el("f_mana").dispatchEvent(new Event("input", { bubbles: true }));
@@ -2960,8 +2989,9 @@ async function applyMovement() {
   el("f_energy").value = String(newEnergy);
   el("f_energy").dispatchEvent(new Event("input", { bubbles: true }));
 
-    if (newEnergy < energy) {
+  if (newEnergy < energy) {
     playCombatChipFx(".combat-chip.energy", "is-energy-flash");
+    showCombatFloat(".combat-chip.energy", `-${energy - newEnergy}`, "energy");
   }
 
   appendBattleLog(`👣 Перемещение: Energy -${energy - newEnergy}`);
@@ -3000,17 +3030,26 @@ function quickApplyResource(targetId, delta) {
   input.dispatchEvent(new Event("input", { bubbles: true }));
 
     if (targetId === "f_hp") {
-    if (delta < 0) playCombatChipFx(".combat-chip.hp", "is-hit");
-    if (delta > 0) playCombatChipFx(".combat-chip.hp", "is-heal-flash");
+    if (delta < 0) {
+      playCombatChipFx(".combat-chip.hp", "is-hit");
+      showCombatFloat(".combat-chip.hp", String(delta), "damage");
+    }
+    if (delta > 0) {
+      playCombatChipFx(".combat-chip.hp", "is-heal-flash");
+      showCombatFloat(".combat-chip.hp", `+${delta}`, "heal");
+    }
   }
 
   if (targetId === "f_mana") {
     playCombatChipFx(".combat-chip.mana", "is-mana-flash");
+    showCombatFloat(".combat-chip.mana", delta > 0 ? `+${delta}` : String(delta), "mana");
   }
 
   if (targetId === "f_energy") {
     playCombatChipFx(".combat-chip.energy", "is-energy-flash");
+    showCombatFloat(".combat-chip.energy", delta > 0 ? `+${delta}` : String(delta), "energy");
   }
+
   if (targetId === "f_hp" && delta < 0 && navigator.vibrate) {
     navigator.vibrate(30);
   }
