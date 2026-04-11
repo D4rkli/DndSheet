@@ -267,18 +267,9 @@
               </div>
 
               <div class="combat-mini-actions mt-3">
-                <div class="combat-hit-picker combat-hit-picker--mini">
-                  <button class="combat-mini-btn combat-mini-btn--hit" type="button" data-compact-action="hit-toggle">
-                    ⚔️ Удар
-                  </button>
-
-                  <div class="combat-hit-menu combat-hit-menu--mini d-none" id="combatHitMenuMini">
-                    <button type="button" class="combat-hit-option" data-hit-damage="1">-1</button>
-                    <button type="button" class="combat-hit-option" data-hit-damage="5">-5</button>
-                    <button type="button" class="combat-hit-option" data-hit-damage="10">-10</button>
-                    <button type="button" class="combat-hit-option" data-hit-damage="20">-20</button>
-                  </div>
-                </div>
+                <button class="combat-mini-btn combat-mini-btn--hit" type="button" data-compact-action="damage">
+                  ⚔️ Урон
+                </button>
                 <button class="combat-mini-btn" type="button" data-compact-action="rest">
                   🛌 Отдых
                 </button>
@@ -863,6 +854,27 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="app.js?v=202"></script>
+
+<div class="modal fade" id="damageModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Нанесённый урон</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <label class="form-label">Сколько урона получить?</label>
+        <input type="number" id="damage_value" class="form-control" min="1" value="10" />
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary" id="applyDamage">Применить</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ===== Конструктор вкладок ===== -->
 <div id="builderModal" class="modalx d-none">

@@ -2256,6 +2256,7 @@ async function boot() {
       el("applyMove")?.addEventListener("click", async () => {
         await applyMovement();
         moveModal?.hide();
+      el("applyDamage")?.addEventListener("click", applyDamageFromModal);
       });
       // чтобы "осталось до уровня" обновлялось при правке XP и XP-per-level
       el("f_xp")?.addEventListener("input", updateXpToNextUI);
@@ -3334,12 +3335,12 @@ function triggerRepeatableAction(btn) {
     const action = btn.getAttribute("data-compact-action");
 
     if (action === "rest") {
-      el("btnRest")?.click();
+      restModal?.show();
       return;
     }
 
     if (action === "move") {
-      el("btnMove")?.click();
+      moveModal?.show();
       return;
     }
 
@@ -3838,13 +3839,18 @@ function wireCombatCompactMode() {
 
     const action = compactBtn.getAttribute("data-compact-action");
 
+    if (action === "damage") {
+      damageModal?.show();
+      return;
+    }
+
     if (action === "rest") {
-      el("btnRest")?.click();
+      restModal?.show();
       return;
     }
 
     if (action === "move") {
-      el("btnMove")?.click();
+      moveModal?.show();
       return;
     }
 
@@ -4038,6 +4044,15 @@ function wireArmorEditor() {
   });
 }
 
+const damageModalEl = el("damageModal");
+const damageModal = damageModalEl ? new bootstrap.Modal(damageModalEl) : null;
+
+damageModalEl?.addEventListener("hidden.bs.modal", () => {
+  document.querySelectorAll(".modal-backdrop").forEach((node) => node.remove());
+  document.body.classList.remove("modal-open");
+  document.body.style.removeProperty("padding-right");
+});
+
 function setBaseResourcesCollapsed(collapsed) {
   const block = el("baseResourcesBlock");
   const btn = el("btnToggleBaseResources");
@@ -4084,6 +4099,18 @@ function wireBaseResourcesToggle() {
     const next = !block.classList.contains("is-collapsed");
     setBaseResourcesCollapsed(next);
   });
+}
+
+async function applyDamageFromModal() {
+  const damage = Number(el("damage_value")?.value || 0);
+
+  if (damage <= 0) {
+    showBattleError("Введи корректный урон");
+    return;
+  }
+
+  quickApplyResource("f_hp", -damage);
+  damageModal?.hide();
 }
 
 function setCombatInnerTab(tabName) {

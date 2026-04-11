@@ -3150,3 +3150,26 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
 .tab:not(.d-none) {
   display: block;
 }
+
+/* ===== MINI MODE CLEANUP ===== */
+.combat-mode-body.is-compact .combat-inner-tabs,
+.combat-mode-body.is-compact #combatModeSummary,
+.combat-mode-body.is-compact .combat-panel-actions .combat-meta-block {
+  display: none !important;
+}
+
+.combat-mode-body.is-compact {
+  padding-top: 4px;
+}
+
+.combat-mode-body.is-compact .combat-mini-actions {
+  margin-top: 12px;
+}
+
+.combat-mode-body.is-compact .combat-chip {
+  min-height: 88px;
+}
+
+.combat-mode-body.is-compact .combat-chip:not(.hp):not(.mana):not(.energy) {
+  min-height: 88px;
+}
