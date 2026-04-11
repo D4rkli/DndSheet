@@ -70,15 +70,14 @@ function setActiveTemplateId(id) {
 }
 
 function activeTabs() {
-  // что выбрано в шаблоне (или дефолт)
-  const base = (state.sheet?.template?.config?.tabs && Array.isArray(state.sheet.template.config.tabs) && state.sheet.template.config.tabs.length)
-  ? state.sheet.template.config.tabs
-  : DEFAULT_TABS;
+  const base =
+    (state.sheet?.template?.config?.tabs &&
+      Array.isArray(state.sheet.template.config.tabs) &&
+      state.sheet.template.config.tabs.length)
+      ? state.sheet.template.config.tabs
+      : DEFAULT_TABS;
 
-  // 👇 важное: добавляем новые вкладки, чтобы старые шаблоны не ломались
-  const mustHave = ["passive-abilities", "abilities", "summons"]; // на будущее можно сюда докидывать новые
-
-  return Array.from(new Set([...base, ...mustHave]));
+  return Array.from(new Set(base));
 }
 
 function applyTemplateToUI() {
@@ -680,6 +679,7 @@ function tabSwitch(name) {
   });
   document.querySelectorAll(".tab").forEach((s) => s.classList.add("d-none"));
   el(`tab-${name}`).classList.remove("d-none");
+  updateFab();
 }
 
 function buildStatInputs(containerId, fields) {
@@ -1284,20 +1284,21 @@ el("btnSaveStats").addEventListener("click", async () => {
 });
 
 async function saveEquipDraft() {
-  const chId = state.currentCharacterId;
+  const chId = currentChId();
   if (!chId) return;
 
-  // берём то, что сейчас в черновике
   const payload = {};
   for (const { key } of equipFields) {
     const v = state.equipDraft?.[key];
     if (v !== undefined) payload[key] = v ?? "";
   }
 
-  // если нечего сохранять — выходим
   if (Object.keys(payload).length === 0) return;
 
-  await apiPatch(`/characters/${chId}/equipment`, payload);
+  await api(`/characters/${chId}/equipment`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 }
 
 // EQUIPMENT
@@ -1567,8 +1568,15 @@ function getActiveTabKey() {
 function updateFab() {
   const fab = el("fabAdd");
   if (!fab) return;
-  fab.classList.add("d-none");
-  fab.onclick = null;
+
+  const tab = getActiveTabKey();
+  const allowed = new Set(activeTabs());
+
+  const tabsWithFab = ["inv", "spells", "abilities", "passive-abilities", "states", "summons"];
+  const shouldShow = allowed.has(tab) && tabsWithFab.includes(tab);
+
+  fab.classList.toggle("d-none", !shouldShow);
+  showFabMenu(false);
 }
 
 function showFabMenu(show) {
@@ -1598,7 +1606,7 @@ function wireFabMenu() {
 
     // вызываем то, что у тебя точно есть:
     if (action === "add-spell") return openSpellModal("spell");
-    if (action === "add-ability") return openSpellModal("passive");
+    if (action === "add-ability") return openSpellModal("ability");
 
     // а вот это попробуем дернуть через существующие кнопки (если есть)
     if (action === "add-item") return document.getElementById("btnAddItem")?.click();
@@ -2582,34 +2590,12 @@ document.addEventListener("DOMContentLoaded", () => {
   backdrop?.addEventListener("click", closeBuilderModal);
 });
 
-// Donate button
-(function initDonate() {
-  const btn = document.getElementById("btnDonate");
-  if (!btn) return;
-
-  const DONATE_URL = "https://www.donationalerts.com/r/d4rkl1";
-
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-
-    // если это Telegram WebApp — открываем внешнюю ссылку правильно
-    if (window.Telegram?.WebApp?.openLink) {
-      window.Telegram.WebApp.openLink(DONATE_URL, { try_instant_view: false });
-      return;
-    }
-
-    // fallback для обычного браузера
-    window.open(DONATE_URL, "_blank", "noopener,noreferrer");
-  });
-})();
-
 // ===== Donate button (DonationAlerts) =====
 document.addEventListener("DOMContentLoaded", () => {
   const DONATE_URL = "https://www.donationalerts.com/r/d4rkl1";
   const btn = document.getElementById("btnDonate");
   if (!btn) return;
 
-  // на всякий случай держим ссылку и в href
   btn.setAttribute("href", DONATE_URL);
   btn.setAttribute("target", "_blank");
   btn.setAttribute("rel", "noopener noreferrer");
@@ -2625,22 +2611,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.open(DONATE_URL, "_blank", "noopener,noreferrer");
   });
-});
-
-// Fallback: если вдруг кнопка появилась позже / или DOMContentLoaded не помог
-document.addEventListener("click", (e) => {
-  const a = e.target.closest("#btnDonate");
-  if (!a) return;
-
-  const DONATE_URL = "https://www.donationalerts.com/r/d4rkl1";
-  e.preventDefault();
-  e.stopPropagation();
-
-  if (window.Telegram?.WebApp?.openLink) {
-    window.Telegram.WebApp.openLink(DONATE_URL, { try_instant_view: false });
-  } else {
-    window.open(DONATE_URL, "_blank", "noopener,noreferrer");
-  }
 });
 
 function getResourceMax(targetId) {
@@ -3923,20 +3893,10 @@ function toggleHitMenu(menuId, forceOpen = null) {
 }
 
 function closeAllHitMenus() {
-  el("combatHitMenu")?.classList.add("d-none");
   el("combatHitMenuMini")?.classList.add("d-none");
 }
 
 function wireCombatHitMenus() {
-  el("btnHitMenu")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const menu = el("combatHitMenu");
-    const willOpen = menu?.classList.contains("d-none");
-    closeAllHitMenus();
-    toggleHitMenu("combatHitMenu", willOpen);
-  });
-
   document.addEventListener("click", (e) => {
     const compactToggle = e.target.closest('[data-compact-action="hit-toggle"]');
     if (compactToggle) {
