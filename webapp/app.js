@@ -2310,16 +2310,6 @@ document.addEventListener("click", (e) => {
   }, { passive: true });
 })();
 
-const topbar = document.querySelector(".topbar");
-
-window.addEventListener("scroll", () => {
-  if (window.scrollY > 40) {
-    topbar.classList.add("is-collapsed");
-  } else {
-    topbar.classList.remove("is-collapsed");
-  }
-});
-
 // ===== Конструктор вкладок =====
 
 const builderState = {
