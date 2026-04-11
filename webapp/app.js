@@ -2239,6 +2239,7 @@ async function boot() {
     wireFabMenu();
     wireTopbarMenu();
     wireMoneyInputs();
+    wireTabSwipe();
 
       // XP / Level wiring
       el("btnAddXp")?.addEventListener("click", addXpAndHandleLevelUp);
@@ -4124,6 +4125,105 @@ function wireCombatInnerTabs() {
       if (!next) return;
       setCombatInnerTab(next);
     });
+  });
+}
+
+function wireTabSwipe() {
+  const content = document.querySelector("main.content");
+  const tabsRoot = document.querySelector("#tabs");
+  if (!content || !tabsRoot) return;
+
+  let startX = 0;
+  let startY = 0;
+  let deltaX = 0;
+  let deltaY = 0;
+  let tracking = false;
+
+  const SWIPE_THRESHOLD = 60;
+  const VERTICAL_LIMIT = 35;
+
+  function getVisibleTabs() {
+    return Array.from(document.querySelectorAll("#tabs .nav-link"))
+      .filter((btn) => !btn.closest("li")?.classList.contains("d-none"))
+      .map((btn) => btn.dataset.tab)
+      .filter(Boolean);
+  }
+
+  function switchTabByOffset(offset) {
+    const visibleTabs = getVisibleTabs();
+    if (!visibleTabs.length) return;
+
+    const current = getActiveTabKey();
+    const currentIndex = visibleTabs.indexOf(current);
+    if (currentIndex === -1) return;
+
+    const nextIndex = currentIndex + offset;
+    if (nextIndex < 0 || nextIndex >= visibleTabs.length) return;
+
+    tabSwitch(visibleTabs[nextIndex]);
+  }
+
+  function shouldIgnoreSwipe(target) {
+    if (!target) return true;
+
+    return !!target.closest(
+      [
+        "input",
+        "textarea",
+        "select",
+        "button",
+        ".modal",
+        ".modal-content",
+        ".combat-chip",
+        ".combat-hit-picker",
+        ".combat-quick-row",
+        ".combat-inner-tabs",
+        "#tabs",
+        "#fabMenu",
+        "#topbarMenu",
+        ".builder-grid",
+        ".builder-list",
+      ].join(", ")
+    );
+  }
+
+  content.addEventListener("pointerdown", (e) => {
+    if (shouldIgnoreSwipe(e.target)) return;
+
+    startX = e.clientX;
+    startY = e.clientY;
+    deltaX = 0;
+    deltaY = 0;
+    tracking = true;
+  });
+
+  content.addEventListener("pointermove", (e) => {
+    if (!tracking) return;
+
+    deltaX = e.clientX - startX;
+    deltaY = e.clientY - startY;
+
+    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > VERTICAL_LIMIT) {
+      tracking = false;
+    }
+  });
+
+  content.addEventListener("pointerup", () => {
+    if (!tracking) return;
+    tracking = false;
+
+    if (Math.abs(deltaY) > VERTICAL_LIMIT) return;
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD) return;
+
+    if (deltaX < 0) {
+      switchTabByOffset(1);
+    } else {
+      switchTabByOffset(-1);
+    }
+  });
+
+  content.addEventListener("pointercancel", () => {
+    tracking = false;
   });
 }
 
