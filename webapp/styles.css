@@ -3173,3 +3173,21 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
 .combat-mode-body.is-compact .combat-chip:not(.hp):not(.mana):not(.energy) {
   min-height: 88px;
 }
+
+.combat-battle-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.combat-battle-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.combat-battle-actions #btnBattle{
+  min-width:160px;
+}

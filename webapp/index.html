@@ -200,12 +200,17 @@
                   </div>
                 </div>
 
-                <div class="combat-chip">
+                <div class="combat-chip attack">
                   <div class="combat-chip-title">DMG</div>
+
                   <div class="combat-chip-body">
+                    <button class="btn btn-outline-light btn-sm step-btn" data-target="f_attack_live" data-step="-1">−</button>
                     <span id="hud_attack" class="combat-chip-val">0</span>
+                    <button class="btn btn-outline-light btn-sm step-btn" data-target="f_attack_live" data-step="+1">+</button>
                   </div>
                 </div>
+
+                <input id="f_attack_live" type="hidden" />
 
                 <div class="combat-chip">
                   <div class="combat-chip-title">Armor</div>
@@ -249,22 +254,21 @@
             </div>
 
             <div class="combat-panel combat-panel-actions mt-3" data-combat-inner-panel="actions">
-              <div class="combat-meta-block">
-              <div class="combat-meta-head">
-                <div class="section-title mb-0">Бой</div>
+                <div class="combat-meta-block">
+                  <div class="section-title mb-0">Бой</div>
 
-                <div class="combat-meta-actions">
-                  <span id="combatRoundBadge" class="combat-round-badge">Раунд 1</span>
-                  <button id="btnPrevRound" class="btn btn-outline-light btn-sm" type="button">− Раунд</button>
-                  <button id="btnNextRound" class="btn btn-outline-light btn-sm" type="button">+ Раунд</button>
+                  <div class="combat-battle-row mt-3">
+                    <span id="combatRoundBadge" class="combat-round-badge">Раунд 1</span>
+
+                    <div class="combat-battle-actions">
+                      <button id="btnPrevRound" class="btn btn-outline-light btn-sm">− Раунд</button>
+                      <button id="btnNextRound" class="btn btn-outline-light btn-sm">+ Раунд</button>
+                      <button id="btnBattle" class="btn btn-outline-light btn-sm">
+                        ⚔️ Начать бой
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div class="d-flex flex-wrap gap-2 mt-3">
-                  <button id="btnBattle" class="btn btn-outline-light btn-sm" type="button">
-                    ⚔️ Начать бой
-                  </button>
-                </div>
-              </div>
-              </div>
 
               <div class="combat-mini-actions mt-3">
                 <button class="combat-mini-btn combat-mini-btn--hit" type="button" data-compact-action="damage">
@@ -860,7 +864,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Нанесённый урон</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
       <div class="modal-body">
@@ -869,8 +873,8 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
-        <button type="button" class="btn btn-primary" id="applyDamage">Применить</button>
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button class="btn btn-danger" id="applyDamage">Применить</button>
       </div>
     </div>
   </div>

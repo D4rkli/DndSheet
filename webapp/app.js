@@ -1219,6 +1219,8 @@ async function saveMain(extra = {}) {
     energy_max: intOrNull(el("f_energy_max").value),
     energy_per_level: intOrNull(el("f_energy_per_level").value),
 
+    attack: intOrNull(el("f_attack_live")?.value),
+
     level_up_rules: el("f_level_up_rules").value,
 
     ...extra,
@@ -2018,6 +2020,8 @@ async function loadSheet(showStatus = true) {
   fillStatInputs("statsPersonality", ch);
   fillStatInputs("statsCombat", ch);
 
+  fillInput("f_attack_live", ch.attack ?? 0);
+
   // экипировка: берём с сервера и кладём в draft
     state.equipDraft = { ...(state.sheet.equipment || {}) };
     renderEquipUI();
@@ -2256,8 +2260,9 @@ async function boot() {
       el("applyMove")?.addEventListener("click", async () => {
         await applyMovement();
         moveModal?.hide();
-      el("applyDamage")?.addEventListener("click", applyDamageFromModal);
       });
+
+      el("applyDamage")?.addEventListener("click", applyDamageFromModal);
       // чтобы "осталось до уровня" обновлялось при правке XP и XP-per-level
       el("f_xp")?.addEventListener("input", updateXpToNextUI);
       el("f_xp_per_level")?.addEventListener("input", updateXpToNextUI);
@@ -2902,12 +2907,18 @@ function updateCombatHudFromSheet() {
   const energy = Number(el("f_energy")?.value || 0);
   const energyMax = Number(el("f_energy_max")?.value || 0);
 
+  const atk = Number(el("f_attack_live")?.value || ch.attack || 0);
+  const { perm, temp } = getArmorValues();
+
   ch.hp = hp;
   ch.hp_max = hpMax;
   ch.mana = mana;
   ch.mana_max = manaMax;
   ch.energy = energy;
   ch.energy_max = energyMax;
+  ch.attack = atk;
+  ch.perm_armor = perm;
+  ch.temp_armor = temp;
 
   const hpRatio = hpMax > 0 ? Math.max(0, Math.min(100, (hp / hpMax) * 100)) : 0;
   const manaRatio = manaMax > 0 ? Math.max(0, Math.min(100, (mana / manaMax) * 100)) : 0;
@@ -2922,6 +2933,12 @@ function updateCombatHudFromSheet() {
   const energyEl = el("hud_energy");
   if (energyEl) energyEl.textContent = `${energy}/${energyMax}`;
 
+  const atkEl = el("hud_attack");
+  if (atkEl) atkEl.textContent = String(atk);
+
+  const armorEl = el("hud_armor");
+  if (armorEl) armorEl.textContent = `${perm}+${temp}`;
+
   const hpBar = el("hud_hp_bar");
   if (hpBar) hpBar.style.width = `${hpRatio}%`;
 
@@ -2930,20 +2947,6 @@ function updateCombatHudFromSheet() {
 
   const energyBar = el("hud_energy_bar");
   if (energyBar) energyBar.style.width = `${energyRatio}%`;
-
-  const atk = Number(ch.attack || 0);
-  const { perm, temp } = getArmorValues();
-
-  ch.perm_armor = perm;
-  ch.temp_armor = temp;
-
-  const atkEl = el("hud_attack");
-  if (atkEl) atkEl.textContent = String(atk);
-
-  const armorEl = el("hud_armor");
-  if (armorEl) armorEl.textContent = `${perm}+${temp}`;
-
-  updateCombatModeSummary();
 
   const hpChip = document.querySelector(".combat-chip.hp");
   const manaChip = document.querySelector(".combat-chip.mana");
@@ -2961,11 +2964,9 @@ function updateCombatHudFromSheet() {
   manaChip?.classList.toggle("is-empty", mana <= 0);
   energyChip?.classList.toggle("is-empty", energy <= 0);
 
-  hpChip?.classList.remove("is-critical");
+  hpChip?.classList.toggle("is-critical", hpRatioState > 0 && hpRatioState <= 0.25);
 
-  if (hpRatioState > 0 && hpRatioState <= 0.25) {
-    hpChip?.classList.add("is-critical");
-  }
+  updateCombatModeSummary();
 }
 
 async function applyRest() {
@@ -3047,8 +3048,7 @@ async function applyMovement() {
 }
 
 function wireCombatHud() {
-  // обновлять HUD при любых изменениях ресурсов
-  ["f_hp","f_hp_max","f_mana","f_mana_max","f_energy","f_energy_max"].forEach((id) => {
+  ["f_hp", "f_hp_max", "f_mana", "f_mana_max", "f_energy", "f_energy_max", "f_attack_live"].forEach((id) => {
     el(id)?.addEventListener("input", updateCombatHudFromSheet);
     el(id)?.addEventListener("change", updateCombatHudFromSheet);
   });
