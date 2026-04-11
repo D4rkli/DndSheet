@@ -3141,3 +3141,12 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
     font-size: 13px;
   }
 }
+
+/* ===== TAB VISIBILITY FIX ===== */
+.tab {
+  display: none;
+}
+
+.tab:not(.d-none) {
+  display: block;
+}
