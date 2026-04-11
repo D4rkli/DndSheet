@@ -4194,3 +4194,6 @@ el("btnFullRestore")?.addEventListener("click", () => {
   scheduleCombatAutosave();
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  tabSwitch('main');
+});
