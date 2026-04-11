@@ -674,6 +674,7 @@ function fillInput(id, value) {
 }
 
 function tabSwitch(name) {
+  console.log("tabSwitch ->", name);
   document.querySelectorAll("#tabs .nav-link").forEach((b) => {
     b.classList.toggle("active", b.dataset.tab === name);
   });
@@ -1040,7 +1041,11 @@ el("modalSave").addEventListener("click", async () => {
 // ===== UI wiring
 
 document.querySelectorAll("#tabs .nav-link").forEach((btn) => {
-  btn.addEventListener("click", () => tabSwitch(btn.dataset.tab));
+  btn.addEventListener("click", () => {
+    const tab = btn.dataset.tab;
+    if (!tab) return;
+    tabSwitch(tab);
+  });
 });
 
 el("btnSync").addEventListener("click", async () => {
@@ -2233,6 +2238,8 @@ async function boot() {
         el(id)?.addEventListener("input", updateCharacterHero);
         el(id)?.addEventListener("change", updateCharacterHero);
       });
+
+      tabSwitch("main");
   } catch (e) {
     console.error(e);
     setStatus("Ошибка");
