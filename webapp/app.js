@@ -4161,6 +4161,10 @@ function wireTabSwipe() {
     if (nextIndex < 0 || nextIndex >= visibleTabs.length) return;
 
     tabSwitch(visibleTabs[nextIndex]);
+
+    if (navigator.vibrate) {
+      navigator.vibrate(20);
+    }
   }
 
   function shouldIgnoreSwipe(target) {
@@ -4183,6 +4187,7 @@ function wireTabSwipe() {
         "#topbarMenu",
         ".builder-grid",
         ".builder-list",
+        ".item-actions",
       ].join(", ")
     );
   }
