@@ -11,8 +11,19 @@ body {
 }
 
 .wrap {
-  max-width: 560px;
+  max-width: 620px;
   margin: 0 auto;
+}
+
+.content {
+  padding: 10px 12px 18px;
+}
+
+.card-soft {
+  background: rgba(18, 26, 51, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
 }
 
 .app-title {
@@ -23,17 +34,6 @@ body {
 .muted {
   color: var(--muted);
   font-size: 12px;
-}
-
-.content {
-  padding: 12px 14px 20px;
-}
-
-.card-soft {
-  background: rgba(18, 26, 51, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  overflow: hidden;
 }
 
 .section-title {
@@ -2244,30 +2244,20 @@ body{
   transform: translateY(1px) scale(.98);
 }
 
-/* =========================
-   MOBILE POLISH PATCH
-   ========================= */
-
-/* Уже, спокойнее, меньше шума */
-.wrap{
-  max-width: 620px;
-}
-
-.content{
-  padding: 10px 12px 18px;
-}
-
-.card-soft{
-  border-radius: 20px;
-}
-
-/* ===== Topbar compact ===== */
-
 .topbar{
+  position: sticky;
+  top: 0;
+  z-index: 120;
   padding: 10px 12px 8px;
+  background: rgba(10, 14, 26, .96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  transition: padding .2s ease, background .2s ease;
 }
 
 .app-title{
+  font-weight: 700;
+  letter-spacing: 0.2px;
   font-size: 15px;
   line-height: 1.15;
 }
@@ -2276,10 +2266,7 @@ body{
   font-size: 11px;
   line-height: 1.2;
   margin-top: 2px;
-}
-
-header.topbar .d-flex.gap-2{
-  gap: 6px !important;
+  transition: opacity .2s ease, transform .2s ease, height .2s ease, margin .2s ease;
 }
 
 header.topbar .btn{
@@ -2970,4 +2957,140 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
 
 .combat-mode-card + .character-hero-card{
   margin-top: 18px;
+}
+
+/* =========================
+   TAB-MAIN EDIT CARD POLISH
+   ========================= */
+
+#tab-main .character-hero-card + .card.card-soft{
+  margin-top: 14px;
+}
+
+#tab-main .card.card-soft:not(.combat-mode-card):not(.character-hero-card){
+  background: rgba(15, 21, 39, .78);
+  box-shadow: none;
+}
+
+#tab-main .card.card-soft:not(.combat-mode-card):not(.character-hero-card) .card-body{
+  padding: 14px 14px 16px;
+}
+
+#tab-main .section-title{
+  margin-bottom: 6px;
+}
+
+.main-edit-kicker{
+  font-size: 11px;
+  color: rgba(255,255,255,.46);
+  margin-top: -2px;
+  margin-bottom: 12px;
+}
+
+.main-subsection-title{
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .55px;
+  color: rgba(255,255,255,.58);
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+/* имя отдельно и чуть воздушнее */
+#tab-main #f_name{
+  min-height: 46px;
+  font-weight: 700;
+}
+
+/* identity-grid компактнее */
+.main-identity-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.main-identity-card{
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.main-identity-card .form-label{
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: rgba(255,255,255,.58);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  font-weight: 700;
+}
+
+.main-identity-card .form-control,
+.main-identity-card .form-select{
+  min-height: 44px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.main-identity-card--xp{
+  grid-column: span 2;
+}
+
+/* прогресс и кошелёк не должны сливаться */
+.xp-grid{
+  margin-top: 4px;
+  gap: 8px;
+}
+
+.xp-grid > div{
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.07);
+}
+
+.money-wrap{
+  margin-top: 2px;
+}
+
+.wallet-card{
+  padding: 10px;
+  border-radius: 16px;
+}
+
+/* блок ресурсов чуть отделяем */
+#baseResourcesBlock{
+  margin-top: 2px;
+}
+
+/* нижняя кнопка сохранения пусть не орёт */
+#btnSaveMain{
+  min-height: 44px;
+  border-radius: 16px;
+  font-size: 14px;
+}
+
+/* hr между секциями мягче */
+.hr-soft{
+  margin: 16px 0 14px;
+  opacity: .65;
+}
+
+@media (max-width: 575px){
+  #tab-main .card.card-soft:not(.combat-mode-card):not(.character-hero-card) .card-body{
+    padding: 12px 12px 14px;
+  }
+
+  .main-identity-grid{
+    gap: 8px;
+  }
+
+  .main-identity-card{
+    padding: 10px;
+  }
+
+  .xp-grid{
+    grid-template-columns: 1fr;
+  }
 }
