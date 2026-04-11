@@ -82,16 +82,18 @@ function activeTabs() {
 
 function applyTemplateToUI() {
   const allowed = new Set(activeTabs());
+
   document.querySelectorAll("#tabs .nav-link").forEach((b) => {
     const tab = b.dataset.tab;
     const show = allowed.has(tab);
     b.closest("li")?.classList.toggle("d-none", !show);
-    updateFab();
   });
-  // если текущая вкладка скрыта — прыгнем в main
+
   const cur = document.querySelector("#tabs .nav-link.active")?.dataset?.tab;
   if (cur && !allowed.has(cur)) {
     tabSwitch("main");
+  } else {
+    updateFab();
   }
 }
 
@@ -636,7 +638,12 @@ function updateMoneyPreview(coins) {
   `;
 }
 
+let moneyInputsWired = false;
+
 function wireMoneyInputs() {
+  if (moneyInputsWired) return;
+  moneyInputsWired = true;
+
   const g = el("f_gold");
   const s = el("f_silver");
   const c = el("f_copper");
@@ -649,7 +656,6 @@ function wireMoneyInputs() {
       copper: parseIntSafe(c.value),
     };
 
-    // 🔴 ВАЖНО: сохраняем в state
     if (state.sheet?.character) {
       state.sheet.character.gold = coins.gold;
       state.sheet.character.silver = coins.silver;
@@ -3315,11 +3321,6 @@ function triggerRepeatableAction(btn) {
   if (btn.hasAttribute("data-compact-action")) {
     const action = btn.getAttribute("data-compact-action");
 
-    if (action === "hit-toggle") {
-      quickApplyResource("f_hp", -10);
-      return;
-    }
-
     if (action === "rest") {
       el("btnRest")?.click();
       return;
@@ -3590,7 +3591,6 @@ async function combatClearStates() {
 function wireCombatStates() {
   el("btnNextTurn")?.addEventListener("click", combatNextTurn);
   el("btnClearStates")?.addEventListener("click", combatClearStates);
-  el("btnCombatAddState")?.addEventListener("click", () => openStateModal());
 
   document.addEventListener("click", async (e) => {
     const btn = e.target.closest("[data-state-act]");
@@ -3825,14 +3825,6 @@ function wireCombatCompactMode() {
     if (!compactBtn) return;
 
     const action = compactBtn.getAttribute("data-compact-action");
-
-    if (action === "hit-toggle") {
-      const menu = el("combatHitMenuMini");
-      const willOpen = menu?.classList.contains("d-none");
-      closeAllHitMenus();
-      toggleHitMenu("combatHitMenuMini", willOpen);
-      return;
-    }
 
     if (action === "rest") {
       el("btnRest")?.click();
@@ -4161,6 +4153,3 @@ el("btnFullRestore")?.addEventListener("click", () => {
   scheduleCombatAutosave();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  tabSwitch('main');
-});
