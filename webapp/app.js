@@ -2052,13 +2052,7 @@ async function loadSheet(showStatus = true) {
     "spellsList",
     (state.sheet.spells || []).map((s) => ({
       ...s,
-      preview: [
-        `🧪 ${s.level ?? 0}`,
-        s.damage ? `🗡 ${s.damage}` : "",
-        s.range ? `🎯 ${s.range}` : "",
-        s.duration ? `⏳ ${s.duration}` : "",
-        s.cost ? formatCostPretty(s.cost) : "",
-      ].filter(Boolean).join("   "),
+      preview: formatSpellPreview(s),
     })),
     async (s) => {
       await api(`/characters/${id}/spells/${s.id}`, { method: "DELETE" });
@@ -2100,7 +2094,7 @@ async function loadSheet(showStatus = true) {
       "passiveAbilitiesList",
       passive.map((a) => ({
         ...a,
-        preview: [`lvl ${a.level ?? 0}`, a.range, a.duration, a.cost].filter(Boolean).join(" · "),
+        preview: formatSpellPreview(a),
       })),
       async (a) => {
         await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
@@ -2119,7 +2113,7 @@ async function loadSheet(showStatus = true) {
       "abilitiesList",
       active.map((a) => ({
         ...a,
-        preview: [`lvl ${a.level ?? 0}`, a.range, a.duration, a.cost].filter(Boolean).join(" · "),
+        preview: formatSpellPreview(a),
       })),
       async (a) => {
         await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
@@ -3481,14 +3475,14 @@ function renderCombatQuickLists() {
     .filter(s => !q || (String(s.name||"").toLowerCase().includes(q) || String(s.description||"").toLowerCase().includes(q)))
     .map((s) => ({
       ...s,
-      preview: [`lvl ${s.level ?? 0}`, s.range, s.duration, s.cost].filter(Boolean).join(" · "),
+      preview: formatSpellPreview(s),
     }));
 
   const abilities = (state.sheet.abilities || [])
     .filter(a => !q || (String(a.name||"").toLowerCase().includes(q) || String(a.description||"").toLowerCase().includes(q)))
     .map((a) => ({
       ...a,
-      preview: [`lvl ${a.level ?? 0}`, a.range, a.duration, a.cost].filter(Boolean).join(" · "),
+      preview: formatSpellPreview(s),
     }));
 
   // Заклинания (use = списать cost)
