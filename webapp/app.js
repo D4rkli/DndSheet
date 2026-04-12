@@ -1421,15 +1421,16 @@ function renderEquipUI() {
       <div class="equip-top">
         <div class="equip-slot">
           <i class="bi ${equipIcons[key] || "bi-shield"}"></i>
-          <span>${label}:</span>
+          <span class="equip-label">${label}:</span>
           <span
             class="equip-name ${name === "—" ? "equip-empty" : ""}"
             title="${name !== "—" ? escapeAttr(name) : ""}"
           >
             ${escapeHtml(name)}
           </span>
-          ${ac ? `<span class="muted">+${ac} AC</span>` : ""}
         </div>
+    
+        ${ac ? `<span class="equip-ac-badge">+${ac} AC</span>` : ``}
       </div>
     
       ${stats ? `<div class="equip-sub">${escapeHtml(stats)}</div>` : ""}
