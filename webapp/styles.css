@@ -3395,3 +3395,159 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
     padding: 3px 8px;
   }
 }
+
+@media (max-width: 575px){
+  .fab{
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .fab-menu{
+    right: 12px;
+    bottom: 72px;
+  }
+
+  .donate-btn{
+    left: 12px !important;
+    right: auto !important;
+    bottom: 12px !important;
+    max-width: 190px;
+    z-index: 999;
+  }
+}
+
+#equipGrid{
+  align-items: start;
+}
+
+.equip-card{
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.equip-top{
+  align-items: flex-start;
+}
+
+.equip-sub,
+.equip-info{
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.equip-info{
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.equip-ac-badge{
+  margin-left: 8px;
+}
+
+@media (max-width: 575px){
+  .equip-card{
+    min-height: 96px;
+    padding: 10px;
+  }
+
+  .equip-slot{
+    gap: 6px;
+  }
+
+  .equip-label,
+  .equip-name{
+    font-size: 13px;
+  }
+
+  .equip-ac-badge{
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+}
+
+@media (max-width: 575px){
+  #spellsList .item,
+  #abilitiesList .item,
+  #passiveAbilitiesList .item {
+    padding: 10px;
+  }
+
+  #spellsList .item-title,
+  #abilitiesList .item-title,
+  #passiveAbilitiesList .item-title {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  #spellsList .item-sub,
+  #abilitiesList .item-sub,
+  #passiveAbilitiesList .item-sub {
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  #spellsList .spell-meta,
+  #abilitiesList .spell-meta,
+  #passiveAbilitiesList .spell-meta {
+    min-height: 24px;
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+
+  .item-actions{
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .item-actions .btn.btn-sm{
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    padding: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-actions .btn.btn-sm i{
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 575px){
+  .fab-menu{
+    width: min(190px, calc(100vw - 24px));
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .fab-item{
+    width: 100%;
+    padding: 9px 10px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
+
+  .fab-item i{
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 575px){
+  #tab-inv #btnAddItem,
+  #tab-spells #btnAddSpell,
+  #tab-abilities #btnAddAbility,
+  #tab-passive-abilities #btnAddPassiveAbility,
+  #tab-states #btnAddState,
+  #tab-summons #btnAddSummon {
+    display: none !important;
+  }
+}
