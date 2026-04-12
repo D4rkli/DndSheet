@@ -2081,9 +2081,10 @@ async function loadSheet(showStatus = true) {
       icon: "bi-stars",
       clamp: true,
       onUse: async (s) => applyCostToCharacter(s.cost, s.name || "Заклинание"),
+      onEdit: (s) => openSpellModal("spell", s),
       onFavorite: async (s) => {
         toggleFavorite("spells", s.id);
-        renderCombatQuickLists();
+        await loadSheet(false);
       },
     }
   );
@@ -2163,9 +2164,10 @@ async function loadSheet(showStatus = true) {
         icon: "bi-lightning-fill",
         clamp: true,
         onUse: async (a) => applyCostToCharacter(a.cost, a.name || "Умение"),
+        onEdit: (a) => openSpellModal("ability", a),
         onFavorite: async (a) => {
           toggleFavorite("abilities", a.id);
-          renderCombatQuickLists();
+          await loadSheet(false);
         },
       }
     );
