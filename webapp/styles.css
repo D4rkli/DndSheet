@@ -3551,3 +3551,90 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
     display: none !important;
   }
 }
+
+/* ===== COMPACT SPELL CARDS ===== */
+@media (max-width: 575px){
+  #spellsList .item,
+  #abilitiesList .item,
+  #passiveAbilitiesList .item,
+  #combatQuickSpells .item,
+  #combatQuickAbilities .item{
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  #spellsList .item-head,
+  #abilitiesList .item-head,
+  #passiveAbilitiesList .item-head,
+  #combatQuickSpells .item-head,
+  #combatQuickAbilities .item-head{
+    gap: 8px;
+  }
+
+  #spellsList .item-title,
+  #abilitiesList .item-title,
+  #passiveAbilitiesList .item-title,
+  #combatQuickSpells .item-title,
+  #combatQuickAbilities .item-title{
+    font-size: 13px;
+    line-height: 1.2;
+    gap: 6px;
+  }
+
+  #spellsList .item-sub,
+  #abilitiesList .item-sub,
+  #passiveAbilitiesList .item-sub,
+  #combatQuickSpells .item-sub,
+  #combatQuickAbilities .item-sub{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+  }
+
+  #spellsList .spell-meta,
+  #abilitiesList .spell-meta,
+  #passiveAbilitiesList .spell-meta,
+  #combatQuickSpells .spell-meta,
+  #combatQuickAbilities .spell-meta{
+    min-height: 22px;
+    padding: 2px 7px;
+    font-size: 11px;
+    border-radius: 999px;
+  }
+
+  .item-actions{
+    gap: 5px;
+    margin-top: 4px;
+  }
+
+  .item-actions .btn.btn-sm{
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-actions .btn.btn-sm i{
+    font-size: 13px;
+  }
+
+  .item-caret{
+    display: none;
+  }
+}
+
+@media (max-width: 575px){
+  #tab-inv #btnAddItem,
+  #tab-spells #btnAddSpell,
+  #tab-abilities #btnAddAbility,
+  #tab-passive-abilities #btnAddPassiveAbility,
+  #tab-states #btnAddState,
+  #tab-summons #btnAddSummon {
+    display: none !important;
+  }
+}
