@@ -1314,24 +1314,6 @@ el("btnSaveStats").addEventListener("click", async () => {
   await saveMain(extra);
 });
 
-async function saveEquipDraft() {
-  const chId = currentChId();
-  if (!chId) return;
-
-  const payload = {};
-  for (const { key } of equipFields) {
-    const v = state.equipDraft?.[key];
-    if (v !== undefined) payload[key] = v ?? "";
-  }
-
-  if (Object.keys(payload).length === 0) return;
-
-  await api(`/characters/${chId}/equipment`, {
-    method: "PATCH",
-    body: JSON.stringify(payload),
-  });
-}
-
 // EQUIPMENT
 const equipFields = [
   { key: "head", label: "Голова" },
@@ -1617,12 +1599,6 @@ function showFabMenu(show) {
   m.classList.toggle("d-none", !show);
 }
 
-function toggleFabMenu() {
-  const m = document.getElementById("fabMenu");
-  if (!m) return;
-  m.classList.toggle("d-none");
-}
-
 function wireFabMenu() {
   const fab = document.getElementById("fabAdd");
   const menu = document.getElementById("fabMenu");
@@ -1650,12 +1626,9 @@ function wireFabMenu() {
   // долгий тап/ПК-правый клик: открыть меню
 
   let pressTimer = null;
-  let longPressed = false;
 
   const startPress = () => {
-    longPressed = false;
     pressTimer = window.setTimeout(() => {
-      longPressed = true;
       showFabMenu(true);
     }, 420);
   };
@@ -3018,17 +2991,6 @@ function focusBattleMode() {
   setCombatInnerTab("actions");
   document.querySelector('[data-combat-tab="spells"]')?.click();
   card.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function setResourceValue(targetId, value, logText = "") {
-  const input = el(targetId);
-  if (!input) return;
-
-  const next = clampResourceValue(targetId, Number(value || 0));
-  input.value = String(next);
-  input.dispatchEvent(new Event("input", { bubbles: true }));
-
-  if (logText) appendBattleLog(logText);
 }
 
 function updateCombatHudFromSheet() {
