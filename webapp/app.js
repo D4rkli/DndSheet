@@ -1639,6 +1639,7 @@ function wireFabMenu() {
     // вызываем то, что у тебя точно есть:
     if (action === "add-spell") return openSpellModal("spell");
     if (action === "add-ability") return openSpellModal("ability");
+    if (action === "add-summon") return openSummonModal();
 
     // а вот это попробуем дернуть через существующие кнопки (если есть)
     if (action === "add-item") return document.getElementById("btnAddItem")?.click();
