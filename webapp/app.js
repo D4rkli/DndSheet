@@ -804,7 +804,7 @@ function renderList(containerId, rows, onDelete, opts = {}) {
     card.className = "item";
 
     const title = escapeHtml(r.title || r.name || "");
-    const preview = escapeHtml(r.preview || "");
+    const preview = r.preview || "";
     const details = escapeHtml(r.details || r.description || "");
 
     card.innerHTML = `
@@ -2052,7 +2052,13 @@ async function loadSheet(showStatus = true) {
     "spellsList",
     (state.sheet.spells || []).map((s) => ({
       ...s,
-      preview: [`lvl ${s.level ?? 0}`, s.range, s.duration, s.cost].filter(Boolean).join(" · "),
+      preview: [
+        `🧪 ${s.level ?? 0}`,
+        s.damage ? `🗡 ${s.damage}` : "",
+        s.range ? `🎯 ${s.range}` : "",
+        s.duration ? `⏳ ${s.duration}` : "",
+        s.cost ? formatCostPretty(s.cost) : "",
+      ].filter(Boolean).join("   "),
     })),
     async (s) => {
       await api(`/characters/${id}/spells/${s.id}`, { method: "DELETE" });
@@ -2158,6 +2164,38 @@ async function loadSheet(showStatus = true) {
   renderCombatRound();
   renderCombatLog();
   setStatus("Ок ✅");
+}
+
+function formatCostPretty(costStr) {
+  const parts = parseCostParts(costStr);
+
+  return [
+    parts.hp ? `❤️ ${parts.hp}` : "",
+    parts.mana ? `🔷 ${parts.mana}` : "",
+    parts.energy ? `🟡 ${parts.energy}` : "",
+  ].filter(Boolean).join(" ");
+}
+
+function formatSpellPreview(spell) {
+  const parts = [
+    spell.level !== undefined && spell.level !== null
+      ? `<span class="spell-meta"><span>✨</span><span>lvl ${escapeHtml(spell.level)}</span></span>`
+      : "",
+
+    spell.range
+      ? `<span class="spell-meta"><span>🎯</span><span>${escapeHtml(spell.range)}</span></span>`
+      : "",
+
+    spell.duration
+      ? `<span class="spell-meta"><span>⏳</span><span>${escapeHtml(spell.duration)}</span></span>`
+      : "",
+
+    spell.cost
+      ? `<span class="spell-meta spell-meta--cost">${escapeHtml(formatCostPretty(spell.cost))}</span>`
+      : "",
+  ].filter(Boolean);
+
+  return parts.join("");
 }
 
 function formatGenderLabel(value) {

@@ -3191,3 +3191,53 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
 .combat-battle-actions #btnBattle{
   min-width:160px;
 }
+
+/* ===== SPELL PREVIEW READABILITY ===== */
+
+#spellsList .item-sub,
+#abilitiesList .item-sub,
+#passiveAbilitiesList .item-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  color: rgba(255,255,255,.78);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+#spellsList .item-sub .spell-meta,
+#abilitiesList .item-sub .spell-meta,
+#passiveAbilitiesList .item-sub .spell-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  white-space: nowrap;
+}
+
+#spellsList .item-sub .spell-meta--cost,
+#abilitiesList .item-sub .spell-meta--cost,
+#passiveAbilitiesList .item-sub .spell-meta--cost {
+  background: rgba(110,168,254,.08);
+  border-color: rgba(110,168,254,.20);
+}
+
+@media (max-width: 575px) {
+  #spellsList .item-sub,
+  #abilitiesList .item-sub,
+  #passiveAbilitiesList .item-sub {
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  #spellsList .item-sub .spell-meta,
+  #abilitiesList .item-sub .spell-meta,
+  #passiveAbilitiesList .item-sub .spell-meta {
+    padding: 4px 8px;
+  }
+}
