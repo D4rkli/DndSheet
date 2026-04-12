@@ -819,19 +819,25 @@ function renderList(containerId, rows, onDelete, opts = {}) {
 
         <div class="d-flex align-items-center gap-2 item-actions">
           <i class="bi bi-chevron-down item-caret"></i>
-
+        
+          ${opts.onFavorite ? `
+            <button class="btn btn-sm btn-outline-light ${r.favorite ? "is-favorite" : ""}" data-act="favorite" title="В избранное">
+              <i class="bi ${r.favorite ? "bi-star-fill" : "bi-star"}"></i>
+            </button>
+          ` : ``}
+        
           ${opts.onUse ? `
             <button class="btn btn-sm btn-outline-light" data-act="use" title="Использовать">
               <i class="bi bi-play-fill"></i>
             </button>
           ` : ``}
-
+        
           ${opts.onEdit ? `
             <button class="btn btn-sm btn-outline-light" data-act="edit" title="Редактировать">
               <i class="bi bi-pencil"></i>
             </button>
           ` : ``}
-
+        
           <button class="btn btn-sm btn-outline-light" data-act="delete" title="Удалить">
             <i class="bi bi-trash3"></i>
           </button>
@@ -865,6 +871,12 @@ function renderList(containerId, rows, onDelete, opts = {}) {
       e.stopPropagation();
       await opts.onUse(r);
     });
+
+    const favoriteBtn = card.querySelector("button[data-act='favorite']");
+      favoriteBtn?.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        await opts.onFavorite(r);
+      });
 
     const editBtn = card.querySelector("button[data-act='edit']");
     editBtn?.addEventListener("click", (e) => {
@@ -2048,12 +2060,19 @@ async function loadSheet(showStatus = true) {
   );
 
   // Spells
+  const spellsRows = sortFavoritesFirst(
+    markFavorites(
+      (state.sheet.spells || []).map((s) => ({
+        ...s,
+        preview: formatSpellPreview(s),
+      })),
+      "spells"
+    )
+  );
+
   renderList(
     "spellsList",
-    (state.sheet.spells || []).map((s) => ({
-      ...s,
-      preview: formatSpellPreview(s),
-    })),
+    spellsRows,
     async (s) => {
       await api(`/characters/${id}/spells/${s.id}`, { method: "DELETE" });
       await loadSheet(false);
@@ -2061,8 +2080,11 @@ async function loadSheet(showStatus = true) {
     {
       icon: "bi-stars",
       clamp: true,
-      onUse: async (s) => applyCostToCharacter(s.cost),
-      onEdit: (s) => openSpellModal("spell", s),
+      onUse: async (s) => applyCostToCharacter(s.cost, s.name || "Заклинание"),
+      onFavorite: async (s) => {
+        toggleFavorite("spells", s.id);
+        renderCombatQuickLists();
+      },
     }
   );
 
@@ -2090,12 +2112,19 @@ async function loadSheet(showStatus = true) {
   const active = allAbilities.filter((a) => !(a.cost || "").toLowerCase().includes("passive"));
 
   if (el("passiveAbilitiesList")) {
+    const passiveRows = sortFavoritesFirst(
+      markFavorites(
+        passive.map((a) => ({
+          ...a,
+          preview: formatSpellPreview(a),
+        })),
+        "passiveAbilities"
+      )
+    );
+
     renderList(
       "passiveAbilitiesList",
-      passive.map((a) => ({
-        ...a,
-        preview: formatSpellPreview(a),
-      })),
+      passiveRows,
       async (a) => {
         await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
         await loadSheet(false);
@@ -2104,17 +2133,28 @@ async function loadSheet(showStatus = true) {
         icon: "bi-shield-check",
         clamp: true,
         onEdit: (a) => openSpellModal("passive", a),
+        onFavorite: async (a) => {
+          toggleFavorite("passiveAbilities", a.id);
+          await loadSheet(false);
+        },
       }
     );
   }
 
   if (el("abilitiesList")) {
+    const activeRows = sortFavoritesFirst(
+      markFavorites(
+        active.map((a) => ({
+          ...a,
+          preview: formatSpellPreview(a),
+        })),
+        "abilities"
+      )
+    );
+
     renderList(
       "abilitiesList",
-      active.map((a) => ({
-        ...a,
-        preview: formatSpellPreview(a),
-      })),
+      activeRows,
       async (a) => {
         await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
         await loadSheet(false);
@@ -2122,8 +2162,11 @@ async function loadSheet(showStatus = true) {
       {
         icon: "bi-lightning-fill",
         clamp: true,
-        onUse: async (a) => applyCostToCharacter(a.cost),
-        onEdit: (a) => openSpellModal("ability", a),
+        onUse: async (a) => applyCostToCharacter(a.cost, a.name || "Умение"),
+        onFavorite: async (a) => {
+          toggleFavorite("abilities", a.id);
+          renderCombatQuickLists();
+        },
       }
     );
     // Summons
@@ -2190,6 +2233,64 @@ function formatSpellPreview(spell) {
   ].filter(Boolean);
 
   return parts.join("");
+}
+
+function getFavoriteStorageKey(kind) {
+  const chId = currentChId() || "nochar";
+  return `favorites:${chId}:${kind}`;
+}
+
+function loadFavorites(kind) {
+  try {
+    const raw = localStorage.getItem(getFavoriteStorageKey(kind));
+    const arr = JSON.parse(raw || "[]");
+    return new Set(Array.isArray(arr) ? arr.map(Number) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveFavorites(kind, idsSet) {
+  try {
+    localStorage.setItem(
+      getFavoriteStorageKey(kind),
+      JSON.stringify(Array.from(idsSet))
+    );
+  } catch {}
+}
+
+function isFavorite(kind, id) {
+  return loadFavorites(kind).has(Number(id));
+}
+
+function toggleFavorite(kind, id) {
+  const ids = loadFavorites(kind);
+  const numId = Number(id);
+
+  if (ids.has(numId)) ids.delete(numId);
+  else ids.add(numId);
+
+  saveFavorites(kind, ids);
+}
+
+function markFavorites(rows, kind) {
+  return (rows || []).map((row) => ({
+    ...row,
+    favorite: isFavorite(kind, row.id),
+    favoriteKind: kind,
+  }));
+}
+
+function sortFavoritesFirst(rows) {
+  return [...(rows || [])].sort((a, b) => {
+    const favDiff = Number(!!b.favorite) - Number(!!a.favorite);
+    if (favDiff !== 0) return favDiff;
+
+    const levelDiff = Number(b.level || 0) - Number(a.level || 0);
+    if (levelDiff !== 0) return levelDiff;
+
+    return String(a.name || "").localeCompare(String(b.name || ""), "ru");
+  });
 }
 
 function formatGenderLabel(value) {
@@ -3471,20 +3572,29 @@ function renderCombatQuickLists() {
 
   const q = String(el("combatSearch")?.value || "").trim().toLowerCase();
 
-  const spells = (state.sheet.spells || [])
-    .filter(s => !q || (String(s.name||"").toLowerCase().includes(q) || String(s.description||"").toLowerCase().includes(q)))
-    .map((s) => ({
-      ...s,
-      preview: formatSpellPreview(s),
-    }));
+  const spells = sortFavoritesFirst(
+      markFavorites(
+        (state.sheet.spells || [])
+          .filter(s => !q || (String(s.name || "").toLowerCase().includes(q) || String(s.description || "").toLowerCase().includes(q)))
+          .map((s) => ({
+            ...s,
+            preview: formatSpellPreview(s),
+          })),
+        "spells"
+      )
+    );
 
-  const abilities = (state.sheet.abilities || [])
-    .filter(a => !q || (String(a.name||"").toLowerCase().includes(q) || String(a.description||"").toLowerCase().includes(q)))
-    .map((a) => ({
-      ...a,
-      preview: formatSpellPreview(a),
-    }));
-
+    const abilities = sortFavoritesFirst(
+      markFavorites(
+        (state.sheet.abilities || [])
+          .filter(a => !q || (String(a.name || "").toLowerCase().includes(q) || String(a.description || "").toLowerCase().includes(q)))
+          .map((a) => ({
+            ...a,
+            preview: formatSpellPreview(a),
+          })),
+        "abilities"
+      )
+    );
   // Заклинания (use = списать cost)
   renderList(
     "combatQuickSpells",

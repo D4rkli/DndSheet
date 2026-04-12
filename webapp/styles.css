@@ -3241,3 +3241,18 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
     padding: 4px 8px;
   }
 }
+
+.item-actions .is-favorite {
+  border-color: rgba(255, 215, 90, .45);
+  background: rgba(255, 215, 90, .10);
+  color: #ffe38a;
+}
+
+.item-actions .is-favorite i {
+  color: #ffd86b;
+}
+
+.item-actions button[data-act="favorite"]:hover {
+  border-color: rgba(255, 215, 90, .35);
+  color: #ffe38a;
+}
