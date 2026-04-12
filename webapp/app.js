@@ -2337,6 +2337,7 @@ async function boot() {
     wireCombatSwipe();
     wireCombatExpandableQuickRows();
     wireLongPressRepeat();
+    wireResourceLongTapAdjust();
     wireCombatHitMenus();
     wireCombatInnerTabs();
     wireCombatSheet();
@@ -2373,6 +2374,8 @@ async function boot() {
       });
 
       el("applyDamage")?.addEventListener("click", applyDamageFromModal);
+
+      el("applyResourceAdjust")?.addEventListener("click", applyResourceAdjustFromModal);
       // чтобы "осталось до уровня" обновлялось при правке XP и XP-per-level
       el("f_xp")?.addEventListener("input", updateXpToNextUI);
       el("f_xp_per_level")?.addEventListener("input", updateXpToNextUI);
@@ -3532,6 +3535,61 @@ function wireLongPressRepeat() {
   }, true);
 }
 
+function wireResourceLongTapAdjust() {
+  const map = [
+    { selector: ".combat-chip.hp", target: "f_hp", label: "HP" },
+    { selector: ".combat-chip.mana", target: "f_mana", label: "Мана" },
+    { selector: ".combat-chip.energy", target: "f_energy", label: "Энергия" },
+  ];
+
+  map.forEach(({ selector, target, label }) => {
+    const chip = document.querySelector(selector);
+    if (!chip) return;
+
+    let timer = null;
+    let moved = false;
+    let startX = 0;
+    let startY = 0;
+
+    chip.addEventListener("pointerdown", (e) => {
+      if (e.target.closest("button")) return;
+
+      moved = false;
+      startX = e.clientX;
+      startY = e.clientY;
+
+      timer = setTimeout(() => {
+        timer = null;
+        openResourceAdjustModal(target, label);
+      }, 450);
+    });
+
+    chip.addEventListener("pointermove", (e) => {
+      if (!timer) return;
+
+      const dx = Math.abs(e.clientX - startX);
+      const dy = Math.abs(e.clientY - startY);
+
+      if (dx > 10 || dy > 10) {
+        moved = true;
+        clearTimeout(timer);
+        timer = null;
+      }
+    });
+
+    const clear = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    chip.addEventListener("pointerup", clear);
+    chip.addEventListener("pointercancel", clear);
+    chip.addEventListener("pointerleave", clear);
+  });
+}
+
 function renderCombatQuickLists() {
   const id = currentChId();
   if (!id || !state.sheet) return;
@@ -4160,6 +4218,43 @@ damageModalEl?.addEventListener("hidden.bs.modal", () => {
   document.body.classList.remove("modal-open");
   document.body.style.removeProperty("padding-right");
 });
+
+const resourceAdjustModalEl = el("resourceAdjustModal");
+const resourceAdjustModal = resourceAdjustModalEl ? new bootstrap.Modal(resourceAdjustModalEl) : null;
+
+let activeResourceAdjustTarget = null;
+let activeResourceAdjustLabel = "";
+
+resourceAdjustModalEl?.addEventListener("hidden.bs.modal", () => {
+  document.querySelectorAll(".modal-backdrop").forEach((node) => node.remove());
+  document.body.classList.remove("modal-open");
+  document.body.style.removeProperty("padding-right");
+});
+
+function openResourceAdjustModal(targetId, label) {
+  activeResourceAdjustTarget = targetId;
+  activeResourceAdjustLabel = label || "Ресурс";
+
+  const title = el("resourceAdjustTitle");
+  const input = el("resource_adjust_value");
+
+  if (title) title.textContent = `Изменить: ${activeResourceAdjustLabel}`;
+  if (input) input.value = "0";
+
+  resourceAdjustModal?.show();
+}
+
+function applyResourceAdjustFromModal() {
+  const delta = Number(el("resource_adjust_value")?.value || 0);
+
+  if (!activeResourceAdjustTarget || !Number.isFinite(delta) || delta === 0) {
+    showBattleError("Введи корректное значение");
+    return;
+  }
+
+  quickApplyResource(activeResourceAdjustTarget, delta);
+  resourceAdjustModal?.hide();
+}
 
 function setBaseResourcesCollapsed(collapsed) {
   const block = el("baseResourcesBlock");
