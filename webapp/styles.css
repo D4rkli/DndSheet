@@ -3256,3 +3256,92 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
   border-color: rgba(255, 215, 90, .35);
   color: #ffe38a;
 }
+
+#spellsList .item,
+#abilitiesList .item,
+#passiveAbilitiesList .item {
+  padding: 10px;
+}
+
+#spellsList .item-title,
+#abilitiesList .item-title,
+#passiveAbilitiesList .item-title {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+#spellsList .item-sub,
+#abilitiesList .item-sub,
+#passiveAbilitiesList .item-sub {
+  gap: 6px;
+  margin-top: 6px;
+}
+
+#spellsList .item-sub .spell-meta,
+#abilitiesList .item-sub .spell-meta,
+#passiveAbilitiesList .item-sub .spell-meta {
+  min-height: 24px;
+  padding: 2px 8px;
+  font-size: 11px;
+  border-radius: 999px;
+}
+
+@media (max-width: 575px) {
+  #tab-inv #btnAddItem,
+  #tab-spells #btnAddSpell,
+  #tab-abilities #btnAddAbility,
+  #tab-passive-abilities #btnAddPassiveAbility,
+  #tab-states #btnAddState,
+  #tab-summons #btnAddSummon {
+    display: none !important;
+  }
+}
+
+.item-actions {
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.item-actions .btn.btn-sm {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-actions .btn.btn-sm i {
+  font-size: 14px;
+}
+
+@media (max-width: 575px) {
+  .fab {
+    width: 52px;
+    height: 52px;
+    right: 12px;
+    bottom: 12px;
+    border-radius: 16px;
+  }
+
+  .fab-menu {
+    right: 12px;
+    bottom: 72px;
+    width: min(190px, calc(100vw - 24px));
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .fab-item {
+    width: 100%;
+    padding: 9px 10px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
+
+  .fab-item i {
+    font-size: 16px;
+  }
+}
