@@ -3482,7 +3482,7 @@ function renderCombatQuickLists() {
     .filter(a => !q || (String(a.name||"").toLowerCase().includes(q) || String(a.description||"").toLowerCase().includes(q)))
     .map((a) => ({
       ...a,
-      preview: formatSpellPreview(s),
+      preview: formatSpellPreview(a),
     }));
 
   // Заклинания (use = списать cost)
