@@ -8,7 +8,7 @@
    ========================================================================== */
 
 .wrap {
-  max-width: 980px;
+  max-width: 1280px;
   padding: 0 24px;
 }
 
@@ -77,14 +77,16 @@
   font-size: 12px;
 }
 
-/* keep the floating donate button out of the FAB's way and make it a
-   normal compact pill instead of a full-width bar */
+/* a fixed floating pill has nowhere safe to sit once the page is a dense
+   3-column dashboard (it ends up on top of form fields no matter which
+   corner) — drop it on desktop and surface it as a normal menu item
+   instead (#btnDonateMenu below) */
 .donate-btn {
-  left: 32px;
-  right: auto;
-  bottom: 32px;
-  width: auto;
-  padding: 12px 22px;
+  display: none;
+}
+
+#btnDonateMenu.d-none {
+  display: flex !important;
 }
 
 .fab {
@@ -95,4 +97,110 @@
 .fab-menu {
   right: 32px;
   bottom: 100px;
+}
+
+/* ==========================================================================
+   3-column dashboard layout.
+
+   Left = "Основное" (identity, resources, XP, wallet — the priority column).
+   Middle = Инвентарь / Заклинания / Способности / Пассивки (stacked).
+   Right = Статы, pinned while scrolling.
+   Everything else (Состояния/Экипировка/Призывы/Поля) stays tab-switchable
+   below, full width, exactly like on mobile.
+   ========================================================================== */
+
+main.content {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(380px, 1.3fr) minmax(300px, 1fr);
+  grid-template-areas:
+    "tabs   tabs   tabs"
+    "main   inv    stats"
+    "main   spells stats"
+    "main   passive stats"
+    "main   abilities stats"
+    "extra  extra  extra";
+  align-items: start;
+  gap: 22px;
+}
+
+#tabs.nav {
+  grid-area: tabs;
+}
+
+#tab-main {
+  grid-area: main;
+}
+
+#tab-inv {
+  grid-area: inv;
+}
+
+#tab-spells {
+  grid-area: spells;
+}
+
+#tab-passive-abilities {
+  grid-area: passive;
+}
+
+#tab-abilities {
+  grid-area: abilities;
+}
+
+#tab-stats {
+  grid-area: stats;
+  position: sticky;
+  top: 108px;
+  max-height: calc(100vh - 128px);
+  overflow-y: auto;
+}
+
+#tab-states,
+#tab-summons,
+#tab-equip,
+#tab-custom {
+  grid-area: extra;
+}
+
+/* these six panels are always visible as columns; ignore the mobile
+   single-tab-at-a-time toggling that adds/removes this class via JS */
+#tab-main.d-none,
+#tab-stats.d-none,
+#tab-inv.d-none,
+#tab-spells.d-none,
+#tab-passive-abilities.d-none,
+#tab-abilities.d-none {
+  display: block !important;
+}
+
+/* their nav pills are redundant once the column is permanently visible;
+   keep pills only for the remaining tab-switched sections */
+#tabs .nav-link[data-tab="main"],
+#tabs .nav-link[data-tab="stats"],
+#tabs .nav-link[data-tab="inv"],
+#tabs .nav-link[data-tab="spells"],
+#tabs .nav-link[data-tab="abilities"],
+#tabs .nav-link[data-tab="passive-abilities"] {
+  display: none;
+}
+
+/* right column is narrower: keep its stat grids single-column so labels
+   and inputs stay readable instead of being squeezed */
+#tab-stats .grid-2 {
+  grid-template-columns: 1fr;
+}
+
+/* left column is narrower than a full page too: the combat HUD and XP
+   grid were tuned for a wide viewport (5 HUD chips / 3 XP columns) and
+   would be crammed into ~350px here, so cap them back down */
+#tab-main .combat-hud-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#tab-main .xp-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+#tab-main .xp-add {
+  grid-column: 1 / -1;
 }

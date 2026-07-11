@@ -1,0 +1,334 @@
+/* ==========================================================================
+   Light theme.
+
+   Default is unchanged (dark, exactly as before). These rules only apply
+   once <html data-theme="light"> is set by theme.js, so nothing changes
+   until the user actively switches — safe on both mobile and desktop.
+   ========================================================================== */
+
+:root[data-theme="light"] {
+  --bg: #eef1f8;
+  --card: #ffffff;
+  --text: #1b2233;
+  --muted: #5c6478;
+}
+
+[data-theme="light"] body {
+  background: radial-gradient(1200px 800px at 20% -10%, #dbe6ff 0%, var(--bg) 55%);
+  color: var(--text);
+}
+
+/* ===== Surfaces ===== */
+
+[data-theme="light"] .card-soft,
+[data-theme="light"] .character-meta-pill,
+[data-theme="light"] .main-identity-card,
+[data-theme="light"] .xp-grid > div,
+[data-theme="light"] .wallet-card,
+[data-theme="light"] .combat-chip:not(.hp):not(.mana):not(.energy),
+[data-theme="light"] .combat-mode-body.is-compact .combat-chip:not(.hp):not(.mana):not(.energy) {
+  background: rgba(15, 23, 42, .035);
+  border-color: rgba(15, 23, 42, .10);
+}
+
+[data-theme="light"] #tab-main .card.card-soft:not(.combat-mode-card):not(.character-hero-card) {
+  background: rgba(15, 23, 42, .025);
+}
+
+[data-theme="light"] .character-hero-card {
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(90, 140, 255, .14), rgba(90, 140, 255, 0) 42%),
+    linear-gradient(180deg, #ffffff, #f3f6ff);
+  border-color: rgba(15, 23, 42, .10);
+}
+
+/* ===== Text ===== */
+
+[data-theme="light"] .character-hero-name,
+[data-theme="light"] .character-hero-badge-value,
+[data-theme="light"] .modal-title,
+[data-theme="light"] .combat-log-summary,
+[data-theme="light"] .combat-log-summary * {
+  color: #12172a !important;
+}
+
+[data-theme="light"] .character-hero-kicker,
+[data-theme="light"] .character-hero-badge-label,
+[data-theme="light"] .character-meta-label,
+[data-theme="light"] .main-identity-card .form-label,
+[data-theme="light"] .main-edit-kicker,
+[data-theme="light"] .main-subsection-title,
+[data-theme="light"] .xp-grid .form-label,
+[data-theme="light"] #tab-main .hint,
+[data-theme="light"] #tab-main .card.card-soft:not(.combat-mode-card):not(.character-hero-card) .section-title {
+  color: rgba(15, 23, 42, .58);
+}
+
+[data-theme="light"] .character-meta-value,
+[data-theme="light"] .money-preview,
+[data-theme="light"] .combat-quick-btn,
+[data-theme="light"] #hud_attack,
+[data-theme="light"] #hud_armor,
+[data-theme="light"] .combat-chip:not(.hp):not(.mana):not(.energy) .combat-chip-val {
+  color: rgba(15, 23, 42, .88) !important;
+}
+
+/* ===== Forms ===== */
+
+[data-theme="light"] .form-control,
+[data-theme="light"] .form-select,
+[data-theme="light"] .input-group-text,
+[data-theme="light"] textarea.form-control,
+[data-theme="light"] input.form-control {
+  background-color: rgba(15, 23, 42, .04) !important;
+  border-color: rgba(15, 23, 42, .14) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="light"] .form-control:focus,
+[data-theme="light"] .form-select:focus {
+  background-color: rgba(15, 23, 42, .05) !important;
+  border-color: rgba(90, 140, 255, .55) !important;
+  color: var(--text) !important;
+  box-shadow: 0 0 0 0.2rem rgba(90, 140, 255, .14) !important;
+}
+
+[data-theme="light"] .form-control::placeholder {
+  color: rgba(15, 23, 42, .40) !important;
+}
+
+[data-theme="light"] .mini {
+  background: rgba(15, 23, 42, .04);
+  border-color: rgba(15, 23, 42, .14);
+  color: var(--text);
+}
+
+[data-theme="light"] .main-identity-card .form-control,
+[data-theme="light"] .main-identity-card .form-select {
+  background: rgba(15, 23, 42, .035) !important;
+}
+
+[data-theme="light"] .coin-input {
+  color: rgba(15, 23, 42, .88) !important;
+  border-bottom-color: rgba(15, 23, 42, .25) !important;
+}
+
+[data-theme="light"] .coin-input:focus {
+  border-bottom-color: rgba(15, 23, 42, .55) !important;
+}
+
+/* ===== Buttons ===== */
+
+[data-theme="light"] .btn-outline-light {
+  border-color: rgba(15, 23, 42, .22);
+  color: #1b2233;
+}
+
+[data-theme="light"] .btn-outline-primary {
+  border-color: rgba(74, 122, 230, .55);
+  color: #2f5fd6;
+}
+
+/* ===== Header / tabs ===== */
+
+[data-theme="light"] .topbar {
+  background: rgba(255, 255, 255, .92);
+  border-bottom-color: rgba(15, 23, 42, .08);
+}
+
+[data-theme="light"] .topbar-menu {
+  background: rgba(255, 255, 255, .98);
+  border-color: rgba(15, 23, 42, .10);
+}
+
+[data-theme="light"] .topbar-menu-item {
+  background: rgba(15, 23, 42, .03);
+  border-color: rgba(15, 23, 42, .10);
+  color: rgba(15, 23, 42, .88);
+}
+
+[data-theme="light"] #tabs .nav-link {
+  color: #3f5fb0;
+  background: rgba(15, 23, 42, .03);
+  border-color: rgba(15, 23, 42, .08);
+}
+
+[data-theme="light"] #tabs .nav-link.active {
+  background: #3f6dff;
+  color: #ffffff;
+}
+
+/* ===== Lists / items ===== */
+
+[data-theme="light"] .item {
+  background: rgba(15, 23, 42, .03);
+  border-color: rgba(15, 23, 42, .10);
+}
+
+[data-theme="light"] .item-title {
+  color: rgba(15, 23, 42, .92);
+}
+
+[data-theme="light"] .item-sub,
+[data-theme="light"] .item-details,
+[data-theme="light"] #spellsList .item-sub,
+[data-theme="light"] #abilitiesList .item-sub,
+[data-theme="light"] #passiveAbilitiesList .item-sub {
+  color: rgba(15, 23, 42, .66);
+}
+
+[data-theme="light"] #spellsList .item-sub .spell-meta,
+[data-theme="light"] #abilitiesList .item-sub .spell-meta,
+[data-theme="light"] #passiveAbilitiesList .item-sub .spell-meta {
+  background: rgba(15, 23, 42, .04);
+  border-color: rgba(15, 23, 42, .10);
+}
+
+/* ===== Equipment ===== */
+
+[data-theme="light"] .equip-card {
+  background: linear-gradient(180deg, #ffffff, #f4f6fc);
+  border-color: rgba(15, 23, 42, .12);
+  color: #1b2233;
+}
+
+[data-theme="light"] .equip-slot span {
+  color: rgba(15, 23, 42, .88);
+  text-shadow: none;
+}
+
+[data-theme="light"] .equip-slot span.equip-empty {
+  color: rgba(15, 23, 42, .48);
+}
+
+[data-theme="light"] .equip-sub,
+[data-theme="light"] .equip-info {
+  color: rgba(15, 23, 42, .62);
+}
+
+/* ===== Modals ===== */
+
+[data-theme="light"] .modal-content {
+  background: #ffffff !important;
+  color: rgba(15, 23, 42, .92) !important;
+  border-color: rgba(15, 23, 42, .10);
+}
+
+[data-theme="light"] .modal-header,
+[data-theme="light"] .modal-footer {
+  border-color: rgba(15, 23, 42, .10);
+}
+
+[data-theme="light"] .modal .form-label {
+  color: rgba(15, 23, 42, .72) !important;
+}
+
+[data-theme="light"] .modal .form-control,
+[data-theme="light"] .modal textarea,
+[data-theme="light"] .modal select {
+  background: rgba(15, 23, 42, .04) !important;
+  color: #1b2233 !important;
+  border: 1px solid rgba(15, 23, 42, .16) !important;
+}
+
+[data-theme="light"] .modal .form-control::placeholder,
+[data-theme="light"] .modal textarea::placeholder {
+  color: rgba(15, 23, 42, .40) !important;
+}
+
+[data-theme="light"] .modal .hint,
+[data-theme="light"] .modal .form-text {
+  color: rgba(15, 23, 42, .55) !important;
+}
+
+[data-theme="light"] .modal-header .btn-close {
+  filter: none;
+}
+
+[data-theme="light"] .modalx-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, .10);
+}
+
+[data-theme="light"] .modalx-head,
+[data-theme="light"] .modalx-foot {
+  border-color: rgba(15, 23, 42, .08);
+}
+
+[data-theme="light"] .builder-list {
+  border-color: rgba(15, 23, 42, .12);
+}
+
+[data-theme="light"] .builder-item:hover {
+  background: rgba(15, 23, 42, .04);
+}
+
+[data-theme="light"] .builder-item.active {
+  border-color: rgba(74, 122, 230, .55);
+  background: rgba(74, 122, 230, .08);
+}
+
+[data-theme="light"] .codebox {
+  background: rgba(15, 23, 42, .04);
+  border-color: rgba(15, 23, 42, .10);
+  color: #1b2233;
+}
+
+/* ===== Combat panel ===== */
+
+[data-theme="light"] .combat-inner-tab {
+  border-color: rgba(15, 23, 42, .14);
+  background: rgba(15, 23, 42, .03);
+  color: rgba(15, 23, 42, .70);
+}
+
+[data-theme="light"] .combat-inner-tab.active {
+  background: rgba(74, 122, 230, .16);
+  border-color: rgba(74, 122, 230, .40);
+  color: #1b2233;
+}
+
+[data-theme="light"] .combat-round-badge,
+[data-theme="light"] .combat-state-chip,
+[data-theme="light"] .combat-state-btn,
+[data-theme="light"] .combat-action-btn,
+[data-theme="light"] .combat-mini-btn:not(.combat-mini-btn--hit),
+[data-theme="light"] .combat-panel-actions .combat-mini-btn:not(.combat-mini-btn--hit) {
+  background: rgba(15, 23, 42, .04);
+  border-color: rgba(15, 23, 42, .14);
+  color: #1b2233;
+}
+
+[data-theme="light"] .combat-log-item {
+  background: rgba(15, 23, 42, .03);
+  border-color: rgba(15, 23, 42, .10);
+  color: rgba(15, 23, 42, .80);
+}
+
+[data-theme="light"] .combat-log-empty,
+[data-theme="light"] .combat-state-empty,
+[data-theme="light"] .combat-state-meta {
+  color: rgba(15, 23, 42, .50);
+}
+
+[data-theme="light"] .combat-hit-menu {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, .12);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, .16);
+}
+
+[data-theme="light"] .combat-panel-log .combat-meta-block,
+[data-theme="light"] .combat-panel-magic,
+[data-theme="light"] .combat-panel-states {
+  border-top-color: rgba(15, 23, 42, .08);
+}
+
+[data-theme="light"] .hr-soft {
+  border-color: rgba(15, 23, 42, .12);
+}
+
+/* ===== Donate button ===== */
+
+[data-theme="light"] .donate-btn {
+  color: #21407a;
+}

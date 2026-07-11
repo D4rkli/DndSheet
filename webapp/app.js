@@ -1164,6 +1164,20 @@ el("btnTemplates")?.addEventListener("click", () => {
   templatesModal.show();
 });
 
+function updateThemeToggleIcon() {
+  const icon = document.querySelector("#btnThemeToggle i");
+  if (!icon) return;
+  const isLight = window.dndTheme?.get() === "light";
+  icon.className = isLight ? "bi bi-sun" : "bi bi-moon-stars";
+}
+
+updateThemeToggleIcon();
+
+el("btnThemeToggle")?.addEventListener("click", () => {
+  window.dndTheme?.toggle();
+  updateThemeToggleIcon();
+});
+
 if (!tg) el("btnLogout")?.classList.remove("d-none");
 
 el("btnLogout")?.addEventListener("click", async () => {
@@ -1955,9 +1969,8 @@ function renderAccountBadge() {
     badge.classList.add("d-none");
     return;
   }
-  const name = tg.first_name || tg.username || `ID ${tg.id}`;
-  const handle = tg.username ? ` (@${tg.username})` : "";
-  badge.innerHTML = `<i class="bi bi-check-circle-fill account-badge-icon"></i> ${escapeHtml(name)}${escapeHtml(handle)}`;
+  const label = tg.username ? `@${tg.username}` : (tg.first_name || "Telegram");
+  badge.innerHTML = `<i class="bi bi-check-circle-fill account-badge-icon"></i> ${escapeHtml(label)}`;
   badge.classList.remove("d-none");
 }
 
