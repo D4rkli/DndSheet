@@ -9,14 +9,15 @@ from .models import User
 from . import crud
 
 
-async def resolve_tg_profile(
+async def resolve_auth_profile(
     request: Request,
     x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
 ) -> dict:
-    """Resolve the current Telegram profile from either Mini App initData
-    (X-TG-INIT-DATA header) or a website session cookie.
+    """Resolve the current authenticated profile from either Telegram Mini App
+    initData (X-TG-INIT-DATA header) or a website session cookie (set after
+    Telegram Login Widget or VK OAuth).
 
-    Returns {"tg_id", "first_name", "last_name", "username", "photo_url"}.
+    Returns {"provider", "user_key", "first_name", "last_name", "username", "photo_url"}.
     """
     if x_tg_init_data:
         try:
@@ -26,7 +27,8 @@ async def resolve_tg_profile(
                 raise ValueError("No user in initData")
             tg_user = json.loads(user_json)
             return {
-                "tg_id": int(tg_user["id"]),
+                "provider": "telegram",
+                "user_key": int(tg_user["id"]),
                 "first_name": tg_user.get("first_name"),
                 "last_name": tg_user.get("last_name"),
                 "username": tg_user.get("username"),
@@ -45,6 +47,8 @@ async def resolve_tg_profile(
 
 async def get_current_user(
     db: AsyncSession = Depends(get_db),
-    profile: dict = Depends(resolve_tg_profile),
+    profile: dict = Depends(resolve_auth_profile),
 ) -> User:
-    return await crud.get_or_create_user(db, tg_id=profile["tg_id"])
+    if profile["provider"] == "vk":
+        return await crud.get_or_create_user_by_vk(db, vk_id=profile["user_key"])
+    return await crud.get_or_create_user(db, tg_id=profile["user_key"])

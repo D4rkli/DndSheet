@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = True
     SESSION_MAX_AGE_DAYS: int = 30
 
+    VK_APP_ID: str = ""
+    VK_APP_SECRET: str = ""
+    VK_REDIRECT_URI: str = "https://d4rkli.ru/api/auth/vk/callback"
+
     def dm_ids(self) -> set[int]:
         if not self.DM_USER_IDS:
             return set()

@@ -1178,15 +1178,21 @@ el("btnThemeToggle")?.addEventListener("click", () => {
   updateThemeToggleIcon();
 });
 
-if (!tg) el("btnLogout")?.classList.remove("d-none");
+if (!tgInitData()) {
+  el("btnLogout")?.classList.remove("d-none");
+  el("btnLogoutVisible")?.classList.remove("d-none");
+}
 
-el("btnLogout")?.addEventListener("click", async () => {
+async function doLogout() {
   try {
     await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include" });
   } finally {
     location.href = "login.html";
   }
-});
+}
+
+el("btnLogout")?.addEventListener("click", doLogout);
+el("btnLogoutVisible")?.addEventListener("click", doLogout);
 
 el("characterSelect").addEventListener("change", async (e) => {
   state.chId = Number(e.target.value);
@@ -1964,12 +1970,12 @@ async function loadMe() {
 function renderAccountBadge() {
   const badge = el("accountBadge");
   if (!badge) return;
-  const tg = state.me?.tg;
-  if (!tg) {
+  const me = state.me;
+  if (!me) {
     badge.classList.add("d-none");
     return;
   }
-  const label = tg.username ? `@${tg.username}` : (tg.first_name || "Telegram");
+  const label = me.username ? `@${me.username}` : me.display_name;
   badge.innerHTML = `<i class="bi bi-check-circle-fill account-badge-icon"></i> ${escapeHtml(label)}`;
   badge.classList.remove("d-none");
 }

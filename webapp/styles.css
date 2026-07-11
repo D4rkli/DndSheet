@@ -3647,6 +3647,7 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
   .item-caret{
     display: none;
   }
+}
 
 /* =========================
    LOGIN PAGE
@@ -3696,6 +3697,48 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
 .login-card #widgetHolder{
   margin-top: 6px;
 }
+
+.login-divider{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: rgba(255,255,255,.42);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+
+.login-divider::before,
+.login-divider::after{
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: rgba(255,255,255,.12);
+}
+
+.login-vk-btn{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 46px;
+  border-radius: 14px;
+  background: #0077ff;
+  border: 1px solid #0077ff;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.login-vk-btn:hover{
+  background: #0066dd;
+  border-color: #0066dd;
+  color: #ffffff;
+}
+
+.login-vk-btn i{
+  font-size: 18px;
 }
 
 @media (max-width: 575px){

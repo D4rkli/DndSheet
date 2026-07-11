@@ -43,5 +43,19 @@ jobs:
             source venv/bin/activate
             pip install -r requirements.txt
 
+            # Back up the sqlite DB before running migrations, just in case.
+            DB_FILE="/var/lib/dndsheet/dnd_v2.sqlite3"
+            if [ -f "$DB_FILE" ]; then
+              cp "$DB_FILE" "$DB_FILE.pre-migrate.$(date +%Y%m%d%H%M%S).bak"
+            fi
+
+            # This database was originally built via SQLAlchemy's create_all()
+            # and was never tracked by Alembic. Stamp it at the last revision
+            # that create_all() already satisfies, so upgrade only applies
+            # genuinely new migrations instead of re-running from scratch.
+            python scripts/ensure_alembic_baseline.py || alembic stamp 21f2d96ca47b
+
+            alembic upgrade head
+
             systemctl restart dnd-backend
             systemctl restart dnd-bot

@@ -7,7 +7,8 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    tg_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    tg_id: Mapped[int | None] = mapped_column(Integer, unique=True, index=True, nullable=True)
+    vk_id: Mapped[int | None] = mapped_column(Integer, unique=True, index=True, nullable=True)
 
     characters: Mapped[list["Character"]] = relationship(back_populates="owner")
 

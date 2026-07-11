@@ -89,14 +89,16 @@ def verify_telegram_login_widget(data: dict) -> dict:
 
 
 def create_session_cookie(
-    tg_id: int,
+    provider: str,
+    user_key: int,
     first_name: str | None = None,
     last_name: str | None = None,
     username: str | None = None,
     photo_url: str | None = None,
 ) -> str:
     return _serializer.dumps({
-        "tg_id": tg_id,
+        "provider": provider,
+        "user_key": user_key,
         "first_name": first_name,
         "last_name": last_name,
         "username": username,
@@ -112,6 +114,23 @@ def read_session_cookie(token: str) -> dict | None:
         data = _serializer.loads(token, max_age=max_age)
     except (BadSignature, SignatureExpired):
         return None
-    if data.get("tg_id") is None:
+    if data.get("provider") not in ("telegram", "vk") or data.get("user_key") is None:
         return None
     return data
+
+
+VK_STATE_COOKIE_NAME = "dnd_vk_state"
+
+
+def create_vk_state_cookie(state: str) -> str:
+    return _serializer.dumps({"state": state})
+
+
+def read_vk_state_cookie(token: str) -> str | None:
+    if not token:
+        return None
+    try:
+        data = _serializer.loads(token, max_age=600)  # 10 minutes to complete the VK redirect
+    except (BadSignature, SignatureExpired):
+        return None
+    return data.get("state")

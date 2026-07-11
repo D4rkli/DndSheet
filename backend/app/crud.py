@@ -62,6 +62,19 @@ async def get_or_create_user(db: AsyncSession, tg_id: int) -> User:
     return user
 
 
+async def get_or_create_user_by_vk(db: AsyncSession, vk_id: int) -> User:
+    q = await db.execute(select(User).where(User.vk_id == vk_id))
+    user = q.scalar_one_or_none()
+    if user:
+        return user
+
+    user = User(vk_id=vk_id)
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
 # =========================
 # CHARACTERS
 # =========================
