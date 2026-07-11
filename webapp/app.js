@@ -25,7 +25,7 @@ async function api(path, options = {}) {
   });
   if (res.status === 401 && !init) {
     location.href = "login.html";
-    throw new Error("Not authenticated");
+    return new Promise(() => {}); // navigating away; stop the caller silently
   }
   if (!res.ok) {
     const txt = await res.text();
