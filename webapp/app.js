@@ -21,7 +21,12 @@ async function api(path, options = {}) {
   const res = await fetch(`${API_BASE}/api${path}`, {
     ...options,
     headers,
+    credentials: "include",
   });
+  if (res.status === 401 && !init) {
+    location.href = "login.html";
+    throw new Error("Not authenticated");
+  }
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`API ${res.status}: ${txt}`);
@@ -1159,6 +1164,16 @@ el("btnTemplates")?.addEventListener("click", () => {
   templatesModal.show();
 });
 
+if (!tg) el("btnLogout")?.classList.remove("d-none");
+
+el("btnLogout")?.addEventListener("click", async () => {
+  try {
+    await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include" });
+  } finally {
+    location.href = "login.html";
+  }
+});
+
 el("characterSelect").addEventListener("change", async (e) => {
   state.chId = Number(e.target.value);
   await loadSheet();
@@ -2007,6 +2022,7 @@ async function loadSheet(showStatus = true) {
   fillStatInputs("statsPersonality", ch);
   fillStatInputs("statsCombat", ch);
 
+  fillInput("f_ap_current", loadCurrentActionPoints());
   fillInput("f_attack_live", ch.attack ?? 0);
 
   // экипировка: берём с сервера и кладём в draft
@@ -2997,6 +3013,8 @@ function focusBattleMode() {
 }
 
 function updateCombatHudFromSheet() {
+  const apMax = Number(getStatInputByKey("action_points")?.value || 0);
+  const apCurrent = Number(el("f_ap_current")?.value || 0);
   const ch = state.sheet?.character;
   if (!ch) return;
 
@@ -3588,6 +3606,58 @@ function wireResourceLongTapAdjust() {
     chip.addEventListener("pointercancel", clear);
     chip.addEventListener("pointerleave", clear);
   });
+}
+
+function getActionPointsStorageKey() {
+  return `apCurrent:${currentChId() || "nochar"}`;
+}
+
+function loadCurrentActionPoints() {
+  const max = Number(getStatInputByKey("action_points")?.value || 0);
+
+  try {
+    const saved = Number(localStorage.getItem(getActionPointsStorageKey()) || max);
+    return Number.isFinite(saved) ? Math.max(0, saved) : max;
+  } catch {
+    return max;
+  }
+}
+
+function saveCurrentActionPoints(value) {
+  try {
+    localStorage.setItem(getActionPointsStorageKey(), String(Math.max(0, Number(value || 0))));
+  } catch {}
+}
+
+function setCurrentActionPoints(value) {
+  const max = Number(getStatInputByKey("action_points")?.value || 0);
+  const next = Math.max(0, Math.min(max, Number(value || 0)));
+
+  fillInput("f_ap_current", next);
+  saveCurrentActionPoints(next);
+
+  const hud = el("hud_ap");
+  if (hud) hud.textContent = `${next}/${max}`;
+}
+
+function spendActionPoints(cost, label = "Действие") {
+  const current = Number(el("f_ap_current")?.value || 0);
+
+  if (cost > current) {
+    showBattleError("Недостаточно очков действия");
+    return false;
+  }
+
+  setCurrentActionPoints(current - cost);
+  appendBattleLog(`🎯 ${label}: AP -${cost}`);
+  scheduleCombatAutosave();
+  return true;
+}
+
+function resetActionPointsForTurn() {
+  const max = Number(getStatInputByKey("action_points")?.value || 0);
+  setCurrentActionPoints(max);
+  appendBattleLog(`🔄 Очки действия восстановлены: ${max}`);
 }
 
 function renderCombatQuickLists() {

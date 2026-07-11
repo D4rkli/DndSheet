@@ -1,45 +1,27 @@
 import json
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from .db import get_db
-from .security import verify_telegram_init_data
+from .deps import get_current_user
+from .models import User
 from .config import settings
 from . import crud, schemas
 
 router = APIRouter()
 
-def _auth_user(x_tg_init_data: str | None):
-    if not x_tg_init_data:
-        raise HTTPException(401, "Missing X-TG-INIT-DATA")
-
-    try:
-        data = verify_telegram_init_data(x_tg_init_data)
-        user_json = data.get("user")
-        if not user_json:
-            raise ValueError("No user in initData")
-        return json.loads(user_json)
-
-    except Exception as e:
-        print("INIT DATA ERROR:", repr(e))
-        raise HTTPException(401, "Bad Telegram initData")
-
 
 @router.get("/me")
 async def me(
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
-    return {"tg": tg_user, "user_id": u.id, "is_dm": int(tg_user["id"]) in settings.dm_ids()}
+    return {"tg": {"id": u.tg_id}, "user_id": u.id, "is_dm": u.tg_id in settings.dm_ids()}
 
 @router.get("/characters")
 async def list_characters(
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     chars = await crud.list_characters(db, u.id)
 
@@ -59,10 +41,8 @@ async def list_characters(
 async def get_character(
     character_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_for_user(db, character_id, u.id)
     if not ch:
@@ -127,10 +107,8 @@ async def update_character(
     character_id: int,
     body: schemas.CharacterUpdate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.update_character(db, character_id, u.id, body)
     if not ch:
@@ -142,10 +120,8 @@ async def update_character(
 async def create_character(
     body: schemas.CharacterCreate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
     ch = await crud.create_character(db, u.id, body.name)
     return {"id": ch.id, "name": ch.name}
 
@@ -155,16 +131,14 @@ async def add_item(
     ch_id: int,
     body: schemas.ItemCreate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
     ch = await crud.get_character_for_user(db, ch_id, u.id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
     # владелец или DM может добавлять
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -175,16 +149,14 @@ async def add_item(
 async def list_items(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -206,17 +178,15 @@ async def delete_item(
     ch_id: int,
     item_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
     # доступ: владелец или DM
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -232,15 +202,13 @@ async def patch_item(
     item_id: int,
     data: schemas.ItemUpdate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
     ch = await crud.get_character_for_user(db, ch_id, u.id)
     if not ch:
         raise HTTPException(status_code=404, detail="Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(status_code=403, detail="No access")
 
@@ -260,16 +228,14 @@ async def patch_item(
 async def list_spells(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -293,10 +259,8 @@ async def add_spell(
     ch_id: int,
     body: schemas.SpellCreate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_for_user(db, ch_id, u.id)
     if not ch:
@@ -306,7 +270,7 @@ async def add_spell(
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -319,16 +283,14 @@ async def delete_spell(
     ch_id: int,
     spell_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -346,16 +308,14 @@ async def delete_spell(
 async def list_abilities(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -379,16 +339,14 @@ async def add_ability(
     ch_id: int,
     body: schemas.AbilityCreate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -401,16 +359,14 @@ async def delete_ability(
     ch_id: int,
     ability_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -428,16 +384,14 @@ async def delete_ability(
 async def list_states(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -459,16 +413,14 @@ async def patch_spell(
     spell_id: int,
     data: schemas.SpellUpdate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -485,16 +437,14 @@ async def patch_ability(
     ability_id: int,
     data: schemas.AbilityUpdate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -511,16 +461,14 @@ async def patch_state(
     state_id: int,
     data: schemas.StateUpdate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -536,16 +484,14 @@ async def add_state(
     ch_id: int,
     body: schemas.StateCreate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -558,16 +504,14 @@ async def delete_state(
     ch_id: int,
     state_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -585,16 +529,14 @@ async def delete_state(
 async def get_equipment(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -622,16 +564,14 @@ async def update_equipment(
     ch_id: int,
     body: schemas.EquipmentUpdate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -646,16 +586,14 @@ async def update_equipment(
 async def list_summons(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -680,16 +618,14 @@ async def add_summon(
     ch_id: int,
     body: schemas.SummonCreate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -703,16 +639,14 @@ async def patch_summon(
     summon_id: int,
     body: schemas.SummonUpdate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -727,16 +661,14 @@ async def delete_summon(
     ch_id: int,
     summon_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -753,18 +685,16 @@ async def delete_summon(
 async def get_full_sheet(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
     """For WebApp: one request returns everything, including template + custom values."""
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     # access check: owner or DM
     ch = await crud.get_character_by_id(db, ch_id)
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = int(tg_user["id"]) in settings.dm_ids()
+    is_dm = u.tg_id in settings.dm_ids()
     if ch.owner_user_id != u.id and not is_dm:
         raise HTTPException(403, "No access")
 
@@ -910,10 +840,8 @@ async def get_full_sheet(
 async def export_character_sheet(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     data = await crud.export_sheet(db, ch_id, u.id)
     if not data:
@@ -925,10 +853,8 @@ async def export_character_sheet(
 async def import_character_sheet(
     body: schemas.SheetImportIn,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.import_sheet(db, u.id, body.model_dump())
     return {"status": "ok", "character_id": ch.id}
@@ -941,10 +867,8 @@ async def import_character_sheet(
 @router.get("/templates")
 async def list_templates(
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     templates = await crud.list_templates(db, u.id)
     return [
@@ -961,10 +885,8 @@ async def list_templates(
 async def create_template(
     body: schemas.SheetTemplateCreate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     t = await crud.create_template(db, u.id, body.name, body.config)
     return {"status": "ok", "template_id": t.id}
@@ -974,10 +896,8 @@ async def create_template(
 async def delete_template(
     template_id: int,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ok = await crud.delete_template(db, u.id, template_id)
     if not ok:
@@ -990,10 +910,8 @@ async def create_character_from_template(
     template_id: int,
     body: schemas.CharacterCreate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.create_character_from_template(db, u.id, template_id, body.name)
     if not ch:
@@ -1010,10 +928,8 @@ async def apply_template(
     ch_id: int,
     body: schemas.ApplyTemplate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_for_user(db, ch_id, u.id)
     if not ch:
@@ -1031,10 +947,8 @@ async def patch_custom_values(
     ch_id: int,
     body: schemas.CustomValuesUpdate,
     db: AsyncSession = Depends(get_db),
-    x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
+    u: User = Depends(get_current_user),
 ):
-    tg_user = _auth_user(x_tg_init_data)
-    u = await crud.get_or_create_user(db, tg_id=int(tg_user["id"]))
 
     ch = await crud.get_character_for_user(db, ch_id, u.id)
     if not ch:

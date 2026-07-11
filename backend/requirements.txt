@@ -7,3 +7,4 @@ sqlalchemy==2.*
 aiosqlite==0.*
 python-multipart==0.*
 alembic==1.*
+itsdangerous==2.*

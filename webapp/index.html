@@ -49,6 +49,11 @@
             <i class="bi bi-sliders"></i>
             <span>Конструктор</span>
           </button>
+
+          <button id="btnLogout" class="topbar-menu-item d-none" type="button">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Выйти</span>
+          </button>
         </div>
       </div>
     </div>
@@ -214,8 +219,11 @@
                 </div>
 
                 <input id="f_attack_live" type="hidden" />
+                <input id="f_ap_current" type="hidden" />
 
-                <div class="combat-chip">
+
+
+                 <div class="combat-chip">
                   <div class="combat-chip-title">Armor</div>
                   <div class="combat-chip-body">
                     <span id="hud_armor" class="combat-chip-val">0+0</span>
