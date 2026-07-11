@@ -151,8 +151,7 @@ main.content {
   grid-area: stats;
   position: sticky;
   top: 108px;
-  max-height: calc(100vh - 128px);
-  overflow-y: auto;
+  align-self: start;
 }
 
 #tab-states,

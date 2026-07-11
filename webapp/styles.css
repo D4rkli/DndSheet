@@ -3698,6 +3698,14 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
   margin-top: 6px;
 }
 
+/* The Telegram widget renders its own iframe with square corners and a
+   fixed (often dark) background — clip it to the rounded button shape so
+   no dark corner peeks out against a light card. */
+.login-card #widgetHolder iframe{
+  border-radius: 8px;
+  overflow: hidden;
+}
+
 .login-divider{
   display: flex;
   align-items: center;
