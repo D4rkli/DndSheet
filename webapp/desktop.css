@@ -1,0 +1,98 @@
+/* ==========================================================================
+   Desktop-only visual polish.
+
+   This file is linked with <link ... media="(min-width: 1024px)"> so it
+   never loads/applies below that width — phones (including landscape) are
+   guaranteed to render exactly as before. Only real desktop/laptop screens
+   and large tablets in landscape get these rules.
+   ========================================================================== */
+
+.wrap {
+  max-width: 980px;
+  padding: 0 24px;
+}
+
+.topbar {
+  padding: 22px 28px 16px;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+}
+
+.app-title {
+  font-size: 20px;
+}
+
+#status.muted {
+  font-size: 13px;
+}
+
+.content {
+  padding: 26px 4px 40px;
+}
+
+.card-soft {
+  border-radius: 24px;
+  transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.card-soft:hover {
+  border-color: rgba(255, 255, 255, .16);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .28);
+}
+
+#tabs.nav {
+  flex-wrap: wrap;
+  overflow-x: visible;
+}
+
+#tabs .nav-link {
+  padding: 10px 18px;
+  font-size: 13px;
+}
+
+.btn {
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.06);
+}
+
+.btn-outline-light:hover,
+.btn-outline-primary:hover {
+  background: rgba(255, 255, 255, .08);
+}
+
+.item:hover {
+  border-color: rgba(255, 255, 255, .22);
+}
+
+/* account badge reads as a small status pill instead of plain text */
+.account-badge {
+  background: rgba(110, 255, 154, .10);
+  border: 1px solid rgba(110, 255, 154, .28);
+  border-radius: 999px;
+  padding: 3px 10px;
+  width: fit-content;
+  font-size: 12px;
+}
+
+/* keep the floating donate button out of the FAB's way and make it a
+   normal compact pill instead of a full-width bar */
+.donate-btn {
+  left: 32px;
+  right: auto;
+  bottom: 32px;
+  width: auto;
+  padding: 12px 22px;
+}
+
+.fab {
+  right: 32px;
+  bottom: 32px;
+}
+
+.fab-menu {
+  right: 32px;
+  bottom: 100px;
+}

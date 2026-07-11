@@ -1944,6 +1944,21 @@ document.getElementById("btnCombatAddState")?.addEventListener("click", () => op
 // ===== Loaders
 async function loadMe() {
   state.me = await api("/me");
+  renderAccountBadge();
+}
+
+function renderAccountBadge() {
+  const badge = el("accountBadge");
+  if (!badge) return;
+  const tg = state.me?.tg;
+  if (!tg) {
+    badge.classList.add("d-none");
+    return;
+  }
+  const name = tg.first_name || tg.username || `ID ${tg.id}`;
+  const handle = tg.username ? ` (@${tg.username})` : "";
+  badge.innerHTML = `<i class="bi bi-check-circle-fill account-badge-icon"></i> ${escapeHtml(name)}${escapeHtml(handle)}`;
+  badge.classList.remove("d-none");
 }
 
 async function loadTemplates() {

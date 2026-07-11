@@ -24,11 +24,17 @@ class TelegramLoginIn(BaseModel):
 @router.post("/telegram-login")
 async def telegram_login(body: TelegramLoginIn, response: Response):
     try:
-        tg_id = verify_telegram_login_widget(body.model_dump())
+        profile = verify_telegram_login_widget(body.model_dump())
     except ValueError:
         raise HTTPException(401, "Bad Telegram login data")
 
-    token = create_session_cookie(tg_id)
+    token = create_session_cookie(
+        profile["tg_id"],
+        first_name=profile["first_name"],
+        last_name=profile["last_name"],
+        username=profile["username"],
+        photo_url=profile["photo_url"],
+    )
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=token,
@@ -38,7 +44,7 @@ async def telegram_login(body: TelegramLoginIn, response: Response):
         max_age=settings.SESSION_MAX_AGE_DAYS * 86400,
         path="/",
     )
-    return {"status": "ok", "tg_id": tg_id}
+    return {"status": "ok", "tg_id": profile["tg_id"]}
 
 
 @router.post("/logout")

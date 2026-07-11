@@ -9,27 +9,42 @@ from .models import User
 from . import crud
 
 
-async def get_current_user(
+async def resolve_tg_profile(
     request: Request,
-    db: AsyncSession = Depends(get_db),
     x_tg_init_data: str | None = Header(default=None, alias="X-TG-INIT-DATA"),
-) -> User:
-    """Resolve the current user from either Telegram Mini App initData
-    (X-TG-INIT-DATA header) or a website session cookie."""
+) -> dict:
+    """Resolve the current Telegram profile from either Mini App initData
+    (X-TG-INIT-DATA header) or a website session cookie.
+
+    Returns {"tg_id", "first_name", "last_name", "username", "photo_url"}.
+    """
     if x_tg_init_data:
         try:
             data = verify_telegram_init_data(x_tg_init_data)
             user_json = data.get("user")
             if not user_json:
                 raise ValueError("No user in initData")
-            tg_id = int(json.loads(user_json)["id"])
+            tg_user = json.loads(user_json)
+            return {
+                "tg_id": int(tg_user["id"]),
+                "first_name": tg_user.get("first_name"),
+                "last_name": tg_user.get("last_name"),
+                "username": tg_user.get("username"),
+                "photo_url": tg_user.get("photo_url"),
+            }
         except Exception as e:
             print("INIT DATA ERROR:", repr(e))
             raise HTTPException(401, "Bad Telegram initData")
-    else:
-        token = request.cookies.get(SESSION_COOKIE_NAME)
-        tg_id = read_session_cookie(token) if token else None
-        if tg_id is None:
-            raise HTTPException(401, "Not authenticated")
 
-    return await crud.get_or_create_user(db, tg_id=tg_id)
+    token = request.cookies.get(SESSION_COOKIE_NAME)
+    profile = read_session_cookie(token) if token else None
+    if profile is None:
+        raise HTTPException(401, "Not authenticated")
+    return profile
+
+
+async def get_current_user(
+    db: AsyncSession = Depends(get_db),
+    profile: dict = Depends(resolve_tg_profile),
+) -> User:
+    return await crud.get_or_create_user(db, tg_id=profile["tg_id"])

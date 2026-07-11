@@ -2269,6 +2269,27 @@ body{
   transition: opacity .2s ease, transform .2s ease, height .2s ease, margin .2s ease;
 }
 
+.account-badge{
+  font-size: 11px;
+  line-height: 1.2;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.account-badge-icon{
+  color: #6bff9a;
+  font-size: 10px;
+}
+
+.topbar.is-collapsed .account-badge{
+  opacity: 0;
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
 header.topbar .btn{
   padding: 5px 9px !important;
   border-radius: 999px !important;

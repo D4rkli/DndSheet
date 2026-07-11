@@ -2,7 +2,7 @@ import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from .db import get_db
-from .deps import get_current_user
+from .deps import get_current_user, resolve_tg_profile
 from .models import User
 from .config import settings
 from . import crud, schemas
@@ -14,8 +14,19 @@ router = APIRouter()
 async def me(
     db: AsyncSession = Depends(get_db),
     u: User = Depends(get_current_user),
+    profile: dict = Depends(resolve_tg_profile),
 ):
-    return {"tg": {"id": u.tg_id}, "user_id": u.id, "is_dm": u.tg_id in settings.dm_ids()}
+    return {
+        "tg": {
+            "id": u.tg_id,
+            "first_name": profile.get("first_name"),
+            "last_name": profile.get("last_name"),
+            "username": profile.get("username"),
+            "photo_url": profile.get("photo_url"),
+        },
+        "user_id": u.id,
+        "is_dm": u.tg_id in settings.dm_ids(),
+    }
 
 @router.get("/characters")
 async def list_characters(
