@@ -25,9 +25,19 @@ jobs:
 
             cd /opt/telegram-bot/DndSheet
 
+            # backend/.env is no longer tracked in git (it holds secrets) -
+            # back it up so `reset --hard` / `clean -fd` below don't wipe it.
+            if [ -f backend/.env ]; then
+              cp backend/.env /tmp/dndsheet.env.bak
+            fi
+
             git fetch --all
             git reset --hard origin/master
             git clean -fd
+
+            if [ -f /tmp/dndsheet.env.bak ]; then
+              mv /tmp/dndsheet.env.bak backend/.env
+            fi
 
             cd backend
             source venv/bin/activate
