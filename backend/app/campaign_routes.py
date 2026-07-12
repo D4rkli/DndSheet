@@ -13,12 +13,13 @@ def _member_label(user: User) -> str:
     return user.first_name or (f"@{user.username}" if user.username else f"Игрок #{user.id}")
 
 
-def _campaign_out(campaign, viewer_id: int) -> dict:
+async def _campaign_out(db: AsyncSession, campaign, viewer_id: int) -> dict:
     is_dm = campaign.dm_user_id == viewer_id
     out = {
         "id": campaign.id,
         "name": campaign.name,
         "is_dm": is_dm,
+        "unread_count": 0,
     }
     if is_dm:
         out["invite_code"] = campaign.invite_code
@@ -27,6 +28,8 @@ def _campaign_out(campaign, viewer_id: int) -> dict:
             for m in campaign.members
             if m.user_id != campaign.dm_user_id
         ]
+    else:
+        out["unread_count"] = await crud.count_unread_campaign_messages(db, campaign.id, viewer_id)
     return out
 
 
@@ -49,7 +52,7 @@ async def list_campaigns(
     u: User = Depends(get_current_user),
 ):
     campaigns = await crud.list_campaigns_for_user(db, u.id)
-    return [_campaign_out(c, u.id) for c in campaigns]
+    return [await _campaign_out(db, c, u.id) for c in campaigns]
 
 
 @router.post("/join")
@@ -61,7 +64,7 @@ async def join_campaign(
     campaign = await crud.join_campaign(db, u.id, body.invite_code.strip())
     if not campaign:
         raise HTTPException(404, "Campaign not found")
-    return _campaign_out(campaign, u.id)
+    return await _campaign_out(db, campaign, u.id)
 
 
 @router.delete("/{campaign_id}")
@@ -119,3 +122,54 @@ async def list_campaign_characters(
         }
         for c in chars
     ]
+
+
+@router.post("/{campaign_id}/messages")
+async def send_message(
+    campaign_id: int,
+    body: schemas.MessageCreate,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+):
+    text = body.text.strip()
+    if not text:
+        raise HTTPException(400, "Text is required")
+
+    msg = await crud.send_campaign_message(db, campaign_id, u.id, body.target_user_id, text)
+    if not msg:
+        raise HTTPException(403, "DM access required, or target is not a campaign member")
+    return {"status": "ok", "id": msg.id}
+
+
+@router.get("/{campaign_id}/messages")
+async def list_messages(
+    campaign_id: int,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+):
+    messages = await crud.list_campaign_messages(db, campaign_id, u.id)
+    if messages is None:
+        raise HTTPException(403, "No access")
+    return [
+        {
+            "id": m.id,
+            "sender_name": _member_label(m.sender),
+            "target_user_id": m.target_user_id,
+            "target_name": _member_label(m.target) if m.target else None,
+            "text": m.text,
+            "created_at": m.created_at.isoformat(),
+        }
+        for m in messages
+    ]
+
+
+@router.post("/{campaign_id}/messages/read")
+async def mark_messages_read(
+    campaign_id: int,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+):
+    ok = await crud.mark_campaign_messages_read(db, campaign_id, u.id)
+    if not ok:
+        raise HTTPException(404, "Not a member of this campaign")
+    return {"status": "ok"}

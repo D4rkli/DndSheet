@@ -2527,6 +2527,22 @@ body{
   line-height: 1;
 }
 
+.msg-badge{
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: #ff5a5a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
+}
+
 .topbar-menu{
   position: absolute;
   top: calc(100% + 8px);

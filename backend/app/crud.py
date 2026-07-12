@@ -1,7 +1,8 @@
 import json
 import secrets
+from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -18,6 +19,7 @@ from .models import (
     Summon,
     Campaign,
     CampaignMember,
+    CampaignMessage,
 )
 
 # =========================
@@ -350,6 +352,102 @@ async def list_campaign_characters(db: AsyncSession, campaign_id: int, dm_user_i
         .options(selectinload(Character.owner))
     )
     return list(q.scalars().all())
+
+
+async def send_campaign_message(
+    db: AsyncSession,
+    campaign_id: int,
+    sender_user_id: int,
+    target_user_id: int | None,
+    text: str,
+) -> CampaignMessage | None:
+    campaign = await get_campaign_by_id(db, campaign_id)
+    if not campaign or campaign.dm_user_id != sender_user_id:
+        return None
+
+    if target_user_id is not None and not any(m.user_id == target_user_id for m in campaign.members):
+        return None
+
+    msg = CampaignMessage(
+        campaign_id=campaign_id,
+        sender_user_id=sender_user_id,
+        target_user_id=target_user_id,
+        text=text,
+    )
+    db.add(msg)
+    await db.commit()
+    await db.refresh(msg)
+    return msg
+
+
+async def list_campaign_messages(db: AsyncSession, campaign_id: int, viewer_user_id: int) -> list[CampaignMessage] | None:
+    campaign = await get_campaign_by_id(db, campaign_id)
+    if not campaign:
+        return None
+
+    is_dm = campaign.dm_user_id == viewer_user_id
+    if not is_dm and not any(m.user_id == viewer_user_id for m in campaign.members):
+        return None
+
+    q = select(CampaignMessage).where(CampaignMessage.campaign_id == campaign_id)
+    if not is_dm:
+        q = q.where(
+            (CampaignMessage.target_user_id.is_(None))
+            | (CampaignMessage.target_user_id == viewer_user_id)
+        )
+    q = q.order_by(CampaignMessage.created_at.desc()).options(
+        selectinload(CampaignMessage.sender), selectinload(CampaignMessage.target)
+    )
+    result = await db.execute(q)
+    return list(result.scalars().all())
+
+
+async def mark_campaign_messages_read(db: AsyncSession, campaign_id: int, user_id: int) -> bool:
+    q = await db.execute(
+        select(CampaignMember).where(
+            CampaignMember.campaign_id == campaign_id,
+            CampaignMember.user_id == user_id,
+        )
+    )
+    member = q.scalar_one_or_none()
+    if not member:
+        return False
+
+    # anchor to the latest visible message's own created_at, not wall-clock time:
+    # SQLite's CURRENT_TIMESTAMP (used for created_at) only has second precision,
+    # so a message inserted in the same second as a client-clock "now" can compare
+    # as older than last_read_at and get silently skipped by count_unread_campaign_messages
+    q = await db.execute(
+        select(func.max(CampaignMessage.created_at)).where(
+            CampaignMessage.campaign_id == campaign_id,
+            (CampaignMessage.target_user_id.is_(None)) | (CampaignMessage.target_user_id == user_id),
+        )
+    )
+    latest = q.scalar_one_or_none()
+    member.last_read_at = latest or datetime.utcnow()
+    await db.commit()
+    return True
+
+
+async def count_unread_campaign_messages(db: AsyncSession, campaign_id: int, user_id: int) -> int:
+    q = await db.execute(
+        select(CampaignMember).where(
+            CampaignMember.campaign_id == campaign_id,
+            CampaignMember.user_id == user_id,
+        )
+    )
+    member = q.scalar_one_or_none()
+    if not member:
+        return 0
+
+    since = member.last_read_at or datetime(1970, 1, 1)
+    q = select(func.count()).select_from(CampaignMessage).where(
+        CampaignMessage.campaign_id == campaign_id,
+        CampaignMessage.created_at > since,
+        (CampaignMessage.target_user_id.is_(None)) | (CampaignMessage.target_user_id == user_id),
+    )
+    result = await db.execute(q)
+    return result.scalar_one()
 
 
 # =========================

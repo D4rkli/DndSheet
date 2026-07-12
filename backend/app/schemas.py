@@ -202,3 +202,8 @@ class CampaignCreate(BaseModel):
 class CampaignJoin(BaseModel):
     invite_code: str
 
+
+class MessageCreate(BaseModel):
+    text: str
+    target_user_id: Optional[int] = None
+

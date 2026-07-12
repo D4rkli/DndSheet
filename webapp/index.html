@@ -28,6 +28,10 @@
         <button id="btnThemeToggle" class="btn btn-sm btn-outline-light topbar-menu-btn" type="button" aria-label="Переключить тему">
           <i class="bi bi-moon-stars"></i>
         </button>
+        <button id="btnMessages" class="btn btn-sm btn-outline-light topbar-menu-btn position-relative" type="button" aria-label="Сообщения">
+          <i class="bi bi-envelope"></i>
+          <span id="msgBadge" class="msg-badge d-none"></span>
+        </button>
         <button id="btnLogoutVisible" class="btn btn-sm btn-outline-light topbar-menu-btn d-none" type="button" aria-label="Выйти из аккаунта">
           <i class="bi bi-box-arrow-right"></i>
         </button>
@@ -827,6 +831,38 @@
           <input id="campJoinCode" class="form-control" placeholder="Код приглашения" />
           <button type="button" class="btn btn-outline-light text-nowrap" id="btnJoinCampaign">Войти</button>
         </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Сообщения -->
+<div class="modal fade" id="messagesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Сообщения</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="msgComposeSection" class="d-none">
+          <div class="section-title">Отправить сообщение</div>
+          <label class="form-label">Компания</label>
+          <select id="msgCampaignSelect" class="form-select mb-2"></select>
+          <label class="form-label">Кому</label>
+          <select id="msgTargetSelect" class="form-select mb-2">
+            <option value="">Всей компании</option>
+          </select>
+          <label class="form-label">Текст</label>
+          <textarea id="msgText" class="form-control" rows="3" placeholder="Секретная информация…"></textarea>
+          <button type="button" class="btn btn-primary mt-2" id="btnSendMessage">Отправить</button>
+          <hr class="hr-soft" />
+        </div>
+        <div class="section-title">Входящие</div>
+        <div id="messagesList"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>

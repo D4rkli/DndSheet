@@ -1,5 +1,7 @@
+from datetime import datetime
+
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, Text, ForeignKey, Boolean, UniqueConstraint
+from sqlalchemy import String, Integer, Text, DateTime, ForeignKey, Boolean, UniqueConstraint
 
 class Base(DeclarativeBase):
     pass
@@ -46,9 +48,28 @@ class CampaignMember(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     campaign_id: Mapped[int] = mapped_column(ForeignKey("campaigns.id"), index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    last_read_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     campaign: Mapped["Campaign"] = relationship(back_populates="members")
     user: Mapped["User"] = relationship()
+
+
+class CampaignMessage(Base):
+    __tablename__ = "campaign_messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    campaign_id: Mapped[int] = mapped_column(ForeignKey("campaigns.id"), index=True)
+    sender_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    target_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    text: Mapped[str] = mapped_column(Text)
+    # Python-side default (not server_default=func.now()): SQLite's CURRENT_TIMESTAMP
+    # only has second precision, which could make a message inserted in the same
+    # second as a read-mark compare as "not newer" and be skipped by unread counts.
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    campaign: Mapped["Campaign"] = relationship()
+    sender: Mapped["User"] = relationship(foreign_keys=[sender_user_id])
+    target: Mapped["User | None"] = relationship(foreign_keys=[target_user_id])
 
 
 class Character(Base):

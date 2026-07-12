@@ -217,6 +217,90 @@ async function renderCampaignsModal() {
   });
 }
 
+function wireMessagesPolling() {
+  setInterval(() => {
+    if (document.hidden) return;
+    loadCampaigns().catch((e) => console.error("Messages poll failed:", e));
+  }, 15000);
+}
+
+function renderMessagesBadge() {
+  const badge = el("msgBadge");
+  if (!badge) return;
+  const total = (state.campaigns || []).reduce((sum, c) => sum + (c.unread_count || 0), 0);
+  if (total > 0) {
+    badge.textContent = total > 99 ? "99+" : String(total);
+    badge.classList.remove("d-none");
+  } else {
+    badge.classList.add("d-none");
+  }
+}
+
+function populateMessageTargets(campaignId) {
+  const targetSel = el("msgTargetSelect");
+  if (!targetSel) return;
+  const campaign = (state.campaigns || []).find((c) => c.id === Number(campaignId));
+  targetSel.innerHTML = `<option value="">Всей компании</option>`;
+  (campaign?.members || []).forEach((m) => {
+    const opt = document.createElement("option");
+    opt.value = m.user_id;
+    opt.textContent = m.name;
+    targetSel.appendChild(opt);
+  });
+}
+
+async function renderMessagesModal() {
+  const dmCampaigns = (state.campaigns || []).filter((c) => c.is_dm);
+  const composeSection = el("msgComposeSection");
+  if (composeSection) {
+    composeSection.classList.toggle("d-none", dmCampaigns.length === 0);
+  }
+  if (dmCampaigns.length > 0) {
+    const campSel = el("msgCampaignSelect");
+    campSel.innerHTML = dmCampaigns.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+    populateMessageTargets(campSel.value);
+  }
+
+  const root = el("messagesList");
+  root.innerHTML = `<div class="muted">Загрузка…</div>`;
+
+  const myCampaigns = state.campaigns || [];
+  if (myCampaigns.length === 0) {
+    root.innerHTML = `<div class="muted">Ты не состоишь ни в одной компании.</div>`;
+    return;
+  }
+
+  const perCampaign = await Promise.all(
+    myCampaigns.map(async (c) => {
+      const messages = await api(`/campaigns/${c.id}/messages`);
+      return messages.map((m) => ({ ...m, campaignName: c.name }));
+    })
+  );
+  const all = perCampaign.flat().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  root.innerHTML = "";
+  if (all.length === 0) {
+    root.innerHTML = `<div class="muted">Сообщений пока нет.</div>`;
+  } else {
+    all.forEach((m) => {
+      const row = document.createElement("div");
+      row.className = "item";
+      const who = m.target_name ? `лично ${escapeHtml(m.target_name)}` : "всей компании";
+      const time = new Date(m.created_at).toLocaleString();
+      row.innerHTML = `
+        <div class="item-title">${escapeHtml(m.campaignName)}</div>
+        <div class="item-sub">${escapeHtml(m.sender_name)} → ${who} · ${escapeHtml(time)}</div>
+        <div class="item-sub">${escapeHtml(m.text)}</div>
+      `;
+      root.appendChild(row);
+    });
+  }
+
+  // отмечаем прочитанным всё, что видели в этой сессии просмотра
+  await Promise.all(myCampaigns.map((c) => api(`/campaigns/${c.id}/messages/read`, { method: "POST" })));
+  await loadCampaigns();
+}
+
 el("btnCreateTpl")?.addEventListener("click", async () => {
   const name = el("tplName").value.trim();
   if (!name) return alert("Название шаблона обязательно");
@@ -1207,6 +1291,35 @@ el("btnJoinCampaign")?.addEventListener("click", async () => {
   await renderCampaignsModal();
 });
 
+const messagesModalEl = el("messagesModal");
+const messagesModal = messagesModalEl ? new bootstrap.Modal(messagesModalEl) : null;
+
+el("btnMessages")?.addEventListener("click", async () => {
+  if (!messagesModal) return;
+  await loadCampaigns();
+  messagesModal.show();
+  await renderMessagesModal();
+});
+
+el("msgCampaignSelect")?.addEventListener("change", () => {
+  populateMessageTargets(el("msgCampaignSelect").value);
+});
+
+el("btnSendMessage")?.addEventListener("click", async () => {
+  const campaignId = el("msgCampaignSelect").value;
+  const targetRaw = el("msgTargetSelect").value;
+  const text = el("msgText").value.trim();
+  if (!campaignId) return alert("Нет компании для отправки");
+  if (!text) return alert("Введи текст сообщения");
+
+  await api(`/campaigns/${campaignId}/messages`, {
+    method: "POST",
+    body: JSON.stringify({ text, target_user_id: targetRaw ? Number(targetRaw) : null }),
+  });
+  el("msgText").value = "";
+  await renderMessagesModal();
+});
+
 el("f_campaign")?.addEventListener("change", async () => {
   const id = currentChId();
   if (!id) return;
@@ -2049,6 +2162,7 @@ async function loadTemplates() {
 async function loadCampaigns() {
   state.campaigns = await api("/campaigns");
   renderCampaignSelectOptions();
+  renderMessagesBadge();
 }
 
 function renderCampaignSelectOptions() {
@@ -2471,6 +2585,7 @@ async function boot() {
     await loadMe();
     await loadTemplates();
     await loadCampaigns();
+    wireMessagesPolling();
     await loadCharacters();
     if (state.characters.length === 0) setStatus("Персонажей нет. Создай нового 👆");
     await loadSheet();
