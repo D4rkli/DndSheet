@@ -2435,6 +2435,12 @@ async function boot() {
       });
 
       tabSwitch("main");
+      // Desktop's middle column shares one slot between Инв./Закл./Способ./
+      // Сост./Призывы/Экип./Поля — "main" alone would leave it empty since
+      // #tab-main is a permanently-visible column there, not a real tab.
+      if (window.matchMedia("(min-width: 1024px)").matches) {
+        tabSwitch("inv");
+      }
   } catch (e) {
     console.error(e);
     setStatus("Ошибка");

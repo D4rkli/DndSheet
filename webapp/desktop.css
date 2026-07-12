@@ -102,23 +102,23 @@
 /* ==========================================================================
    3-column dashboard layout.
 
-   Left = "Основное" (identity, resources, XP, wallet — the priority column).
-   Middle = Инвентарь / Заклинания / Способности / Пассивки (stacked).
-   Right = Статы, pinned while scrolling.
-   Everything else (Состояния/Экипировка/Призывы/Поля) stays tab-switchable
-   below, full width, exactly like on mobile.
+   Left = "Основное" (identity, resources, XP, wallet — always visible,
+   the priority column). Right = Статы, always visible, pinned while
+   scrolling. Middle = everything else (Инвентарь / Заклинания /
+   Способности / Пассивки / Состояния / Призывы / Экипировка / Поля) as
+   one shared, tab-switched slot — only the active one shows there, driven
+   by the same top nav pills and tabSwitch() as mobile. That keeps all the
+   switchable content in one consistent place instead of some of it being
+   permanently stacked and the rest appearing in a separate full-width
+   block below, which read as broken.
    ========================================================================== */
 
 main.content {
   display: grid;
   grid-template-columns: minmax(340px, 480px) minmax(420px, 1fr) minmax(320px, 460px);
   grid-template-areas:
-    "tabs   tabs   tabs"
-    "main   inv    stats"
-    "main   spells stats"
-    "main   passive stats"
-    "main   abilities stats"
-    "extra  extra  extra";
+    "tabs tabs tabs"
+    "main inv  stats";
   align-items: start;
   gap: 22px;
 }
@@ -131,22 +131,6 @@ main.content {
   grid-area: main;
 }
 
-#tab-inv {
-  grid-area: inv;
-}
-
-#tab-spells {
-  grid-area: spells;
-}
-
-#tab-passive-abilities {
-  grid-area: passive;
-}
-
-#tab-abilities {
-  grid-area: abilities;
-}
-
 #tab-stats {
   grid-area: stats;
   position: sticky;
@@ -154,32 +138,29 @@ main.content {
   align-self: start;
 }
 
+#tab-inv,
+#tab-spells,
+#tab-passive-abilities,
+#tab-abilities,
 #tab-states,
 #tab-summons,
 #tab-equip,
 #tab-custom {
-  grid-area: extra;
+  grid-area: inv;
 }
 
-/* these six panels are always visible as columns; ignore the mobile
-   single-tab-at-a-time toggling that adds/removes this class via JS */
+/* only main/stats are permanent columns; everything else keeps the normal
+   mobile tab-switching behaviour (one visible at a time) inside the
+   shared middle-column slot */
 #tab-main.d-none,
-#tab-stats.d-none,
-#tab-inv.d-none,
-#tab-spells.d-none,
-#tab-passive-abilities.d-none,
-#tab-abilities.d-none {
+#tab-stats.d-none {
   display: block !important;
 }
 
-/* their nav pills are redundant once the column is permanently visible;
-   keep pills only for the remaining tab-switched sections */
+/* their nav pills are redundant once permanently visible; every other
+   pill stays a real switch for the middle column */
 #tabs .nav-link[data-tab="main"],
-#tabs .nav-link[data-tab="stats"],
-#tabs .nav-link[data-tab="inv"],
-#tabs .nav-link[data-tab="spells"],
-#tabs .nav-link[data-tab="abilities"],
-#tabs .nav-link[data-tab="passive-abilities"] {
+#tabs .nav-link[data-tab="stats"] {
   display: none;
 }
 
@@ -204,6 +185,15 @@ main.content {
   grid-column: 1 / -1;
 }
 
+/* Bootstrap's col-md-4 forces the HP/Mana/Energy resource fields into 3
+   columns from 768px of VIEWPORT width, with no idea that its actual
+   container here is a ~400px column — that squeezed the number inputs
+   down to a sliver. Stack them full-width instead, like on mobile. */
+#tab-main #baseResourcesBlock.resources-grid > div {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
 /* ==========================================================================
    Login page hero (desktop only — mobile keeps the plain centered card).
    ========================================================================== */
@@ -211,6 +201,8 @@ main.content {
 .login-wrap {
   max-width: 1100px;
   gap: 72px;
+  align-items: flex-start !important;
+  padding-top: 14vh;
 }
 
 .login-hero.d-none {
