@@ -43,6 +43,7 @@ const state = {
   sheet: null,
   templates: [],
   activeTemplateId: null,
+  campaigns: [],
   battleRound: 1,
   battleLog: [],
   inBattle: false,
@@ -155,6 +156,65 @@ async function renderTemplatesModal() {
 
   // чекбокс вкладок для создания
   el("tplTabs").innerHTML = tabsCheckboxesHtml(DEFAULT_TABS);
+}
+
+async function renderCampaignsModal() {
+  const root = el("campaignsList");
+  root.innerHTML = "";
+  if (!state.campaigns || state.campaigns.length === 0) {
+    root.innerHTML = `<div class="muted">Компаний нет. Создай или присоединись по коду ниже.</div>`;
+    return;
+  }
+
+  state.campaigns.forEach((c) => {
+    const row = document.createElement("div");
+    row.className = "item";
+    const membersHtml = c.is_dm
+      ? `
+        <div class="item-sub">Игроки: ${c.members.length ? c.members.map((m) => escapeHtml(m.name)).join(", ") : "пока никого"}</div>
+        <div class="item-sub d-flex align-items-center gap-2">
+          <span>Код приглашения: <code>${escapeHtml(c.invite_code)}</code></span>
+          <button class="btn btn-sm btn-outline-light" data-act="copy">Копировать</button>
+        </div>
+      `
+      : "";
+    row.innerHTML = `
+      <div class="item-title">${escapeHtml(c.name)}</div>
+      <div class="item-sub">${c.is_dm ? "Вы — ДМ" : "Вы — игрок"}</div>
+      ${membersHtml}
+      <div class="item-actions d-flex gap-2">
+        <button class="btn btn-sm btn-outline-danger" data-act="${c.is_dm ? "delete" : "leave"}">${c.is_dm ? "Удалить" : "Выйти"}</button>
+      </div>
+    `;
+
+    if (c.is_dm) {
+      row.querySelector("button[data-act='copy']").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(c.invite_code);
+          setStatus("Код скопирован ✅");
+        } catch {
+          alert(c.invite_code);
+        }
+      });
+      row.querySelector("button[data-act='delete']").addEventListener("click", async () => {
+        if (!confirm(`Удалить компанию «${c.name}»? Персонажи не удалятся, только отвяжутся от неё.`)) return;
+        await api(`/campaigns/${c.id}`, { method: "DELETE" });
+        await loadCampaigns();
+        await renderCampaignsModal();
+        await loadCharacters();
+      });
+    } else {
+      row.querySelector("button[data-act='leave']").addEventListener("click", async () => {
+        if (!confirm(`Выйти из компании «${c.name}»?`)) return;
+        await api(`/campaigns/${c.id}/leave`, { method: "DELETE" });
+        await loadCampaigns();
+        await renderCampaignsModal();
+        await loadSheet(false);
+      });
+    }
+
+    root.appendChild(row);
+  });
 }
 
 el("btnCreateTpl")?.addEventListener("click", async () => {
@@ -1005,6 +1065,10 @@ async function addXpAndHandleLevelUp() {
 const templatesModalEl = el("templatesModal");
 const templatesModal = templatesModalEl ? new bootstrap.Modal(templatesModalEl) : null;
 
+// Campaigns modal
+const campaignsModalEl = el("campaignsModal");
+const campaignsModal = campaignsModalEl ? new bootstrap.Modal(campaignsModalEl) : null;
+
 function openModal(title, bodyHtml, onSave) {
   el("modalTitle").textContent = title;
   el("modalBody").innerHTML = bodyHtml;
@@ -1112,6 +1176,47 @@ el("btnTemplates")?.addEventListener("click", () => {
   if (!templatesModal) return;
   renderTemplatesModal();
   templatesModal.show();
+});
+
+el("btnCampaigns")?.addEventListener("click", async () => {
+  if (!campaignsModal) return;
+  await loadCampaigns();
+  renderCampaignsModal();
+  campaignsModal.show();
+});
+
+el("btnCreateCampaign")?.addEventListener("click", async () => {
+  const name = el("campName").value.trim();
+  if (!name) return alert("Название компании обязательно");
+  await api(`/campaigns`, { method: "POST", body: JSON.stringify({ name }) });
+  el("campName").value = "";
+  await loadCampaigns();
+  await renderCampaignsModal();
+});
+
+el("btnJoinCampaign")?.addEventListener("click", async () => {
+  const code = el("campJoinCode").value.trim();
+  if (!code) return alert("Введи код приглашения");
+  try {
+    await api(`/campaigns/join`, { method: "POST", body: JSON.stringify({ invite_code: code }) });
+  } catch (e) {
+    return alert("Не удалось присоединиться — проверь код приглашения");
+  }
+  el("campJoinCode").value = "";
+  await loadCampaigns();
+  await renderCampaignsModal();
+});
+
+el("f_campaign")?.addEventListener("change", async () => {
+  const id = currentChId();
+  if (!id) return;
+  const raw = el("f_campaign").value;
+  await api(`/characters/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ campaign_id: raw ? Number(raw) : null }),
+  });
+  setStatus("Компания обновлена ✅");
+  await loadCharacters();
 });
 
 function updateThemeToggleIcon() {
@@ -1941,19 +2046,62 @@ async function loadTemplates() {
   applyTemplateToUI();
 }
 
+async function loadCampaigns() {
+  state.campaigns = await api("/campaigns");
+  renderCampaignSelectOptions();
+}
+
+function renderCampaignSelectOptions() {
+  const sel = el("f_campaign");
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = `<option value="">— нет —</option>`;
+  state.campaigns.forEach((c) => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.is_dm ? `${c.name} (я ДМ)` : c.name;
+    sel.appendChild(opt);
+  });
+  sel.value = current;
+}
+
 async function loadCharacters() {
   state.characters = await api("/characters");
   const sel = el("characterSelect");
   sel.innerHTML = "";
-  state.characters.forEach((c) => {
+
+  const own = state.characters.filter((c) => c.is_own);
+  const dmVisible = state.characters.filter((c) => !c.is_own);
+
+  own.forEach((c) => {
     const opt = document.createElement("option");
     opt.value = c.id;
     opt.textContent = `${c.name} (lvl ${c.level})`;
     sel.appendChild(opt);
   });
 
-  if (!state.chId && state.characters.length > 0) {
-    state.chId = state.characters[0].id;
+  // персонажи из компаний, где я ДМ — сгруппированы по владельцу, чтобы
+  // не путать со своими персонажами в том же выпадающем списке
+  const byOwner = new Map();
+  dmVisible.forEach((c) => {
+    const key = c.owner_name || "Игрок";
+    if (!byOwner.has(key)) byOwner.set(key, []);
+    byOwner.get(key).push(c);
+  });
+  byOwner.forEach((chars, ownerName) => {
+    const group = document.createElement("optgroup");
+    group.label = ownerName;
+    chars.forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = `${c.name} (lvl ${c.level})`;
+      group.appendChild(opt);
+    });
+    sel.appendChild(group);
+  });
+
+  if (!state.chId && own.length > 0) {
+    state.chId = own[0].id;
   }
   if (state.chId) sel.value = state.chId;
 }
@@ -1982,6 +2130,7 @@ async function loadSheet(showStatus = true) {
   fillInput("f_level", ch.level);
   fillInput("f_xp", ch.xp);
   fillInput("f_xp_per_level", ch.xp_per_level);
+  fillInput("f_campaign", ch.campaign_id ?? "");
 
   updateXpToNextUI();
 
@@ -2321,6 +2470,7 @@ async function boot() {
   try {
     await loadMe();
     await loadTemplates();
+    await loadCampaigns();
     await loadCharacters();
     if (state.characters.length === 0) setStatus("Персонажей нет. Создай нового 👆");
     await loadSheet();

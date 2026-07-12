@@ -62,6 +62,8 @@ class CharacterUpdate(BaseModel):
 
     level_up_rules: Optional[str] = None
 
+    campaign_id: Optional[int] = None
+
 
 class ItemCreate(BaseModel):
     name: str
@@ -191,4 +193,12 @@ class ApplyTemplate(BaseModel):
 
 class CustomValuesUpdate(BaseModel):
     values: Dict[str, Any]
+
+
+class CampaignCreate(BaseModel):
+    name: str
+
+
+class CampaignJoin(BaseModel):
+    invite_code: str
 

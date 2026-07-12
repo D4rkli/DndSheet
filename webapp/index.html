@@ -57,6 +57,11 @@
             <span>Шаблоны</span>
           </button>
 
+          <button id="btnCampaigns" class="topbar-menu-item" type="button">
+            <i class="bi bi-people"></i>
+            <span>Компании</span>
+          </button>
+
           <button id="btnBuilder" class="topbar-menu-item" type="button">
             <i class="bi bi-sliders"></i>
             <span>Конструктор</span>
@@ -420,6 +425,13 @@
                 <div class="main-identity-card main-identity-card--xp">
                   <label class="form-label">XP</label>
                   <input id="f_xp" type="number" class="form-control" min="0" />
+                </div>
+
+                <div class="main-identity-card main-identity-card--xp">
+                  <label class="form-label">Компания</label>
+                  <select id="f_campaign" class="form-select">
+                    <option value="">— нет —</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -786,6 +798,38 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
         <button type="button" class="btn btn-primary" id="btnCreateTpl">Создать</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Компании -->
+<div class="modal fade" id="campaignsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Компании</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="section-title">Мои компании</div>
+        <div id="campaignsList"></div>
+        <hr class="hr-soft" />
+        <div class="section-title">Создать компанию</div>
+        <label class="form-label">Название</label>
+        <div class="d-flex gap-2">
+          <input id="campName" class="form-control" placeholder="Напр. Затерянные земли" />
+          <button type="button" class="btn btn-primary text-nowrap" id="btnCreateCampaign">Создать</button>
+        </div>
+        <hr class="hr-soft" />
+        <div class="section-title">Присоединиться по коду</div>
+        <div class="d-flex gap-2">
+          <input id="campJoinCode" class="form-control" placeholder="Код приглашения" />
+          <button type="button" class="btn btn-outline-light text-nowrap" id="btnJoinCampaign">Войти</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Закрыть</button>
       </div>
     </div>
   </div>

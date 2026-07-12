@@ -50,9 +50,11 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db),
     profile: dict = Depends(resolve_auth_profile),
 ) -> User:
+    first_name = profile.get("first_name")
+    username = profile.get("username")
     if profile["provider"] == "vk":
-        return await crud.get_or_create_user_by_vk(db, vk_id=profile["user_key"])
-    return await crud.get_or_create_user(db, tg_id=profile["user_key"])
+        return await crud.get_or_create_user_by_vk(db, vk_id=profile["user_key"], first_name=first_name, username=username)
+    return await crud.get_or_create_user(db, tg_id=profile["user_key"], first_name=first_name, username=username)
 
 
 async def get_owned_or_dm_character(
@@ -67,8 +69,12 @@ async def get_owned_or_dm_character(
     if not ch:
         raise HTTPException(404, "Character not found")
 
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
+    if ch.owner_user_id == u.id:
+        return ch
+
+    is_global_dm = u.tg_id in settings.dm_ids()
+    is_campaign_dm = ch.campaign is not None and ch.campaign.dm_user_id == u.id
+    if not is_global_dm and not is_campaign_dm:
         raise HTTPException(403, "No access")
 
     return ch

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, Text, ForeignKey, Boolean
+from sqlalchemy import String, Integer, Text, ForeignKey, Boolean, UniqueConstraint
 
 class Base(DeclarativeBase):
     pass
@@ -10,6 +10,11 @@ class User(Base):
     tg_id: Mapped[int | None] = mapped_column(Integer, unique=True, index=True, nullable=True)
     vk_id: Mapped[int | None] = mapped_column(Integer, unique=True, index=True, nullable=True)
 
+    # кэш имени из последнего логина — нужен, чтобы ДМ мог видеть, чей персонаж
+    # (сам User больше ничего о профиле не хранит, это не источник истины)
+    first_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    username: Mapped[str | None] = mapped_column(String(120), nullable=True)
+
     characters: Mapped[list["Character"]] = relationship(back_populates="owner")
 
     templates: Mapped[list["SheetTemplate"]] = relationship(
@@ -18,11 +23,40 @@ class User(Base):
     )
 
 
+class Campaign(Base):
+    __tablename__ = "campaigns"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(120))
+    dm_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    invite_code: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+
+    dm: Mapped["User"] = relationship(foreign_keys=[dm_user_id])
+    members: Mapped[list["CampaignMember"]] = relationship(
+        back_populates="campaign",
+        cascade="all, delete-orphan",
+    )
+    characters: Mapped[list["Character"]] = relationship(back_populates="campaign")
+
+
+class CampaignMember(Base):
+    __tablename__ = "campaign_members"
+    __table_args__ = (UniqueConstraint("campaign_id", "user_id", name="uq_campaign_member"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    campaign_id: Mapped[int] = mapped_column(ForeignKey("campaigns.id"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+
+    campaign: Mapped["Campaign"] = relationship(back_populates="members")
+    user: Mapped["User"] = relationship()
+
+
 class Character(Base):
     __tablename__ = "characters"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    campaign_id: Mapped[int | None] = mapped_column(ForeignKey("campaigns.id"), nullable=True, index=True)
 
     name: Mapped[str] = mapped_column(String(100))
     race: Mapped[str] = mapped_column(String(60), default="")
@@ -82,6 +116,7 @@ class Character(Base):
     level_up_rules: Mapped[str] = mapped_column(Text, default="")
 
     owner: Mapped["User"] = relationship(back_populates="characters")
+    campaign: Mapped["Campaign | None"] = relationship(back_populates="characters", foreign_keys=[campaign_id])
     items: Mapped[list["Item"]] = relationship(back_populates="character", cascade="all, delete-orphan")
     spells: Mapped[list["Spell"]] = relationship(back_populates="character", cascade="all, delete-orphan")
     abilities: Mapped[list["Ability"]] = relationship(back_populates="character", cascade="all, delete-orphan")

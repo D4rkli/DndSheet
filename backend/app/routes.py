@@ -43,21 +43,17 @@ async def list_characters(
             "race": c.race,
             "klass": c.klass,
             "level": c.level,
+            "is_own": is_own,
+            "owner_name": None if is_own else (c.owner.first_name or (f"@{c.owner.username}" if c.owner.username else f"Игрок #{c.owner.id}")),
         }
-        for c in chars
+        for c, is_own in chars
     ]
 
 
-@router.get("/characters/{character_id}")
+@router.get("/characters/{ch_id}")
 async def get_character(
-    character_id: int,
-    db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_for_user(db, character_id, u.id)
-    if not ch:
-        raise HTTPException(status_code=404, detail="Character not found")
 
     # отдаём расширенный лист (чтобы webapp мог рисовать все поля)
     return {
@@ -114,18 +110,15 @@ async def get_character(
         "level_up_rules": ch.level_up_rules,
     }
 
-@router.patch("/characters/{character_id}")
+@router.patch("/characters/{ch_id}")
 async def update_character(
-    character_id: int,
     body: schemas.CharacterUpdate,
     db: AsyncSession = Depends(get_db),
     u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
 
-    ch = await crud.update_character(db, character_id, u.id, body)
-    if not ch:
-        raise HTTPException(status_code=404, detail="Character not found")
-
+    ch = await crud.update_character(db, ch, u.id, body)
     return ch
 
 @router.post("/characters")
@@ -553,6 +546,7 @@ async def get_full_sheet(
             "dodges": character.dodges,
             "level_up_rules": character.level_up_rules,
             "template_id": character.template_id,
+            "campaign_id": character.campaign_id,
         },
         "items": [
             {

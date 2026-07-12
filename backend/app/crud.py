@@ -1,7 +1,9 @@
 import json
+import secrets
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from .schemas import CharacterUpdate
 from .models import (
@@ -14,6 +16,8 @@ from .models import (
     Equipment,
     SheetTemplate,
     Summon,
+    Campaign,
+    CampaignMember,
 )
 
 # =========================
@@ -49,26 +53,44 @@ SUMMON_FIELDS = [
 # USERS
 # =========================
 
-async def get_or_create_user(db: AsyncSession, tg_id: int) -> User:
+async def get_or_create_user(
+    db: AsyncSession, tg_id: int, first_name: str | None = None, username: str | None = None
+) -> User:
     q = await db.execute(select(User).where(User.tg_id == tg_id))
     user = q.scalar_one_or_none()
     if user:
+        if first_name and user.first_name != first_name:
+            user.first_name = first_name
+        if username and user.username != username:
+            user.username = username
+        if db.is_modified(user):
+            await db.commit()
+            await db.refresh(user)
         return user
 
-    user = User(tg_id=tg_id)
+    user = User(tg_id=tg_id, first_name=first_name, username=username)
     db.add(user)
     await db.commit()
     await db.refresh(user)
     return user
 
 
-async def get_or_create_user_by_vk(db: AsyncSession, vk_id: int) -> User:
+async def get_or_create_user_by_vk(
+    db: AsyncSession, vk_id: int, first_name: str | None = None, username: str | None = None
+) -> User:
     q = await db.execute(select(User).where(User.vk_id == vk_id))
     user = q.scalar_one_or_none()
     if user:
+        if first_name and user.first_name != first_name:
+            user.first_name = first_name
+        if username and user.username != username:
+            user.username = username
+        if db.is_modified(user):
+            await db.commit()
+            await db.refresh(user)
         return user
 
-    user = User(vk_id=vk_id)
+    user = User(vk_id=vk_id, first_name=first_name, username=username)
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -79,9 +101,23 @@ async def get_or_create_user_by_vk(db: AsyncSession, vk_id: int) -> User:
 # CHARACTERS
 # =========================
 
-async def list_characters(db: AsyncSession, user_id: int) -> list[Character]:
+async def list_characters(db: AsyncSession, user_id: int) -> list[tuple[Character, bool]]:
+    """Own characters, plus (as a DM) characters from campaigns I run.
+
+    Returns (character, is_own) pairs so the caller can tell them apart.
+    """
     q = await db.execute(select(Character).where(Character.owner_user_id == user_id))
-    return list(q.scalars().all())
+    own = [(c, True) for c in q.scalars().all()]
+
+    q = await db.execute(
+        select(Character)
+        .join(Campaign, Campaign.id == Character.campaign_id)
+        .where(Campaign.dm_user_id == user_id, Character.owner_user_id != user_id)
+        .options(selectinload(Character.owner))
+    )
+    dm_visible = [(c, False) for c in q.scalars().all()]
+
+    return own + dm_visible
 
 
 async def create_character(db: AsyncSession, user_id: int, name: str) -> Character:
@@ -110,21 +146,38 @@ async def get_character_for_user(db: AsyncSession, character_id: int, user_id: i
 
 
 async def get_character_by_id(db: AsyncSession, character_id: int) -> Character | None:
-    q = await db.execute(select(Character).where(Character.id == character_id))
+    q = await db.execute(
+        select(Character)
+        .where(Character.id == character_id)
+        .options(selectinload(Character.campaign))
+    )
     return q.scalar_one_or_none()
 
 
 async def update_character(
     db: AsyncSession,
-    character_id: int,
-    user_id: int,
+    ch: Character,
+    actor_user_id: int,
     data: CharacterUpdate,
 ):
-    ch = await get_character_for_user(db, character_id, user_id)
-    if not ch:
-        return None
-
     payload = data.model_dump(exclude_unset=True)
+
+    # campaign_id needs a membership check, not a bare setattr — a character
+    # can only be attached to a campaign its owner is DM of or a member of.
+    # Only the owner may change it (not a DM editing someone else's sheet).
+    if "campaign_id" in payload:
+        campaign_id = payload.pop("campaign_id")
+        if actor_user_id == ch.owner_user_id:
+            if campaign_id is None:
+                ch.campaign_id = None
+            else:
+                campaign = await get_campaign_by_id(db, campaign_id)
+                is_member = campaign and (
+                    campaign.dm_user_id == actor_user_id
+                    or any(m.user_id == actor_user_id for m in campaign.members)
+                )
+                if is_member:
+                    ch.campaign_id = campaign_id
 
     # Level: minimum 1
     if "level" in payload and payload["level"] is not None:
@@ -162,6 +215,141 @@ async def update_character(
     await db.commit()
     await db.refresh(ch)
     return ch
+
+
+# =========================
+# CAMPAIGNS
+# =========================
+
+async def create_campaign(db: AsyncSession, dm_user_id: int, name: str) -> Campaign:
+    campaign = Campaign(
+        name=name,
+        dm_user_id=dm_user_id,
+        invite_code=secrets.token_urlsafe(6),
+    )
+    db.add(campaign)
+    await db.flush()
+
+    db.add(CampaignMember(campaign_id=campaign.id, user_id=dm_user_id))
+    await db.commit()
+    await db.refresh(campaign)
+    return campaign
+
+
+async def get_campaign_by_id(db: AsyncSession, campaign_id: int) -> Campaign | None:
+    q = await db.execute(
+        select(Campaign)
+        .where(Campaign.id == campaign_id)
+        .options(selectinload(Campaign.members).selectinload(CampaignMember.user))
+    )
+    return q.scalar_one_or_none()
+
+
+async def list_campaigns_for_user(db: AsyncSession, user_id: int) -> list[Campaign]:
+    q = await db.execute(
+        select(Campaign)
+        .join(CampaignMember, CampaignMember.campaign_id == Campaign.id)
+        .where(CampaignMember.user_id == user_id)
+        .options(selectinload(Campaign.members).selectinload(CampaignMember.user))
+        .distinct()
+    )
+    return list(q.scalars().all())
+
+
+async def join_campaign(db: AsyncSession, user_id: int, invite_code: str) -> Campaign | None:
+    q = await db.execute(select(Campaign).where(Campaign.invite_code == invite_code))
+    campaign = q.scalar_one_or_none()
+    if not campaign:
+        return None
+
+    q = await db.execute(
+        select(CampaignMember).where(
+            CampaignMember.campaign_id == campaign.id,
+            CampaignMember.user_id == user_id,
+        )
+    )
+    if not q.scalar_one_or_none():
+        db.add(CampaignMember(campaign_id=campaign.id, user_id=user_id))
+        await db.commit()
+
+    # re-fetch with members eager-loaded (needed by the DM-facing response shape)
+    return await get_campaign_by_id(db, campaign.id)
+
+
+async def _detach_member_characters(db: AsyncSession, campaign_id: int, user_id: int) -> None:
+    q = await db.execute(
+        select(Character).where(
+            Character.campaign_id == campaign_id,
+            Character.owner_user_id == user_id,
+        )
+    )
+    for ch in q.scalars().all():
+        ch.campaign_id = None
+
+
+async def leave_campaign(db: AsyncSession, user_id: int, campaign_id: int) -> bool:
+    q = await db.execute(
+        select(CampaignMember).where(
+            CampaignMember.campaign_id == campaign_id,
+            CampaignMember.user_id == user_id,
+        )
+    )
+    member = q.scalar_one_or_none()
+    if not member:
+        return False
+
+    await _detach_member_characters(db, campaign_id, user_id)
+    await db.delete(member)
+    await db.commit()
+    return True
+
+
+async def kick_campaign_member(db: AsyncSession, campaign_id: int, dm_user_id: int, target_user_id: int) -> bool:
+    campaign = await get_campaign_by_id(db, campaign_id)
+    if not campaign or campaign.dm_user_id != dm_user_id or target_user_id == dm_user_id:
+        return False
+
+    q = await db.execute(
+        select(CampaignMember).where(
+            CampaignMember.campaign_id == campaign_id,
+            CampaignMember.user_id == target_user_id,
+        )
+    )
+    member = q.scalar_one_or_none()
+    if not member:
+        return False
+
+    await _detach_member_characters(db, campaign_id, target_user_id)
+    await db.delete(member)
+    await db.commit()
+    return True
+
+
+async def delete_campaign(db: AsyncSession, dm_user_id: int, campaign_id: int) -> bool:
+    campaign = await get_campaign_by_id(db, campaign_id)
+    if not campaign or campaign.dm_user_id != dm_user_id:
+        return False
+
+    q = await db.execute(select(Character).where(Character.campaign_id == campaign_id))
+    for ch in q.scalars().all():
+        ch.campaign_id = None
+
+    await db.delete(campaign)
+    await db.commit()
+    return True
+
+
+async def list_campaign_characters(db: AsyncSession, campaign_id: int, dm_user_id: int) -> list[Character] | None:
+    campaign = await get_campaign_by_id(db, campaign_id)
+    if not campaign or campaign.dm_user_id != dm_user_id:
+        return None
+
+    q = await db.execute(
+        select(Character)
+        .where(Character.campaign_id == campaign_id)
+        .options(selectinload(Character.owner))
+    )
+    return list(q.scalars().all())
 
 
 # =========================
