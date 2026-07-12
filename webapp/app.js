@@ -301,6 +301,125 @@ async function renderMessagesModal() {
   await loadCampaigns();
 }
 
+// ===== Group battle (shared combat within a campaign)
+
+function updateGroupBattleTabVisibility() {
+  const tabBtn = el("combatInnerTabGroup");
+  if (!tabBtn) return;
+  const campaignId = state.sheet?.character?.campaign_id;
+  tabBtn.classList.toggle("d-none", !campaignId);
+  if (campaignId) {
+    renderGroupBattlePanel();
+  }
+}
+
+function getCombatInnerTabActive() {
+  return document.querySelector(".combat-inner-tab.active")?.getAttribute("data-combat-inner-tab");
+}
+
+async function renderGroupBattlePanel() {
+  const campaignId = state.sheet?.character?.campaign_id;
+  const startEl = el("groupBattleStart");
+  const idleEl = el("groupBattleIdle");
+  const activeEl = el("groupBattleActive");
+  if (!campaignId || !startEl || !idleEl || !activeEl) return;
+
+  const campaign = (state.campaigns || []).find((c) => c.id === campaignId);
+  const isDm = !!campaign?.is_dm;
+
+  const battle = await api(`/campaigns/${campaignId}/battle`);
+
+  if (!battle) {
+    activeEl.classList.add("d-none");
+    if (isDm) {
+      idleEl.classList.add("d-none");
+      startEl.classList.remove("d-none");
+      const chars = await api(`/campaigns/${campaignId}/characters`);
+      const listEl = el("groupBattleCharList");
+      listEl.innerHTML = chars
+        .map(
+          (c) => `
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="${c.id}" id="gbchar_${c.id}" checked>
+          <label class="form-check-label" for="gbchar_${c.id}">${escapeHtml(c.name)} (${escapeHtml(c.owner_name)})</label>
+        </div>
+      `
+        )
+        .join("");
+    } else {
+      startEl.classList.add("d-none");
+      idleEl.classList.remove("d-none");
+    }
+    return;
+  }
+
+  startEl.classList.add("d-none");
+  idleEl.classList.add("d-none");
+  activeEl.classList.remove("d-none");
+
+  el("groupBattleRoundBadge").textContent = `Раунд ${battle.round}`;
+  el("btnEndGroupBattle").classList.toggle("d-none", !isDm);
+
+  const myOwnedIds = new Set((state.characters || []).filter((c) => c.is_own).map((c) => c.id));
+  const canAdvance = isDm || myOwnedIds.has(battle.current_turn_character_id);
+  el("btnGroupNextTurn").disabled = !canAdvance;
+
+  const listEl = el("groupBattleList");
+  listEl.innerHTML = battle.participants
+    .map((p) => {
+      const bars =
+        "hp" in p
+          ? `
+        <div class="item-sub">HP ${p.hp}/${p.hp_max} · Mana ${p.mana}/${p.mana_max} · Energy ${p.energy}/${p.energy_max}</div>
+      `
+          : `<div class="item-sub muted">Ресурсы скрыты</div>`;
+      return `
+        <div class="item${p.is_current_turn ? " is-current-turn" : ""}">
+          <div class="item-title">${p.is_current_turn ? "▶ " : ""}${escapeHtml(p.name)}</div>
+          ${bars}
+        </div>
+      `;
+    })
+    .join("");
+}
+
+el("btnStartGroupBattle")?.addEventListener("click", async () => {
+  const campaignId = state.sheet?.character?.campaign_id;
+  if (!campaignId) return;
+  const characterIds = Array.from(document.querySelectorAll("#groupBattleCharList input:checked")).map((el) => Number(el.value));
+  if (characterIds.length === 0) return alert("Выбери хотя бы одного персонажа");
+  const revealResources = el("groupBattleReveal").checked;
+  await api(`/campaigns/${campaignId}/battle`, {
+    method: "POST",
+    body: JSON.stringify({ character_ids: characterIds, reveal_resources: revealResources }),
+  });
+  await renderGroupBattlePanel();
+});
+
+el("btnGroupNextTurn")?.addEventListener("click", async () => {
+  const campaignId = state.sheet?.character?.campaign_id;
+  if (!campaignId) return;
+  await api(`/campaigns/${campaignId}/battle/next-turn`, { method: "POST" });
+  await renderGroupBattlePanel();
+});
+
+el("btnEndGroupBattle")?.addEventListener("click", async () => {
+  const campaignId = state.sheet?.character?.campaign_id;
+  if (!campaignId) return;
+  if (!confirm("Закончить общий бой?")) return;
+  await api(`/campaigns/${campaignId}/battle`, { method: "DELETE" });
+  await renderGroupBattlePanel();
+});
+
+function wireGroupBattlePolling() {
+  setInterval(() => {
+    if (document.hidden) return;
+    if (getCombatInnerTabActive() !== "group") return;
+    if (!state.sheet?.character?.campaign_id) return;
+    renderGroupBattlePanel().catch((e) => console.error("Group battle poll failed:", e));
+  }, 6000);
+}
+
 el("btnCreateTpl")?.addEventListener("click", async () => {
   const name = el("tplName").value.trim();
   if (!name) return alert("Название шаблона обязательно");
@@ -2245,6 +2364,7 @@ async function loadSheet(showStatus = true) {
   fillInput("f_xp", ch.xp);
   fillInput("f_xp_per_level", ch.xp_per_level);
   fillInput("f_campaign", ch.campaign_id ?? "");
+  updateGroupBattleTabVisibility();
 
   updateXpToNextUI();
 
@@ -2586,6 +2706,7 @@ async function boot() {
     await loadTemplates();
     await loadCampaigns();
     wireMessagesPolling();
+    wireGroupBattlePolling();
     await loadCharacters();
     if (state.characters.length === 0) setStatus("Персонажей нет. Создай нового 👆");
     await loadSheet();
@@ -4565,6 +4686,10 @@ function setCombatInnerTab(tabName) {
   try {
     localStorage.setItem("combatInnerTab", tabName);
   } catch {}
+
+  if (tabName === "group") {
+    renderGroupBattlePanel();
+  }
 }
 
 function getCombatInnerTab() {

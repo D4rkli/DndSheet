@@ -72,6 +72,35 @@ class CampaignMessage(Base):
     target: Mapped["User | None"] = relationship(foreign_keys=[target_user_id])
 
 
+class CampaignBattle(Base):
+    __tablename__ = "campaign_battles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    campaign_id: Mapped[int] = mapped_column(ForeignKey("campaigns.id"), unique=True, index=True)
+    round: Mapped[int] = mapped_column(Integer, default=1)
+    turn_index: Mapped[int] = mapped_column(Integer, default=0)
+    reveal_resources: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    campaign: Mapped["Campaign"] = relationship()
+    participants: Mapped[list["CampaignBattleParticipant"]] = relationship(
+        back_populates="battle",
+        cascade="all, delete-orphan",
+        order_by="CampaignBattleParticipant.order_index",
+    )
+
+
+class CampaignBattleParticipant(Base):
+    __tablename__ = "campaign_battle_participants"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    battle_id: Mapped[int] = mapped_column(ForeignKey("campaign_battles.id"), index=True)
+    character_id: Mapped[int] = mapped_column(ForeignKey("characters.id"), index=True)
+    order_index: Mapped[int] = mapped_column(Integer, default=0)
+
+    battle: Mapped["CampaignBattle"] = relationship(back_populates="participants")
+    character: Mapped["Character"] = relationship()
+
+
 class Character(Base):
     __tablename__ = "characters"
 

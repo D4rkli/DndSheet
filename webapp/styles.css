@@ -461,6 +461,11 @@ header.topbar .topbar-character-row::-webkit-scrollbar{
   transform: translateY(0);
 }
 
+.item.is-current-turn{
+  border-color: rgba(110,168,254,.55);
+  background: rgba(110,168,254,.12);
+}
+
 .item-head{
   display: flex;
   align-items: flex-start;

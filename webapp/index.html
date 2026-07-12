@@ -273,6 +273,9 @@
               <button class="combat-inner-tab" type="button" data-combat-inner-tab="magic">
                 Магия
               </button>
+              <button id="combatInnerTabGroup" class="combat-inner-tab d-none" type="button" data-combat-inner-tab="group">
+                Группа
+              </button>
             </div>
 
             <div class="combat-panel combat-panel-states mt-3 d-none" data-combat-inner-panel="states">
@@ -348,6 +351,31 @@
 
               <div id="combatQuickSpells" class="list mt-2"></div>
               <div id="combatQuickAbilities" class="list d-none mt-2"></div>
+            </div>
+
+            <div class="combat-panel combat-panel-group mt-3 d-none" data-combat-inner-panel="group">
+              <div id="groupBattleStart" class="d-none">
+                <div class="section-title mb-0">Начать бой компании</div>
+                <div id="groupBattleCharList" class="mt-2"></div>
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="checkbox" id="groupBattleReveal" checked>
+                  <label class="form-check-label" for="groupBattleReveal">Показывать HP/ману/энергию всем участникам</label>
+                </div>
+                <button id="btnStartGroupBattle" class="btn btn-primary btn-sm mt-2" type="button">⚔️ Начать бой</button>
+              </div>
+
+              <div id="groupBattleIdle" class="hint d-none">Общий бой ещё не начат.</div>
+
+              <div id="groupBattleActive" class="d-none">
+                <div class="combat-battle-row">
+                  <span id="groupBattleRoundBadge" class="combat-round-badge">Раунд 1</span>
+                  <div class="combat-battle-actions">
+                    <button id="btnGroupNextTurn" class="btn btn-outline-light btn-sm" type="button">Следующий ход</button>
+                    <button id="btnEndGroupBattle" class="btn btn-outline-danger btn-sm d-none" type="button">Закончить бой</button>
+                  </div>
+                </div>
+                <div id="groupBattleList" class="mt-2"></div>
+              </div>
             </div>
             </div>
           </div>

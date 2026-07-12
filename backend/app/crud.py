@@ -20,6 +20,8 @@ from .models import (
     Campaign,
     CampaignMember,
     CampaignMessage,
+    CampaignBattle,
+    CampaignBattleParticipant,
 )
 
 # =========================
@@ -448,6 +450,105 @@ async def count_unread_campaign_messages(db: AsyncSession, campaign_id: int, use
     )
     result = await db.execute(q)
     return result.scalar_one()
+
+
+async def _get_battle_with_participants(db: AsyncSession, campaign_id: int) -> CampaignBattle | None:
+    q = await db.execute(
+        select(CampaignBattle)
+        .where(CampaignBattle.campaign_id == campaign_id)
+        .options(selectinload(CampaignBattle.participants).selectinload(CampaignBattleParticipant.character))
+    )
+    return q.scalar_one_or_none()
+
+
+async def start_campaign_battle(
+    db: AsyncSession,
+    campaign_id: int,
+    dm_user_id: int,
+    character_ids: list[int],
+    reveal_resources: bool,
+) -> CampaignBattle | None:
+    campaign = await get_campaign_by_id(db, campaign_id)
+    if not campaign or campaign.dm_user_id != dm_user_id:
+        return None
+
+    existing = await _get_battle_with_participants(db, campaign_id)
+    if existing:
+        return None
+
+    if not character_ids:
+        return None
+
+    q = await db.execute(
+        select(Character).where(
+            Character.id.in_(character_ids),
+            Character.campaign_id == campaign_id,
+        )
+    )
+    chars = list(q.scalars().all())
+    if len(chars) != len(set(character_ids)):
+        return None
+
+    chars.sort(key=lambda c: c.initiative, reverse=True)
+
+    battle = CampaignBattle(campaign_id=campaign_id, reveal_resources=reveal_resources)
+    db.add(battle)
+    await db.flush()
+
+    for i, ch in enumerate(chars):
+        db.add(CampaignBattleParticipant(battle_id=battle.id, character_id=ch.id, order_index=i))
+
+    await db.commit()
+    return await _get_battle_with_participants(db, campaign_id)
+
+
+async def get_campaign_battle(db: AsyncSession, campaign_id: int, viewer_user_id: int) -> CampaignBattle | None:
+    campaign = await get_campaign_by_id(db, campaign_id)
+    if not campaign:
+        return None
+    is_dm = campaign.dm_user_id == viewer_user_id
+    if not is_dm and not any(m.user_id == viewer_user_id for m in campaign.members):
+        return None
+
+    return await _get_battle_with_participants(db, campaign_id)
+
+
+async def advance_battle_turn(db: AsyncSession, campaign_id: int, actor_user_id: int) -> CampaignBattle | None:
+    campaign = await get_campaign_by_id(db, campaign_id)
+    if not campaign:
+        return None
+
+    battle = await _get_battle_with_participants(db, campaign_id)
+    if not battle or not battle.participants:
+        return None
+
+    is_dm = campaign.dm_user_id == actor_user_id
+    current = battle.participants[battle.turn_index]
+    if not is_dm and current.character.owner_user_id != actor_user_id:
+        return None
+
+    next_index = battle.turn_index + 1
+    if next_index >= len(battle.participants):
+        next_index = 0
+        battle.round += 1
+    battle.turn_index = next_index
+
+    await db.commit()
+    return await _get_battle_with_participants(db, campaign_id)
+
+
+async def end_campaign_battle(db: AsyncSession, campaign_id: int, dm_user_id: int) -> bool:
+    campaign = await get_campaign_by_id(db, campaign_id)
+    if not campaign or campaign.dm_user_id != dm_user_id:
+        return False
+
+    battle = await _get_battle_with_participants(db, campaign_id)
+    if not battle:
+        return False
+
+    await db.delete(battle)
+    await db.commit()
+    return True
 
 
 # =========================

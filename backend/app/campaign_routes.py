@@ -173,3 +173,88 @@ async def mark_messages_read(
     if not ok:
         raise HTTPException(404, "Not a member of this campaign")
     return {"status": "ok"}
+
+
+def _battle_out(battle, viewer_id: int, is_dm: bool) -> dict:
+    participants = []
+    for p in battle.participants:
+        ch = p.character
+        can_see_resources = battle.reveal_resources or is_dm or ch.owner_user_id == viewer_id
+        item = {
+            "character_id": ch.id,
+            "name": ch.name,
+            "initiative": ch.initiative,
+            "is_current_turn": p.order_index == battle.turn_index,
+        }
+        if can_see_resources:
+            item.update({
+                "hp": ch.hp, "hp_max": ch.hp_max,
+                "mana": ch.mana, "mana_max": ch.mana_max,
+                "energy": ch.energy, "energy_max": ch.energy_max,
+            })
+        participants.append(item)
+
+    current = battle.participants[battle.turn_index]
+    return {
+        "round": battle.round,
+        "reveal_resources": battle.reveal_resources,
+        "current_turn_character_id": current.character_id,
+        "participants": participants,
+    }
+
+
+@router.post("/{campaign_id}/battle")
+async def start_battle(
+    campaign_id: int,
+    body: schemas.BattleStart,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+):
+    battle = await crud.start_campaign_battle(db, campaign_id, u.id, body.character_ids, body.reveal_resources)
+    if not battle:
+        raise HTTPException(400, "Cannot start battle (not DM, battle already active, or invalid characters)")
+    return _battle_out(battle, u.id, is_dm=True)
+
+
+@router.get("/{campaign_id}/battle")
+async def get_battle(
+    campaign_id: int,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+):
+    campaign = await crud.get_campaign_by_id(db, campaign_id)
+    if not campaign:
+        raise HTTPException(404, "Campaign not found")
+
+    battle = await crud.get_campaign_battle(db, campaign_id, u.id)
+    if battle is None:
+        is_member = campaign.dm_user_id == u.id or any(m.user_id == u.id for m in campaign.members)
+        if not is_member:
+            raise HTTPException(403, "No access")
+        return None
+    return _battle_out(battle, u.id, is_dm=campaign.dm_user_id == u.id)
+
+
+@router.post("/{campaign_id}/battle/next-turn")
+async def next_turn(
+    campaign_id: int,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+):
+    campaign = await crud.get_campaign_by_id(db, campaign_id)
+    battle = await crud.advance_battle_turn(db, campaign_id, u.id)
+    if not battle:
+        raise HTTPException(403, "No active battle, or not your turn")
+    return _battle_out(battle, u.id, is_dm=bool(campaign and campaign.dm_user_id == u.id))
+
+
+@router.delete("/{campaign_id}/battle")
+async def end_battle(
+    campaign_id: int,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+):
+    ok = await crud.end_campaign_battle(db, campaign_id, u.id)
+    if not ok:
+        raise HTTPException(403, "DM access required, or no active battle")
+    return {"status": "ok"}

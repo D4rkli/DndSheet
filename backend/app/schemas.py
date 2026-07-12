@@ -207,3 +207,8 @@ class MessageCreate(BaseModel):
     text: str
     target_user_id: Optional[int] = None
 
+
+class BattleStart(BaseModel):
+    character_ids: list[int]
+    reveal_resources: bool = True
+
