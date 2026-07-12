@@ -496,6 +496,25 @@ async def apply_template_to_character(
     return ch
 
 
+async def create_character_from_template(
+    db: AsyncSession,
+    user_id: int,
+    template_id: int,
+    name: str,
+) -> Character | None:
+    q = await db.execute(
+        select(SheetTemplate).where(
+            SheetTemplate.id == template_id,
+            SheetTemplate.owner_user_id == user_id,
+        )
+    )
+    if not q.scalar_one_or_none():
+        return None
+
+    ch = await create_character(db, user_id, name)
+    return await apply_template_to_character(db, ch.id, user_id, template_id)
+
+
 async def update_custom_values(db: AsyncSession, character_id: int, user_id: int, values: dict) -> bool:
     ch = await get_character_for_user(db, character_id, user_id)
     if not ch:
@@ -579,7 +598,8 @@ async def export_character(db: AsyncSession, character_id: int, user_id: int) ->
             "mana_per_level": ch.mana_per_level,
             "energy_per_level": ch.energy_per_level,
 
-            "aggression_kindness": ch.aggression_kindness,
+            "aggression": ch.aggression,
+            "kindness": ch.kindness,
             "intellect": ch.intellect,
             "fearlessness": ch.fearlessness,
             "confidence": ch.confidence,
@@ -681,13 +701,18 @@ async def import_character(db: AsyncSession, user_id: int, payload: dict) -> Cha
         template_id = tpl_obj.id
 
     ch_data = payload.get("character") or {}
-    name = str(ch_data.get("name") or "Character")
+    name = str(payload.get("new_name") or ch_data.get("name") or "Character")
     ch = await create_character(db, user_id, name)
 
     # set fields on character
     for key, value in ch_data.items():
         if hasattr(ch, key) and value is not None:
             setattr(ch, key, value)
+
+    # new_name wins over character.name from the imported JSON, even
+    # though the loop above just copied character.name onto ch.name
+    if payload.get("new_name"):
+        ch.name = str(payload.get("new_name"))
 
     # set template + custom values
     if template_id:

@@ -9,9 +9,7 @@ class Settings(BaseSettings):
     )
 
     BOT_TOKEN: str
-    BOT_USERNAME: str = ""
 
-    BASE_URL: str = "https://d4rkli.ru"
     WEBAPP_URL: str = "https://d4rkli.ru/webapp/"
     SQLITE_PATH: str = "sqlite+aiosqlite:////var/lib/dndsheet/dnd_v2.sqlite3"
     DM_USER_IDS: str = ""

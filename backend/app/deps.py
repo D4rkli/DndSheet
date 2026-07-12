@@ -3,9 +3,10 @@ import json
 from fastapi import Depends, Header, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .config import settings
 from .db import get_db
 from .security import SESSION_COOKIE_NAME, read_session_cookie, verify_telegram_init_data
-from .models import User
+from .models import Character, User
 from . import crud
 
 
@@ -52,3 +53,22 @@ async def get_current_user(
     if profile["provider"] == "vk":
         return await crud.get_or_create_user_by_vk(db, vk_id=profile["user_key"])
     return await crud.get_or_create_user(db, tg_id=profile["user_key"])
+
+
+async def get_owned_or_dm_character(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+) -> Character:
+    """Resolve {ch_id} from the URL path and check the current user may
+    access it (owner, or one of settings.DM_USER_IDS). Shared by every
+    route that used to repeat this 404/403 check by hand."""
+    ch = await crud.get_character_by_id(db, ch_id)
+    if not ch:
+        raise HTTPException(404, "Character not found")
+
+    is_dm = u.tg_id in settings.dm_ids()
+    if ch.owner_user_id != u.id and not is_dm:
+        raise HTTPException(403, "No access")
+
+    return ch

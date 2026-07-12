@@ -2,11 +2,8 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
-from fastapi import Request
 
 from app.db import init_db
-from app.db import engine
-from app.models import Base
 from app.routes import router
 from app.auth_routes import router as auth_router
 

@@ -470,56 +470,6 @@ function evalCostExpr(res, expr, character, level) {
   return total;
 }
 
-function evalSummonExpr(expr, base, level) {
-  const s = String(expr || "").toLowerCase().replaceAll(" ", "");
-  if (!s) return 0;
-
-  const tokens = s.match(/[+-]?[^+-]+/g) || [];
-  let total = 0;
-
-  for (let t of tokens) {
-    if (!t) continue;
-
-    let sign = 1;
-    if (t[0] === "+") t = t.slice(1);
-    else if (t[0] === "-") { sign = -1; t = t.slice(1); }
-
-    if (!t) continue;
-
-    let val = null;
-
-    // 50% от base
-    const perc = t.match(/^(\d+(?:\.\d+)?)%$/);
-    if (perc) {
-      val = Math.round(Number(base) * (Number(perc[1]) / 100));
-    }
-    // 1/3 от base
-    else if (t.match(/^\d+(?:\.\d+)?\/\d+(?:\.\d+)?$/)) {
-      const [a, b] = t.split("/").map(x => Number(x.replace(",", ".")));
-      if (Number.isFinite(a) && Number.isFinite(b) && b !== 0) {
-        val = Math.round(Number(base) * (a / b));
-      }
-    }
-    // 3x (от уровня)
-    else if (t.match(/^\d+(?:\.\d+)?x$/)) {
-      val = Math.round(Number(t.replace("x", "").replace(",", ".")) * level);
-    }
-    // x (от уровня)
-    else if (t === "x") {
-      val = Math.round(level);
-    }
-    // просто число
-    else if (t.match(/^\d+(?:\.\d+)?$/)) {
-      val = Math.round(Number(t.replace(",", ".")));
-    }
-
-    if (val === null) continue;
-    total += sign * val;
-  }
-
-  return total;
-}
-
 function parseCost(costStr, character) {
   const level = Number(character?.level || 1);
   const raw = String(costStr || "")
@@ -2196,30 +2146,30 @@ async function loadSheet(showStatus = true) {
         },
       }
     );
-    // Summons
-    if (el("summonsList")) {
-      const ch = state.sheet.character || {};
-      renderList(
-        "summonsList",
-        (state.sheet.summons || []).map((s) => {
-          const r = calcSummonStats(ch, s);
-          return {
-            ...s,
-            preview: `HP ${r.hp} · M ${r.mana} · E ${r.energy} · ATK ${r.atk} · DEF ${r.def} · Ini ${r.initiative} · L ${r.luck} · S ${r.steps} · R ${r.attackRange} · x${r.count}${s.duration ? ` · ${s.duration}` : ""}`,
-          };
-        }),
-        async (s) => {
-          const id = currentChId();
-          await api(`/characters/${id}/summons/${s.id}`, { method: "DELETE" });
-          await loadSheet(false);
-        },
-        {
-          icon: "bi-person-plus",
-          clamp: true,
-          onEdit: (s) => openSummonModal(s),
-        }
-      );
-    }
+  }
+  // Summons
+  if (el("summonsList")) {
+    const ch = state.sheet.character || {};
+    renderList(
+      "summonsList",
+      (state.sheet.summons || []).map((s) => {
+        const r = calcSummonStats(ch, s);
+        return {
+          ...s,
+          preview: `HP ${r.hp} · M ${r.mana} · E ${r.energy} · ATK ${r.atk} · DEF ${r.def} · Ini ${r.initiative} · L ${r.luck} · S ${r.steps} · R ${r.attackRange} · x${r.count}${s.duration ? ` · ${s.duration}` : ""}`,
+        };
+      }),
+      async (s) => {
+        const id = currentChId();
+        await api(`/characters/${id}/summons/${s.id}`, { method: "DELETE" });
+        await loadSheet(false);
+      },
+      {
+        icon: "bi-person-plus",
+        clamp: true,
+        onEdit: (s) => openSummonModal(s),
+      }
+    );
   }
   updateCombatHudFromSheet();
   updateCharacterHero();
@@ -2388,7 +2338,6 @@ async function boot() {
     wireCombatExpandableQuickRows();
     wireLongPressRepeat();
     wireResourceLongTapAdjust();
-    wireCombatHitMenus();
     wireCombatInnerTabs();
     wireCombatSheet();
     wireCombatStates();
@@ -2408,12 +2357,6 @@ async function boot() {
 
       // XP / Level wiring
       el("btnAddXp")?.addEventListener("click", addXpAndHandleLevelUp);
-      el("btnRest")?.addEventListener("click", () => {
-        restModal?.show();
-      });
-      el("btnMove")?.addEventListener("click", () => {
-        moveModal?.show();
-      });
       el("applyRest")?.addEventListener("click", async () => {
         await applyRest();
         restModal?.hide();
@@ -2817,14 +2760,6 @@ function getResourceMax(targetId) {
   };
   const maxId = map[targetId];
   return maxId ? Number(el(maxId)?.value || 0) : null;
-}
-
-function clampResourceValue(targetId, value) {
-  const min = 0;
-  const max = getResourceMax(targetId);
-
-  if (max === null) return Math.max(min, value);
-  return Math.min(max, Math.max(min, value));
 }
 
 function appendBattleLog(text) {
@@ -3666,42 +3601,6 @@ function loadCurrentActionPoints() {
   }
 }
 
-function saveCurrentActionPoints(value) {
-  try {
-    localStorage.setItem(getActionPointsStorageKey(), String(Math.max(0, Number(value || 0))));
-  } catch {}
-}
-
-function setCurrentActionPoints(value) {
-  const max = Number(getStatInputByKey("action_points")?.value || 0);
-  const next = Math.max(0, Math.min(max, Number(value || 0)));
-
-  fillInput("f_ap_current", next);
-  saveCurrentActionPoints(next);
-
-  const hud = el("hud_ap");
-  if (hud) hud.textContent = `${next}/${max}`;
-}
-
-function spendActionPoints(cost, label = "Действие") {
-  const current = Number(el("f_ap_current")?.value || 0);
-
-  if (cost > current) {
-    showBattleError("Недостаточно очков действия");
-    return false;
-  }
-
-  setCurrentActionPoints(current - cost);
-  appendBattleLog(`🎯 ${label}: AP -${cost}`);
-  scheduleCombatAutosave();
-  return true;
-}
-
-function resetActionPointsForTurn() {
-  const max = Number(getStatInputByKey("action_points")?.value || 0);
-  setCurrentActionPoints(max);
-  appendBattleLog(`🔄 Очки действия восстановлены: ${max}`);
-}
 
 function renderCombatQuickLists() {
   const id = currentChId();
@@ -4173,49 +4072,6 @@ function wireBattleControls() {
   });
 }
 
-function toggleHitMenu(menuId, forceOpen = null) {
-  const menu = el(menuId);
-  if (!menu) return;
-
-  const nextOpen = forceOpen === null ? menu.classList.contains("d-none") : !!forceOpen;
-  menu.classList.toggle("d-none", !nextOpen);
-}
-
-function closeAllHitMenus() {
-  el("combatHitMenuMini")?.classList.add("d-none");
-}
-
-function wireCombatHitMenus() {
-  document.addEventListener("click", (e) => {
-    const compactToggle = e.target.closest('[data-compact-action="hit-toggle"]');
-    if (compactToggle) {
-      e.preventDefault();
-      e.stopPropagation();
-      const menu = el("combatHitMenuMini");
-      const willOpen = menu?.classList.contains("d-none");
-      closeAllHitMenus();
-      toggleHitMenu("combatHitMenuMini", willOpen);
-      return;
-    }
-
-    const hitOption = e.target.closest("[data-hit-damage]");
-    if (hitOption) {
-      const damage = Number(hitOption.getAttribute("data-hit-damage") || 0);
-      closeAllHitMenus();
-
-      if (damage > 0) {
-        quickApplyResource("f_hp", -damage);
-      }
-      return;
-    }
-
-    const insidePicker = e.target.closest(".combat-hit-picker");
-    if (!insidePicker) {
-      closeAllHitMenus();
-    }
-  });
-}
-
 document.addEventListener("click", (e) => {
   const clearBtn = e.target.closest("#btnClearCombatLog");
   if (!clearBtn) return;
@@ -4522,7 +4378,6 @@ function wireTabSwipe() {
         ".modal",
         ".modal-content",
         ".combat-chip",
-        ".combat-hit-picker",
         ".combat-quick-row",
         ".combat-inner-tabs",
         "#tabs",

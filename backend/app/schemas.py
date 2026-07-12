@@ -167,12 +167,6 @@ class SheetTemplateCreate(BaseModel):
     config: Dict[str, Any] = {}
 
 
-class SheetTemplateOut(BaseModel):
-    id: int
-    name: str
-    config: Dict[str, Any] = {}
-
-
 class SheetExportOut(BaseModel):
     """Полный экспорт листа в JSON."""
     character: Dict[str, Any]
@@ -182,12 +176,13 @@ class SheetExportOut(BaseModel):
     states: list[Dict[str, Any]]
     equipment: Optional[Dict[str, Any]] = None
     summons: list[Dict[str, Any]] = []
+    template: Optional[Dict[str, Any]] = None
+    custom_values: Optional[Dict[str, Any]] = None
 
 
 class SheetImportIn(SheetExportOut):
     # при импорте можно переименовать
     new_name: Optional[str] = None
-
 
 
 class ApplyTemplate(BaseModel):
@@ -196,17 +191,4 @@ class ApplyTemplate(BaseModel):
 
 class CustomValuesUpdate(BaseModel):
     values: Dict[str, Any]
-
-
-class ImportPayload(BaseModel):
-    # optional template to create on import
-    template: Optional[Dict[str, Any]] = None
-    character: Dict[str, Any]
-    items: list[Dict[str, Any]] = []
-    spells: list[Dict[str, Any]] = []
-    abilities: list[Dict[str, Any]] = []
-    states: list[Dict[str, Any]] = []
-    equipment: Optional[Dict[str, Any]] = None
-    custom_values: Optional[Dict[str, Any]] = None
-    summons: list[Dict[str, Any]] = []
 

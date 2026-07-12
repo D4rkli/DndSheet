@@ -34,8 +34,7 @@
   border-color: rgba(15, 23, 42, .10);
 }
 
-[data-theme="light"] .wallet-head,
-[data-theme="light"] .wallet-num {
+[data-theme="light"] .wallet-head {
   color: rgba(15, 23, 42, .78);
 }
 
@@ -333,12 +332,6 @@
 [data-theme="light"] .combat-state-empty,
 [data-theme="light"] .combat-state-meta {
   color: rgba(15, 23, 42, .50);
-}
-
-[data-theme="light"] .combat-hit-menu {
-  background: #f1f4f9;
-  border-color: rgba(15, 23, 42, .12);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, .16);
 }
 
 [data-theme="light"] .combat-panel-log .combat-meta-block,

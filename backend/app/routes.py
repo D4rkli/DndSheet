@@ -2,8 +2,8 @@ import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from .db import get_db
-from .deps import get_current_user, resolve_auth_profile
-from .models import User
+from .deps import get_current_user, get_owned_or_dm_character, resolve_auth_profile
+from .models import Character, User
 from .config import settings
 from . import crud, schemas
 
@@ -86,7 +86,8 @@ async def get_character(
         "energy_per_level": ch.energy_per_level,
 
         # характер
-        "aggression_kindness": ch.aggression_kindness,
+        "aggression": ch.aggression,
+        "kindness": ch.kindness,
         "intellect": ch.intellect,
         "fearlessness": ch.fearlessness,
         "humor": ch.humor,
@@ -142,17 +143,8 @@ async def add_item(
     ch_id: int,
     body: schemas.ItemCreate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-    ch = await crud.get_character_for_user(db, ch_id, u.id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    # владелец или DM может добавлять
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     it = await crud.add_item(db, ch_id, body.name, body.description, body.stats, body.qty)
     return {"id": it.id, "name": it.name, "description": it.description, "stats": it.stats, "qty": it.qty}
 
@@ -160,17 +152,8 @@ async def add_item(
 async def list_items(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     items = await crud.list_items(db, ch_id)
 
     return [
@@ -189,18 +172,8 @@ async def delete_item(
     ch_id: int,
     item_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    # доступ: владелец или DM
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     ok = await crud.delete_item(db, item_id)
     if not ok:
         raise HTTPException(404, "Item not found")
@@ -213,16 +186,8 @@ async def patch_item(
     item_id: int,
     data: schemas.ItemUpdate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-    ch = await crud.get_character_for_user(db, ch_id, u.id)
-    if not ch:
-        raise HTTPException(status_code=404, detail="Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(status_code=403, detail="No access")
-
     obj = await crud.update_item(db, ch_id, item_id, data)
     if not obj:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -239,17 +204,8 @@ async def patch_item(
 async def list_spells(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     spells = await crud.list_spells(db, ch_id)
     return [
         {
@@ -270,21 +226,8 @@ async def add_spell(
     ch_id: int,
     body: schemas.SpellCreate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_for_user(db, ch_id, u.id)
-    if not ch:
-        # DM может добавлять не только своим
-        ch = await crud.get_character_by_id(db, ch_id)
-
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     sp = await crud.add_spell(db, ch_id, body.model_dump())
     return {"id": sp.id}
 
@@ -294,17 +237,8 @@ async def delete_spell(
     ch_id: int,
     spell_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     ok = await crud.delete_spell(db, spell_id)
     if not ok:
         raise HTTPException(404, "Spell not found")
@@ -319,17 +253,8 @@ async def delete_spell(
 async def list_abilities(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     abilities = await crud.list_abilities(db, ch_id)
     return [
         {
@@ -350,17 +275,8 @@ async def add_ability(
     ch_id: int,
     body: schemas.AbilityCreate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     ab = await crud.add_ability(db, ch_id, body.model_dump())
     return {"id": ab.id}
 
@@ -370,17 +286,8 @@ async def delete_ability(
     ch_id: int,
     ability_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     ok = await crud.delete_ability(db, ability_id)
     if not ok:
         raise HTTPException(404, "Ability not found")
@@ -395,17 +302,8 @@ async def delete_ability(
 async def list_states(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     states = await crud.list_states(db, ch_id)
     return [
         {
@@ -424,17 +322,8 @@ async def patch_spell(
     spell_id: int,
     data: schemas.SpellUpdate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     obj = await crud.update_spell(db, ch_id, spell_id, data)
     if not obj:
         raise HTTPException(404, "Spell not found")
@@ -448,17 +337,8 @@ async def patch_ability(
     ability_id: int,
     data: schemas.AbilityUpdate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     obj = await crud.update_ability(db, ch_id, ability_id, data)
     if not obj:
         raise HTTPException(404, "Ability not found")
@@ -472,17 +352,8 @@ async def patch_state(
     state_id: int,
     data: schemas.StateUpdate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     obj = await crud.update_state(db, ch_id, state_id, data)
     if not obj:
         raise HTTPException(404, "State not found")
@@ -495,17 +366,8 @@ async def add_state(
     ch_id: int,
     body: schemas.StateCreate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     st = await crud.add_state(db, ch_id, body.model_dump())
     return {"id": st.id}
 
@@ -515,17 +377,8 @@ async def delete_state(
     ch_id: int,
     state_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     ok = await crud.delete_state(db, state_id)
     if not ok:
         raise HTTPException(404, "State not found")
@@ -540,17 +393,8 @@ async def delete_state(
 async def get_equipment(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     eq = await crud.get_or_create_equipment(db, ch_id)
     return {
         "head": eq.head,
@@ -575,17 +419,8 @@ async def update_equipment(
     ch_id: int,
     body: schemas.EquipmentUpdate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     eq = await crud.update_equipment(db, ch_id, body.model_dump(exclude_unset=True))
     return {"status": "ok", "equipment": {"id": eq.id}}
 
@@ -597,17 +432,8 @@ async def update_equipment(
 async def list_summons(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     rows = await crud.list_summons(db, ch_id)
     return [
         {
@@ -629,17 +455,8 @@ async def add_summon(
     ch_id: int,
     body: schemas.SummonCreate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     obj = await crud.add_summon(db, ch_id, body.model_dump())
     return {"id": obj.id}
 
@@ -650,17 +467,8 @@ async def patch_summon(
     summon_id: int,
     body: schemas.SummonUpdate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     obj = await crud.update_summon(db, ch_id, summon_id, body)
     if not obj:
         raise HTTPException(404, "Summon not found")
@@ -672,17 +480,8 @@ async def delete_summon(
     ch_id: int,
     summon_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
-
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     ok = await crud.delete_summon(db, summon_id)
     if not ok:
         raise HTTPException(404, "Summon not found")
@@ -696,19 +495,9 @@ async def delete_summon(
 async def get_full_sheet(
     ch_id: int,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    ch: Character = Depends(get_owned_or_dm_character),
 ):
     """For WebApp: one request returns everything, including template + custom values."""
-
-    # access check: owner or DM
-    ch = await crud.get_character_by_id(db, ch_id)
-    if not ch:
-        raise HTTPException(404, "Character not found")
-
-    is_dm = u.tg_id in settings.dm_ids()
-    if ch.owner_user_id != u.id and not is_dm:
-        raise HTTPException(403, "No access")
-
     sheet = await crud.get_sheet(db, ch_id, ch.owner_user_id)
     if not sheet:
         raise HTTPException(404, "Character not found")
