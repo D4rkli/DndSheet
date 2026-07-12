@@ -26,6 +26,32 @@
   font-size: 13px;
 }
 
+/* The scroll-triggered header shrink is a mobile space-saving trick; on a
+   sticky 3-column dashboard it just resizes the header while the page
+   scrolls, which visibly jittered. Neutralize it here — the header stays
+   at its normal size regardless of the is-collapsed class. */
+.topbar.is-collapsed {
+  padding-top: 22px !important;
+  padding-bottom: 16px !important;
+}
+
+.topbar.is-collapsed .app-title {
+  font-size: 20px !important;
+}
+
+.topbar.is-collapsed #status.muted,
+.topbar.is-collapsed .account-badge {
+  opacity: 1 !important;
+  height: auto !important;
+  margin-top: 2px !important;
+  transform: none !important;
+  overflow: visible !important;
+}
+
+.topbar.is-collapsed #status {
+  display: block !important;
+}
+
 .content {
   padding: 26px 4px 40px;
 }
@@ -43,6 +69,9 @@
 #tabs.nav {
   flex-wrap: wrap;
   overflow-x: visible;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 0 10px;
 }
 
 #tabs .nav-link {
@@ -198,11 +227,22 @@ main.content {
    Login page hero (desktop only — mobile keeps the plain centered card).
    ========================================================================== */
 
+/* Switch the outer wrap to a column so justify-content (now the vertical
+   axis) centers the hero+card row as a whole block, instead of each
+   child being centered independently against its own height (which threw
+   the hero and card tops out of alignment with each other). */
 .login-wrap {
-  max-width: 1100px;
+  flex-direction: column;
+  max-width: none;
+}
+
+.login-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
   gap: 72px;
-  align-items: flex-start !important;
-  padding-top: 14vh;
+  max-width: 1100px;
+  width: 100%;
 }
 
 .login-hero.d-none {

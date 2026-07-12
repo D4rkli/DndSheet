@@ -1975,7 +1975,7 @@ function renderAccountBadge() {
     badge.classList.add("d-none");
     return;
   }
-  const label = me.username ? `@${me.username}` : me.display_name;
+  const label = me.username ? `@${me.username}` : (me.display_name || "Аккаунт");
   badge.innerHTML = `<i class="bi bi-check-circle-fill account-badge-icon"></i> ${escapeHtml(label)}`;
   badge.classList.remove("d-none");
 }
@@ -2503,14 +2503,17 @@ document.addEventListener("click", (e) => {
   if (!header) return;
 
   let lastScroll = 0;
-  const threshold = 40; // через сколько px схлопывать
+  // separate collapse/expand thresholds (hysteresis) so scroll jitter right
+  // around one boundary doesn't flip the class back and forth rapidly
+  const collapseAt = 80;
+  const expandAt = 20;
 
   window.addEventListener("scroll", () => {
     const current = window.scrollY;
 
-    if (current > threshold && current > lastScroll) {
+    if (current > collapseAt && current > lastScroll) {
       header.classList.add("is-collapsed");
-    } else if (current < threshold) {
+    } else if (current < expandAt) {
       header.classList.remove("is-collapsed");
     }
 
