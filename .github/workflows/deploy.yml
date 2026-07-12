@@ -43,8 +43,14 @@ jobs:
             source venv/bin/activate
             pip install -r requirements.txt
 
+            # DATABASE_URL lives on the dnd-backend systemd unit (Environment=),
+            # not in .env, so a plain SSH shell doesn't see it by default - pull
+            # it from the unit so alembic operates on the real database instead
+            # of falling back to the (wrong) hardcoded default path.
+            export DATABASE_URL=$(systemctl show dnd-backend -p Environment --value | tr ' ' '\n' | sed -n 's/^DATABASE_URL=//p')
+
             # Back up the sqlite DB before running migrations, just in case.
-            DB_FILE="/var/lib/dndsheet/dnd_v2.sqlite3"
+            DB_FILE=$(echo "$DATABASE_URL" | sed 's#sqlite+aiosqlite:///##')
             if [ -f "$DB_FILE" ]; then
               cp "$DB_FILE" "$DB_FILE.pre-migrate.$(date +%Y%m%d%H%M%S).bak"
             fi

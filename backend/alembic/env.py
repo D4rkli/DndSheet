@@ -31,16 +31,12 @@ import os
 from app.config import settings
 
 def get_alembic_url():
-    url = os.getenv("DATABASE_URL")
-    if url:
-        url = url.replace("postgresql+asyncpg://", "postgresql://")
-        url = url.replace("postgres://", "postgresql://")
-        return url
-
-    # берём тот же sqlite url, что использует приложение
-    url = settings.SQLITE_PATH
-    # alembic нужен sync sqlite url
-    url = url.replace("sqlite+aiosqlite:///", "sqlite:///")
+    # берём тот же url, что использует приложение (DATABASE_URL, либо fallback
+    # на SQLITE_PATH) — alembic-у в обоих случаях нужен sync-драйвер, не async
+    url = os.getenv("DATABASE_URL") or settings.SQLITE_PATH
+    url = url.replace("postgresql+asyncpg://", "postgresql://")
+    url = url.replace("postgres://", "postgresql://")
+    url = url.replace("sqlite+aiosqlite://", "sqlite://")
     return url
 
 

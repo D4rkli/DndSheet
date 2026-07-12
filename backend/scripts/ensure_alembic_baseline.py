@@ -14,12 +14,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import create_engine, inspect
 
-url = os.getenv("DATABASE_URL")
-if url:
-    url = url.replace("postgresql+asyncpg://", "postgresql://").replace("postgres://", "postgresql://")
-else:
+if not (url := os.getenv("DATABASE_URL")):
     from app.config import settings
-    url = settings.SQLITE_PATH.replace("sqlite+aiosqlite:///", "sqlite:///")
+    url = settings.SQLITE_PATH
+url = url.replace("postgresql+asyncpg://", "postgresql://").replace("postgres://", "postgresql://")
+url = url.replace("sqlite+aiosqlite://", "sqlite://")
 
 insp = inspect(create_engine(url))
 sys.exit(0 if "alembic_version" in insp.get_table_names() else 1)
