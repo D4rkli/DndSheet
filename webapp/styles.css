@@ -2281,10 +2281,15 @@ header.topbar .btn{
 
 /* ===== Connection status lamp ===== */
 
-#status.muted{
+.account-status-row{
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-top: 2px;
+}
+
+.account-status-row .account-badge{
+  margin-top: 0;
 }
 
 .status-dot{
