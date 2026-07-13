@@ -26,6 +26,14 @@ body {
   overflow: hidden;
 }
 
+/* Bootstrap's .card sets its own color: var(--bs-body-color), which our
+   theme never touches — any icon/label inside a card that doesn't set its
+   own color (chevrons, item carets) silently inherited Bootstrap's dark
+   gray default instead of our theme text color. */
+.card {
+  color: var(--text);
+}
+
 .app-title {
   font-weight: 700;
   letter-spacing: 0.2px;
@@ -1126,18 +1134,20 @@ body{
 }
 
 #combatModeChevron{
-  font-size: 22px;
+  font-size: 20px;
+  opacity: .7;
+  transition: transform .2s ease, opacity .2s ease, color .2s ease;
+}
+
+.combat-mode-card.is-open #combatModeChevron{
   opacity: 1;
-  transition: transform .2s ease;
+  color: #6ea8fe;
+  transform: rotate(180deg);
 }
 
 #combatModeSummary{
   font-size: 13px;
   opacity: .85;
-}
-
-.combat-mode-card.is-open #combatModeChevron{
-  transform: rotate(180deg);
 }
 
 /* ===== Цвета ресурсов ===== */
