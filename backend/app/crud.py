@@ -2,7 +2,7 @@ import json
 import secrets
 from datetime import datetime
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -23,6 +23,7 @@ from .models import (
     CampaignBattle,
     CampaignBattleParticipant,
     FeedbackReport,
+    ActionLogEntry,
 )
 
 # =========================
@@ -828,6 +829,49 @@ async def delete_summon(db: AsyncSession, summon_id: int) -> bool:
     await db.delete(obj)
     await db.commit()
     return True
+
+
+# =========================
+# ACTION LOG (persistent combat history)
+# =========================
+
+ACTION_LOG_MAX_ENTRIES = 500
+
+
+async def add_action_log(db: AsyncSession, character_id: int, text: str) -> ActionLogEntry:
+    entry = ActionLogEntry(character_id=character_id, text=text[:500])
+    db.add(entry)
+    await db.commit()
+    await db.refresh(entry)
+
+    # keep the table bounded — trim anything past the cap for this character
+    q = await db.execute(
+        select(ActionLogEntry.id)
+        .where(ActionLogEntry.character_id == character_id)
+        .order_by(ActionLogEntry.created_at.desc(), ActionLogEntry.id.desc())
+        .offset(ACTION_LOG_MAX_ENTRIES)
+    )
+    stale_ids = [row[0] for row in q.all()]
+    if stale_ids:
+        await db.execute(delete(ActionLogEntry).where(ActionLogEntry.id.in_(stale_ids)))
+        await db.commit()
+
+    return entry
+
+
+async def list_action_log(db: AsyncSession, character_id: int, limit: int = 200) -> list[ActionLogEntry]:
+    q = await db.execute(
+        select(ActionLogEntry)
+        .where(ActionLogEntry.character_id == character_id)
+        .order_by(ActionLogEntry.created_at.desc(), ActionLogEntry.id.desc())
+        .limit(limit)
+    )
+    return list(q.scalars().all())
+
+
+async def clear_action_log(db: AsyncSession, character_id: int) -> None:
+    await db.execute(delete(ActionLogEntry).where(ActionLogEntry.character_id == character_id))
+    await db.commit()
 
 
 # =========================

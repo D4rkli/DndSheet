@@ -535,6 +535,43 @@ async def delete_summon(
     return {"status": "deleted"}
 
 # =========================
+# ACTION LOG (persistent combat history)
+# =========================
+
+@router.get("/characters/{ch_id}/log")
+async def list_action_log(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    ch: Character = Depends(get_owned_or_dm_character),
+):
+    entries = await crud.list_action_log(db, ch_id)
+    return [
+        {"id": e.id, "text": e.text, "created_at": e.created_at.isoformat()}
+        for e in entries
+    ]
+
+
+@router.post("/characters/{ch_id}/log")
+async def add_action_log(
+    ch_id: int,
+    body: schemas.ActionLogCreate,
+    db: AsyncSession = Depends(get_db),
+    ch: Character = Depends(get_owned_or_dm_character),
+):
+    entry = await crud.add_action_log(db, ch_id, body.text)
+    return {"id": entry.id, "text": entry.text, "created_at": entry.created_at.isoformat()}
+
+
+@router.delete("/characters/{ch_id}/log")
+async def clear_action_log(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    ch: Character = Depends(get_owned_or_dm_character),
+):
+    await crud.clear_action_log(db, ch_id)
+    return {"status": "ok"}
+
+# =========================
 # FULL SHEET (one call for webapp)
 # =========================
 

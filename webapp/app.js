@@ -1461,6 +1461,62 @@ el("btnSendMessage")?.addEventListener("click", async () => {
   await renderMessagesModal();
 });
 
+// ===== История действий (персистентный лог на сервере)
+
+const historyModalEl = el("historyModal");
+const historyModal = historyModalEl ? new bootstrap.Modal(historyModalEl) : null;
+
+el("btnHistory")?.addEventListener("click", async () => {
+  if (!historyModal) return;
+  historyModal.show();
+  await renderHistoryModal();
+});
+
+async function renderHistoryModal() {
+  const root = el("historyLogList");
+  const id = currentChId();
+  if (!root) return;
+  if (!id) {
+    root.innerHTML = `<div class="combat-log-empty">Нет выбранного персонажа.</div>`;
+    return;
+  }
+
+  root.innerHTML = `<div class="combat-log-empty">Загрузка…</div>`;
+
+  try {
+    const entries = await api(`/characters/${id}/log`);
+    if (!entries.length) {
+      root.innerHTML = `<div class="combat-log-empty">История пуста.</div>`;
+      return;
+    }
+
+    root.innerHTML = entries
+      .map((e) => {
+        const type = getCombatLogType(e.text);
+        const time = new Date(e.created_at).toLocaleString("ru-RU", {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        return `<div class="combat-log-item ${type}"><span class="combat-log-time">${escapeHtml(time)}</span> ${escapeHtml(e.text)}</div>`;
+      })
+      .join("");
+  } catch (e) {
+    console.error("Failed to load action log:", e);
+    root.innerHTML = `<div class="combat-log-empty">Не удалось загрузить историю.</div>`;
+  }
+}
+
+el("btnClearHistoryLog")?.addEventListener("click", async () => {
+  const id = currentChId();
+  if (!id) return;
+  if (!confirm("Удалить всю историю действий этого персонажа? Отменить нельзя.")) return;
+
+  await api(`/characters/${id}/log`, { method: "DELETE" });
+  await renderHistoryModal();
+});
+
 // ===== Feedback (bugs/suggestions)
 
 const feedbackModalEl = el("feedbackModal");
@@ -3326,6 +3382,14 @@ function appendBattleLog(text) {
     localStorage.setItem("battleLog", JSON.stringify(state.battleLog));
   } catch {}
   renderCombatLog();
+
+  // персистентная история на сервере — не блокирует UI, не мешает при ошибке сети
+  const id = currentChId();
+  if (id) {
+    api(`/characters/${id}/log`, { method: "POST", body: JSON.stringify({ text: String(text) }) }).catch((e) =>
+      console.error("Action log save failed:", e)
+    );
+  }
 }
 
 function getCombatLogType(text) {

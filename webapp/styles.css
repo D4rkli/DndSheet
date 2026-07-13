@@ -1564,6 +1564,13 @@ body{
   line-height: 1.35;
 }
 
+.combat-log-time{
+  color: rgba(255,255,255,.5);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  margin-right: 6px;
+}
+
 .combat-log-empty{
   color: rgba(255,255,255,.55);
   font-size: 13px;

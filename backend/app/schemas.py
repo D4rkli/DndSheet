@@ -224,3 +224,7 @@ class FeedbackCreate(BaseModel):
     kind: str
     text: str
 
+
+class ActionLogCreate(BaseModel):
+    text: str
+

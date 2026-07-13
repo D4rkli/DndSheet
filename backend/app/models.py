@@ -174,6 +174,8 @@ class Character(Base):
 
     summons: Mapped[list["Summon"]] = relationship(back_populates="character", cascade="all, delete-orphan")
 
+    action_log: Mapped[list["ActionLogEntry"]] = relationship(back_populates="character", cascade="all, delete-orphan")
+
     equipment: Mapped["Equipment"] = relationship(
         back_populates="character",
         cascade="all, delete-orphan",
@@ -310,6 +312,17 @@ class Summon(Base):
     count: Mapped[int] = mapped_column(Integer, default=1)
 
     character: Mapped["Character"] = relationship(back_populates="summons")
+
+
+class ActionLogEntry(Base):
+    __tablename__ = "action_log_entries"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    character_id: Mapped[int] = mapped_column(ForeignKey("characters.id"), index=True)
+    text: Mapped[str] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    character: Mapped["Character"] = relationship(back_populates="action_log")
 
 
 class FeedbackReport(Base):
