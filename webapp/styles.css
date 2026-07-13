@@ -1154,7 +1154,7 @@ body{
 
 .combat-chip.hp {
   border: 1px solid rgba(255, 80, 80, 0.25);
-  background: rgba(255, 80, 80, 0.08);
+  background: linear-gradient(160deg, rgba(255, 80, 80, .14), rgba(255, 80, 80, .04));
 }
 
 .combat-chip.hp .combat-chip-title {
@@ -1168,7 +1168,7 @@ body{
 
 .combat-chip.mana {
   border: 1px solid rgba(80, 160, 255, 0.25);
-  background: rgba(80, 160, 255, 0.08);
+  background: linear-gradient(160deg, rgba(80, 160, 255, .14), rgba(80, 160, 255, .04));
 }
 
 .combat-chip.mana .combat-chip-title {
@@ -1182,7 +1182,7 @@ body{
 
 .combat-chip.energy {
   border: 1px solid rgba(255, 200, 80, 0.25);
-  background: rgba(255, 200, 80, 0.08);
+  background: linear-gradient(160deg, rgba(255, 200, 80, .14), rgba(255, 200, 80, .04));
 }
 
 .combat-chip.energy .combat-chip-title {
@@ -2408,8 +2408,25 @@ header.topbar .btn{
   width: 34px;
   height: 34px;
   min-width: 34px;
+  padding: 0;
   border-radius: 999px;
-  font-size: 20px;
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.combat-chip.hp .step-btn{
+  border-color: rgba(255, 110, 110, .28);
+}
+
+.combat-chip.mana .step-btn{
+  border-color: rgba(90, 170, 255, .28);
+}
+
+.combat-chip.energy .step-btn{
+  border-color: rgba(255, 210, 90, .28);
 }
 
 /* DMG/Armor компактнее */
