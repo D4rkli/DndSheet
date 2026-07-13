@@ -451,7 +451,16 @@ el("btnCreateTpl")?.addEventListener("click", async () => {
 });
 
 function setStatus(text) {
-  el("status").textContent = text;
+  const node = el("statusText");
+  if (node) node.textContent = text;
+  else el("status").textContent = text;
+}
+
+function setConnectionState(stateName) {
+  const dot = el("statusDot");
+  if (!dot) return;
+  dot.classList.remove("status-dot--connecting", "status-dot--ok", "status-dot--error");
+  dot.classList.add(`status-dot--${stateName}`);
 }
 
 function currentChId() {
@@ -847,12 +856,11 @@ function updateMoneyPreview(coins) {
 
   const { gold = 0, silver = 0, copper = 0 } = coins || {};
   const totalCp = coinsToCp({ gold, silver, copper });
-  const totalGold = (totalCp / 1000).toFixed(3);
 
   node.innerHTML = `
     Всего: <b>${gold}</b> 🟡 · <b>${silver}</b> ⚪ · <b>${copper}</b> 🟤
     <br>
-    Эквивалент: <b>${totalGold}</b> золота
+    Эквивалент: <b>${totalCp}</b> меди
   `;
 }
 
@@ -1538,6 +1546,35 @@ el("btnLogoutVisible")?.addEventListener("click", doLogout);
 
 el("characterSelect").addEventListener("change", async (e) => {
   state.chId = Number(e.target.value);
+  updateDeleteCharacterButtonState();
+  await loadSheet();
+});
+
+function updateDeleteCharacterButtonState() {
+  const btn = el("btnDeleteCharacter");
+  if (!btn) return;
+  const ch = (state.characters || []).find((c) => c.id === currentChId());
+  btn.disabled = !ch || !ch.is_own;
+}
+
+el("btnDeleteCharacter")?.addEventListener("click", async () => {
+  const chId = currentChId();
+  const ch = (state.characters || []).find((c) => c.id === chId);
+  if (!ch || !ch.is_own) return;
+
+  const typed = prompt(
+    `Это безвозвратно удалит персонажа «${ch.name}» вместе с инвентарём, заклинаниями, способностями и состояниями.\n\nЧтобы подтвердить, введи имя персонажа:`
+  );
+  if (typed === null) return;
+  if (typed.trim() !== ch.name) {
+    alert("Имя не совпадает — персонаж не удалён.");
+    return;
+  }
+
+  await api(`/characters/${chId}`, { method: "DELETE" });
+  state.chId = null;
+  await loadCharacters();
+  updateDeleteCharacterButtonState();
   await loadSheet();
 });
 
@@ -2393,6 +2430,7 @@ async function loadCharacters() {
     state.chId = own[0].id;
   }
   if (state.chId) sel.value = state.chId;
+  updateDeleteCharacterButtonState();
 }
 
 async function loadSheet(showStatus = true) {
@@ -2616,7 +2654,8 @@ async function loadSheet(showStatus = true) {
   renderCombatStates();
   renderCombatRound();
   renderCombatLog();
-  setStatus("Ок ✅");
+  setStatus("");
+  setConnectionState("ok");
 }
 
 function formatCostPretty(costStr) {
@@ -2829,6 +2868,7 @@ async function boot() {
   } catch (e) {
     console.error(e);
     setStatus("Ошибка");
+    setConnectionState("error");
     alert(e.message);
   }
 }

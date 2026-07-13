@@ -150,6 +150,24 @@ async def get_character_for_user(db: AsyncSession, character_id: int, user_id: i
     return q.scalar_one_or_none()
 
 
+async def delete_character(db: AsyncSession, user_id: int, character_id: int) -> bool:
+    ch = await get_character_for_user(db, character_id, user_id)
+    if not ch:
+        return False
+
+    # drop battle-participant rows first so deleting a character mid-battle
+    # doesn't leave a dangling character_id reference
+    q = await db.execute(
+        select(CampaignBattleParticipant).where(CampaignBattleParticipant.character_id == character_id)
+    )
+    for p in q.scalars().all():
+        await db.delete(p)
+
+    await db.delete(ch)
+    await db.commit()
+    return True
+
+
 async def get_character_by_id(db: AsyncSession, character_id: int) -> Character | None:
     q = await db.execute(
         select(Character)

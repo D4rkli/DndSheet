@@ -171,6 +171,18 @@ async def create_character(
     return {"id": ch.id, "name": ch.name}
 
 
+@router.delete("/characters/{ch_id}")
+async def delete_character(
+    ch_id: int,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+):
+    ok = await crud.delete_character(db, u.id, ch_id)
+    if not ok:
+        raise HTTPException(404, "Character not found")
+    return {"status": "ok"}
+
+
 @router.post("/characters/{ch_id}/items")
 async def add_item(
     ch_id: int,

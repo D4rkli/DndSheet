@@ -98,6 +98,10 @@
   color: var(--text);
 }
 
+[data-theme="light"] .character-select-icon {
+  color: rgba(15, 23, 42, .45);
+}
+
 [data-theme="light"] .form-control:focus,
 [data-theme="light"] .form-select:focus {
   background-color: rgba(15, 23, 42, .05) !important;

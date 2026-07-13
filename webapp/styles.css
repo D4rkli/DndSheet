@@ -2240,9 +2240,80 @@ header.topbar .btn{
   font-size: 12px !important;
 }
 
+.character-select-wrap{
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.character-select-icon{
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: rgba(255,255,255,.5);
+  pointer-events: none;
+}
+
 #characterSelect{
+  width: 100%;
   min-height: 42px;
+  padding-left: 34px !important;
   border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+  border-color: rgba(255,255,255,.16);
+  font-weight: 700;
+}
+
+#characterSelect:focus{
+  border-color: rgba(110,168,254,.55);
+  box-shadow: 0 0 0 3px rgba(110,168,254,.18);
+}
+
+#btnDeleteCharacter{
+  min-height: 42px;
+  min-width: 42px;
+  padding: 0 !important;
+  border-radius: 14px !important;
+  flex: 0 0 auto;
+}
+
+/* ===== Connection status lamp ===== */
+
+#status.muted{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot{
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot--connecting{
+  background: #f5c542;
+  box-shadow: 0 0 6px rgba(245,197,66,.7);
+  animation: statusDotPulse 1.2s ease-in-out infinite;
+}
+
+.status-dot--ok{
+  background: #34d372;
+  box-shadow: 0 0 6px rgba(52,211,114,.6);
+}
+
+.status-dot--error{
+  background: #ff5c5c;
+  box-shadow: 0 0 6px rgba(255,92,92,.6);
+}
+
+@keyframes statusDotPulse{
+  0%, 100% { opacity: 1; }
+  50% { opacity: .4; }
 }
 
 #btnNew{
