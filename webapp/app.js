@@ -770,16 +770,19 @@ function parseCost(costStr, character) {
   return result;
 }
 
-async function applyCostToCharacter(costStr, sourceName = "Способность") {
+async function applyCostToCharacter(costStr, sourceName = "Способность", apCost = 0) {
   const id = currentChId();
   if (!id || !state.sheet?.character) return;
 
   const ch = state.sheet.character;
   const delta = parseCost(costStr, ch);
+  const ap = Math.max(0, Number(apCost) || 0);
 
   const hp = Number(ch.hp || 0);
   const mana = Number(ch.mana || 0);
   const energy = Number(ch.energy || 0);
+  const apInput = el("f_ap_current");
+  const apCurrent = Number(apInput?.value || 0);
 
   if (delta.hp > hp) {
     showBattleError("Недостаточно HP");
@@ -793,19 +796,24 @@ async function applyCostToCharacter(costStr, sourceName = "Способност�
     showBattleError("Недостаточно энергии");
     return;
   }
+  if (ap > apCurrent) {
+    showBattleError("Недостаточно очков действия");
+    return;
+  }
 
   const payload = {};
   if (delta.hp) payload.hp = hp - delta.hp;
   if (delta.mana) payload.mana = mana - delta.mana;
   if (delta.energy) payload.energy = energy - delta.energy;
 
-  if (Object.keys(payload).length === 0) return;
+  if (Object.keys(payload).length === 0 && !ap) return;
 
   appendBattleLog(
     `✨ ${sourceName}:` +
     `${delta.hp ? ` HP -${delta.hp}` : ""}` +
     `${delta.mana ? ` Mana -${delta.mana}` : ""}` +
-    `${delta.energy ? ` Energy -${delta.energy}` : ""}`
+    `${delta.energy ? ` Energy -${delta.energy}` : ""}` +
+    `${ap ? ` AP -${ap}` : ""}`
   );
 
   showBattleToast(`${sourceName}: действие применено`, "success");
@@ -822,8 +830,14 @@ async function applyCostToCharacter(costStr, sourceName = "Способност�
       playCombatChipFx(".combat-chip.energy", "is-energy-flash");
       showCombatFloat(".combat-chip.energy", `-${delta.energy}`, "energy");
     }
+    if (ap && apInput) {
+      apInput.value = String(apCurrent - ap);
+      apInput.dispatchEvent(new Event("input", { bubbles: true }));
+      playCombatChipFx(".combat-chip.ap", "is-mana-flash");
+      showCombatFloat(".combat-chip.ap", `-${ap}`, "mana");
+    }
 
-  scheduleCombatAutosave(payload);
+  if (Object.keys(payload).length > 0) scheduleCombatAutosave(payload);
 }
 
 function showCombatFloat(selector, value, kind) {
@@ -2193,6 +2207,7 @@ function openSpellModal(kind, existing = null) {
 
   const isEdit = !!existing;
   const title = `${isEdit ? "Редактировать" : "Добавить"} ${labels[kind] || ""}`.trim();
+  const defaultApCost = kind === "spell" ? 5 : 1;
 
   openModal(
     title,
@@ -2203,6 +2218,10 @@ function openSpellModal(kind, existing = null) {
         <div class="col-4">
           <label class="form-label">Уровень</label>
           <input id="m_level" type="number" class="form-control" min="0" value="0" />
+        </div>
+        <div class="col-4">
+          <label class="form-label">Очки действия</label>
+          <input id="m_ap_cost" type="number" class="form-control" min="0" value="${defaultApCost}" />
         </div>
       </div>
       <label class="form-label mt-2">Описание</label>
@@ -2246,6 +2265,7 @@ function openSpellModal(kind, existing = null) {
         description: document.getElementById("m_desc").value,
         range: document.getElementById("m_range").value,
         duration: document.getElementById("m_duration").value,
+        ap_cost: intOrNull(document.getElementById("m_ap_cost").value) ?? defaultApCost,
         cost: buildCostString({
           hp: document.getElementById("m_cost_hp").value,
           mana: document.getElementById("m_cost_mana").value,
@@ -2265,6 +2285,7 @@ function openSpellModal(kind, existing = null) {
   if (existing) {
     document.getElementById("m_name").value = existing.name || "";
     document.getElementById("m_level").value = String(existing.level ?? 0);
+    document.getElementById("m_ap_cost").value = String(existing.ap_cost ?? defaultApCost);
     document.getElementById("m_desc").value = existing.description || "";
     document.getElementById("m_range").value = existing.range || "";
     document.getElementById("m_duration").value = existing.duration || "";
@@ -2320,6 +2341,12 @@ function openStateModal(existing = null) {
       const method = isEdit ? "PATCH" : "POST";
 
       await api(path, { method, body: JSON.stringify(payload) });
+
+      // новое активное состояние (горение, замерзание и т.п.) сразу бьёт по HP
+      if (!isEdit && payload.is_active && payload.hp_cost) {
+        await applyStateHpCost(payload.hp_cost, payload.name);
+      }
+
       await loadSheet(false);
     }
   );
@@ -2532,7 +2559,7 @@ async function loadSheet(showStatus = true) {
     {
       icon: "bi-stars",
       clamp: true,
-      onUse: async (s) => applyCostToCharacter(s.cost, s.name || "Заклинание"),
+      onUse: async (s) => applyCostToCharacter(s.cost, s.name || "Заклинание", s.ap_cost),
       onEdit: (s) => openSpellModal("spell", s),
       onFavorite: async (s) => {
         toggleFavorite("spells", s.id);
@@ -2615,7 +2642,7 @@ async function loadSheet(showStatus = true) {
       {
         icon: "bi-lightning-fill",
         clamp: true,
-        onUse: async (a) => applyCostToCharacter(a.cost, a.name || "Умение"),
+        onUse: async (a) => applyCostToCharacter(a.cost, a.name || "Умение", a.ap_cost),
         onEdit: (a) => openSpellModal("ability", a),
         onFavorite: async (a) => {
           toggleFavorite("abilities", a.id);
@@ -2684,6 +2711,10 @@ function formatSpellPreview(spell) {
 
     spell.cost
       ? `<span class="spell-meta spell-meta--cost">${escapeHtml(formatCostPretty(spell.cost))}</span>`
+      : "",
+
+    spell.ap_cost
+      ? `<span class="spell-meta spell-meta--cost">⚡ ${escapeHtml(spell.ap_cost)} ОД</span>`
       : "",
   ].filter(Boolean);
 
@@ -2918,6 +2949,46 @@ document.addEventListener("click", (e) => {
 
   input.value = String(next);
   input.dispatchEvent(new Event("input", { bubbles: true }));
+});
+
+// Восстановление HP/маны/энергии сверх максимума — та же логика, что и
+// quickApplyResource, но без ограничения по max (только не ниже 0)
+function overfillResource(targetId, amount) {
+  const input = el(targetId);
+  if (!input || !Number.isFinite(amount) || amount === 0) return;
+
+  const current = Number(input.value || 0);
+  const next = Math.max(0, current + amount);
+  input.value = String(next);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+
+  const sign = amount > 0 ? "+" : "";
+  const labels = { f_hp: "HP", f_mana: "Mana", f_energy: "Energy" };
+  const chipSel = { f_hp: ".combat-chip.hp", f_mana: ".combat-chip.mana", f_energy: ".combat-chip.energy" }[targetId];
+  const fx = targetId === "f_hp" ? (amount > 0 ? "is-heal-flash" : "is-hit") : targetId === "f_mana" ? "is-mana-flash" : "is-energy-flash";
+  const kind = targetId === "f_hp" ? (amount > 0 ? "heal" : "damage") : targetId === "f_mana" ? "mana" : "energy";
+
+  if (chipSel) {
+    playCombatChipFx(chipSel, fx);
+    showCombatFloat(chipSel, `${sign}${amount}`, kind);
+  }
+
+  appendBattleLog(`⤴ ${labels[targetId] || targetId} сверх максимума: ${sign}${amount}`);
+  scheduleCombatAutosave();
+}
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-overheal-target]");
+  if (!btn) return;
+
+  const targetId = btn.getAttribute("data-overheal-target");
+  const raw = prompt("На сколько восстановить (можно выше максимума)? Отрицательное число — забрать.", "");
+  if (raw === null) return;
+
+  const amount = Number(raw);
+  if (!Number.isFinite(amount)) return;
+
+  overfillResource(targetId, amount);
 });
 
 // =========================
@@ -3235,6 +3306,10 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function getResourceMax(targetId) {
+  if (targetId === "f_ap_current") {
+    return Number(getStatInputByKey("action_points")?.value || 0);
+  }
+
   const map = {
     f_hp: "f_hp_max",
     f_mana: "f_mana_max",
@@ -3519,6 +3594,15 @@ function updateCombatHudFromSheet() {
   const armorEl = el("hud_armor");
   if (armorEl) armorEl.textContent = `${perm}+${temp}`;
 
+  const apEl = el("hud_ap");
+  if (apEl) apEl.textContent = `${apCurrent}/${apMax}`;
+
+  const apRatio = apMax > 0 ? Math.max(0, Math.min(100, (apCurrent / apMax) * 100)) : 0;
+  const apBar = el("hud_ap_bar");
+  if (apBar) apBar.style.width = `${apRatio}%`;
+
+  document.querySelector(".combat-chip.ap")?.classList.toggle("is-empty", apCurrent <= 0);
+
   const hpBar = el("hud_hp_bar");
   if (hpBar) hpBar.style.width = `${hpRatio}%`;
 
@@ -3628,10 +3712,12 @@ async function applyMovement() {
 }
 
 function wireCombatHud() {
-  ["f_hp", "f_hp_max", "f_mana", "f_mana_max", "f_energy", "f_energy_max", "f_attack_live"].forEach((id) => {
+  ["f_hp", "f_hp_max", "f_mana", "f_mana_max", "f_energy", "f_energy_max", "f_attack_live", "f_ap_current"].forEach((id) => {
     el(id)?.addEventListener("input", updateCombatHudFromSheet);
     el(id)?.addEventListener("change", updateCombatHudFromSheet);
   });
+
+  el("f_ap_current")?.addEventListener("input", () => saveCurrentActionPoints(el("f_ap_current").value));
 }
 
 function quickApplyResource(targetId, delta) {
@@ -4083,6 +4169,22 @@ function loadCurrentActionPoints() {
   }
 }
 
+function saveCurrentActionPoints(value) {
+  try {
+    localStorage.setItem(getActionPointsStorageKey(), String(Math.max(0, Number(value) || 0)));
+  } catch {}
+}
+
+function resetActionPointsToMax() {
+  const max = Number(getStatInputByKey("action_points")?.value || 0);
+  const input = el("f_ap_current");
+  if (!input) return;
+
+  input.value = String(max);
+  saveCurrentActionPoints(max);
+  updateCombatHudFromSheet();
+}
+
 
 function renderCombatQuickLists() {
   const id = currentChId();
@@ -4121,7 +4223,7 @@ function renderCombatQuickLists() {
       await api(`/characters/${id}/spells/${s.id}`, { method: "DELETE" });
       await loadSheet(false);
     },
-    { icon: "bi-stars", clamp: true, onUse: async (s) => applyCostToCharacter(s.cost, s.name || "Заклинание") }
+    { icon: "bi-stars", clamp: true, onUse: async (s) => applyCostToCharacter(s.cost, s.name || "Заклинание", s.ap_cost) }
   );
 
   // Умения (use = списать cost)
@@ -4132,7 +4234,7 @@ function renderCombatQuickLists() {
       await api(`/characters/${id}/abilities/${a.id}`, { method: "DELETE" });
       await loadSheet(false);
     },
-    { icon: "bi-lightning-fill", clamp: true, onUse: async (a) => applyCostToCharacter(a.cost, a.name || "Умение") }
+    { icon: "bi-lightning-fill", clamp: true, onUse: async (a) => applyCostToCharacter(a.cost, a.name || "Умение", a.ap_cost) }
   );
 }
 
@@ -4181,14 +4283,42 @@ function parseDurationValue(raw) {
   };
 }
 
+async function applyStateHpCost(hpCost, stateName) {
+  const id = currentChId();
+  if (!id || !state.sheet?.character) return;
+
+  const ch = state.sheet.character;
+  const hp = Number(ch.hp || 0);
+  const hpMax = Number(ch.hp_max || 0);
+  const cost = Number(hpCost || 0);
+  if (!cost) return;
+
+  let nextHp = Math.max(0, hp - cost);
+  if (hpMax > 0) nextHp = Math.min(hpMax, nextHp);
+  if (nextHp === hp) return;
+
+  await api(`/characters/${id}`, { method: "PATCH", body: JSON.stringify({ hp: nextHp }) });
+  ch.hp = nextHp; // держим локальное состояние в курсе для следующих вызовов в этом же батче
+  appendBattleLog(`🩸 ${stateName || "Состояние"}: HP ${cost > 0 ? "-" : "+"}${Math.abs(cost)}`);
+}
+
 async function combatStateTick(stateId) {
   const chId = currentChId();
   const states = state.sheet?.states || [];
   const st = states.find((x) => Number(x.id) === Number(stateId));
   if (!chId || !st) return;
 
+  // активное состояние (горение, замерзание и т.п.) бьёт по HP каждый ход,
+  // пока действует — не только в момент добавления
+  if (st.is_active && st.hp_cost) {
+    await applyStateHpCost(st.hp_cost, st.name);
+  }
+
   const parsed = parseDurationValue(st.duration);
-  if (!parsed) return;
+  if (!parsed) {
+    await loadSheet(false);
+    return;
+  }
 
   const nextValue = parsed.value - 1;
 
@@ -4233,6 +4363,10 @@ async function combatStateDelete(stateId) {
 async function combatNextTurn() {
   const states = state.sheet?.states || [];
   for (const st of states) {
+    if (st.is_active && st.hp_cost) {
+      await applyStateHpCost(st.hp_cost, st.name);
+    }
+
     const parsed = parseDurationValue(st.duration);
     if (!parsed) continue;
 
@@ -4538,6 +4672,7 @@ function wireBattleControls() {
     state.battleRound = (state.battleRound || 1) + 1;
     saveBattleRound();
     renderCombatRound();
+    resetActionPointsToMax();
     appendBattleLog(`🔄 Раунд ${state.battleRound}`);
   });
 

@@ -261,6 +261,7 @@ async def list_spells(
             "range": s.range,
             "duration": s.duration,
             "cost": s.cost,
+            "ap_cost": s.ap_cost,
         }
         for s in spells
     ]
@@ -310,6 +311,7 @@ async def list_abilities(
             "range": a.range,
             "duration": a.duration,
             "cost": a.cost,
+            "ap_cost": a.ap_cost,
         }
         for a in abilities
     ]
@@ -373,7 +375,7 @@ async def patch_spell(
     if not obj:
         raise HTTPException(404, "Spell not found")
 
-    return {"id": obj.id, "name": obj.name, "level": obj.level, "description": obj.description, "range": obj.range, "duration": obj.duration, "cost": obj.cost}
+    return {"id": obj.id, "name": obj.name, "level": obj.level, "description": obj.description, "range": obj.range, "duration": obj.duration, "cost": obj.cost, "ap_cost": obj.ap_cost}
 
 
 @router.patch("/characters/{ch_id}/abilities/{ability_id}")
@@ -388,7 +390,7 @@ async def patch_ability(
     if not obj:
         raise HTTPException(404, "Ability not found")
 
-    return {"id": obj.id, "name": obj.name, "level": obj.level, "description": obj.description, "range": obj.range, "duration": obj.duration, "cost": obj.cost}
+    return {"id": obj.id, "name": obj.name, "level": obj.level, "description": obj.description, "range": obj.range, "duration": obj.duration, "cost": obj.cost, "ap_cost": obj.ap_cost}
 
 
 @router.patch("/characters/{ch_id}/states/{state_id}")
@@ -619,6 +621,7 @@ async def get_full_sheet(
                 "range": s.range,
                 "duration": s.duration,
                 "cost": s.cost,
+                "ap_cost": s.ap_cost,
             }
             for s in sheet["spells"]
         ],
@@ -631,6 +634,7 @@ async def get_full_sheet(
                 "range": a.range,
                 "duration": a.duration,
                 "cost": a.cost,
+                "ap_cost": a.ap_cost,
             }
             for a in sheet["abilities"]
         ],

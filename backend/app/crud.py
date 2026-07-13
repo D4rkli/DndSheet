@@ -41,8 +41,8 @@ def _safe_json_dict(raw: str | None) -> dict:
 
 
 # Fields used across CRUD updates (avoid copy-paste)
-SPELL_FIELDS = ["name", "level", "description", "range", "duration", "cost"]
-ABILITY_FIELDS = ["name", "level", "description", "range", "duration", "cost"]
+SPELL_FIELDS = ["name", "level", "description", "range", "duration", "cost", "ap_cost"]
+ABILITY_FIELDS = ["name", "level", "description", "range", "duration", "cost", "ap_cost"]
 STATE_FIELDS = ["name", "hp_cost", "duration", "is_active"]
 ITEM_FIELDS = ["name", "description", "stats", "qty"]
 SUMMON_FIELDS = [
@@ -1049,11 +1049,11 @@ async def export_character(db: AsyncSession, character_id: int, user_id: int) ->
             for i in sheet["items"]
         ],
         "spells": [
-            {"name": s.name, "description": s.description, "range": s.range, "duration": s.duration, "cost": s.cost}
+            {"name": s.name, "description": s.description, "range": s.range, "duration": s.duration, "cost": s.cost, "ap_cost": s.ap_cost}
             for s in sheet["spells"]
         ],
         "abilities": [
-            {"name": a.name, "description": a.description, "range": a.range, "duration": a.duration, "cost": a.cost}
+            {"name": a.name, "description": a.description, "range": a.range, "duration": a.duration, "cost": a.cost, "ap_cost": a.ap_cost}
             for a in sheet["abilities"]
         ],
         "states": [
@@ -1166,6 +1166,7 @@ async def import_character(db: AsyncSession, user_id: int, payload: dict) -> Cha
                     "range": s.get("range", ""),
                     "duration": s.get("duration", ""),
                     "cost": s.get("cost", ""),
+                    "ap_cost": int(s.get("ap_cost", 5) or 0),
                 },
             )
 
@@ -1181,6 +1182,7 @@ async def import_character(db: AsyncSession, user_id: int, payload: dict) -> Cha
                     "range": a.get("range", ""),
                     "duration": a.get("duration", ""),
                     "cost": a.get("cost", ""),
+                    "ap_cost": int(a.get("ap_cost", 1) or 0),
                 },
             )
 

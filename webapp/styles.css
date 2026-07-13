@@ -1204,6 +1204,23 @@ body{
   color: #ffe08a;
 }
 
+.combat-chip.ap {
+  border: 1px solid rgba(110, 168, 254, 0.25);
+  background: linear-gradient(160deg, rgba(110, 168, 254, .14), rgba(110, 168, 254, .04));
+}
+
+.combat-chip.ap .combat-chip-title {
+  color: #6ea8fe;
+}
+
+.combat-chip.ap .combat-chip-val {
+  color: #9cc2ff;
+}
+
+.combat-chip.ap .step-btn{
+  border-color: rgba(110, 168, 254, .35);
+}
+
 /* ===== XP блок ===== */
 
 .xp-grid{
@@ -1630,6 +1647,10 @@ body{
 
 .combat-bar-fill.energy{
   background: linear-gradient(90deg, #ffd36b, #ffe08a);
+}
+
+.combat-bar-fill.ap{
+  background: linear-gradient(90deg, #6ea8fe, #9cc2ff);
 }
 
 #btnClearCombatLog{
@@ -2173,7 +2194,14 @@ body{
   gap: 8px;
 }
 
-.combat-chip-toggle{
+.combat-chip-top-actions{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.combat-chip-toggle,
+.combat-chip-overheal{
   width: 28px;
   height: 28px;
   min-width: 28px;
@@ -2190,12 +2218,14 @@ body{
   transition: transform .12s ease, filter .15s ease;
 }
 
-.combat-chip-toggle:active{
+.combat-chip-toggle:active,
+.combat-chip-overheal:active{
   transform: scale(.90);
   filter: brightness(1.15);
 }
 
-.combat-chip-toggle i{
+.combat-chip-toggle i,
+.combat-chip-overheal i{
   font-size: 12px;
   transition: transform .18s ease;
 }
@@ -2204,15 +2234,18 @@ body{
   transform: rotate(180deg);
 }
 
-.combat-chip.hp .combat-chip-toggle{
+.combat-chip.hp .combat-chip-toggle,
+.combat-chip.hp .combat-chip-overheal{
   border-color: rgba(255, 110, 110, .24);
 }
 
-.combat-chip.mana .combat-chip-toggle{
+.combat-chip.mana .combat-chip-toggle,
+.combat-chip.mana .combat-chip-overheal{
   border-color: rgba(90, 170, 255, .24);
 }
 
-.combat-chip.energy .combat-chip-toggle{
+.combat-chip.energy .combat-chip-toggle,
+.combat-chip.energy .combat-chip-overheal{
   border-color: rgba(255, 210, 90, .24);
 }
 

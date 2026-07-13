@@ -86,10 +86,11 @@ class SpellCreate(BaseModel):
     range: str = ""
     duration: str = ""
     cost: str = ""
+    ap_cost: int = 5
 
 
 class AbilityCreate(SpellCreate):
-    pass
+    ap_cost: int = 1
 
 
 class StateCreate(BaseModel):
@@ -106,6 +107,7 @@ class SpellUpdate(BaseModel):
     range: Optional[str] = None
     duration: Optional[str] = None
     cost: Optional[str] = None
+    ap_cost: Optional[int] = None
 
 class AbilityUpdate(SpellUpdate):
     pass

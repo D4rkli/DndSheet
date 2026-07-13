@@ -232,6 +232,7 @@ class Spell(Base):
     duration: Mapped[str] = mapped_column(String(80), default="")
     cost: Mapped[str] = mapped_column(String(120), default="")  # “мана = x*10” и т.д.
     level: Mapped[int] = mapped_column(Integer, default=0)
+    ap_cost: Mapped[int] = mapped_column(Integer, default=5)
 
     character: Mapped["Character"] = relationship(back_populates="spells")
 
@@ -246,6 +247,7 @@ class Ability(Base):
     duration: Mapped[str] = mapped_column(String(80), default="")
     cost: Mapped[str] = mapped_column(String(120), default="")
     level: Mapped[int] = mapped_column(Integer, default=0)
+    ap_cost: Mapped[int] = mapped_column(Integer, default=1)
 
     character: Mapped["Character"] = relationship(back_populates="abilities")
 
