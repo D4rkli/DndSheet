@@ -1439,6 +1439,61 @@ el("btnSendMessage")?.addEventListener("click", async () => {
   await renderMessagesModal();
 });
 
+// ===== Feedback (bugs/suggestions)
+
+const feedbackModalEl = el("feedbackModal");
+const feedbackModal = feedbackModalEl ? new bootstrap.Modal(feedbackModalEl) : null;
+let feedbackKind = "bug";
+
+el("btnFeedback")?.addEventListener("click", () => {
+  if (!feedbackModal) return;
+  feedbackModal.show();
+});
+
+el("fbKindBug")?.addEventListener("click", () => {
+  feedbackKind = "bug";
+  el("fbKindBug").classList.add("active");
+  el("fbKindSuggestion").classList.remove("active");
+});
+
+el("fbKindSuggestion")?.addEventListener("click", () => {
+  feedbackKind = "suggestion";
+  el("fbKindSuggestion").classList.add("active");
+  el("fbKindBug").classList.remove("active");
+});
+
+el("btnSendFeedback")?.addEventListener("click", async () => {
+  const text = el("fbText").value.trim();
+  if (!text) return alert("Введи текст");
+  await api("/feedback", { method: "POST", body: JSON.stringify({ kind: feedbackKind, text }) });
+  el("fbText").value = "";
+  feedbackModal?.hide();
+  setStatus("Спасибо, отправлено ✅");
+});
+
+// ===== Dev panel
+
+const devModalEl = el("devModal");
+const devModal = devModalEl ? new bootstrap.Modal(devModalEl) : null;
+
+el("btnDevPanel")?.addEventListener("click", async () => {
+  if (!devModal) return;
+  devModal.show();
+  const [info, stats] = await Promise.all([api("/dev/info"), api("/dev/stats")]);
+  el("devInfo").innerHTML = `Время сервера: ${escapeHtml(info.server_time)}<br>Ревизия БД: ${escapeHtml(info.alembic_revision || "—")}`;
+  el("devStats").innerHTML = Object.entries(stats)
+    .map(([k, v]) => `${escapeHtml(k)}: <b>${v}</b>`)
+    .join("<br>");
+});
+
+el("btnDevLoginAs")?.addEventListener("click", async () => {
+  const tgId = Number(el("devTgId").value);
+  if (!tgId) return alert("Введи tg_id");
+  const firstName = el("devFirstName").value.trim() || null;
+  await api("/dev/login-as", { method: "POST", body: JSON.stringify({ tg_id: tgId, first_name: firstName }) });
+  location.reload();
+});
+
 el("f_campaign")?.addEventListener("change", async () => {
   const id = currentChId();
   if (!id) return;
@@ -2252,6 +2307,7 @@ document.getElementById("btnCombatAddState")?.addEventListener("click", () => op
 async function loadMe() {
   state.me = await api("/me");
   renderAccountBadge();
+  el("btnDevPanel")?.classList.toggle("d-none", !state.me.is_dev);
 }
 
 function renderAccountBadge() {

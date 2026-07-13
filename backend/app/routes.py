@@ -1,4 +1,6 @@
+import asyncio
 import json
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from .db import get_db
@@ -26,7 +28,45 @@ async def me(
         "display_name": profile.get("first_name") or profile.get("username") or "Аккаунт",
         "user_id": u.id,
         "is_dm": u.tg_id in settings.dm_ids(),
+        "is_dev": u.tg_id in settings.dev_ids(),
     }
+
+
+@router.post("/feedback")
+async def send_feedback(
+    body: schemas.FeedbackCreate,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+    profile: dict = Depends(resolve_auth_profile),
+):
+    kind = body.kind if body.kind in ("bug", "suggestion") else "suggestion"
+    text = body.text.strip()
+    if not text:
+        raise HTTPException(400, "Text is required")
+
+    await crud.create_feedback_report(db, u.id, kind, text)
+
+    display_name = profile.get("first_name") or profile.get("username") or f"Пользователь #{u.id}"
+    emoji = "🐛" if kind == "bug" else "💡"
+    label = "Баг" if kind == "bug" else "Предложение"
+    message = f"{emoji} {label} от {display_name}: {text[:1000]}"
+
+    async def _notify(dev_tg_id: int) -> None:
+        try:
+            async with httpx.AsyncClient(timeout=5) as client:
+                await client.post(
+                    f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage",
+                    json={"chat_id": dev_tg_id, "text": message},
+                )
+        except Exception as e:
+            print("FEEDBACK NOTIFY ERROR:", repr(e))
+
+    # best-effort, in parallel — a slow/unreachable Telegram API shouldn't make
+    # the whole request wait on each dev sequentially (the report is already saved)
+    await asyncio.gather(*(_notify(dev_tg_id) for dev_tg_id in settings.dev_ids()))
+
+    return {"status": "ok"}
+
 
 @router.get("/characters")
 async def list_characters(

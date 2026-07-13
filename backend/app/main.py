@@ -7,6 +7,7 @@ from app.db import init_db
 from app.routes import router
 from app.auth_routes import router as auth_router
 from app.campaign_routes import router as campaign_router
+from app.dev_routes import router as dev_router
 
 app = FastAPI(title="DnD TG WebApp")
 from fastapi.middleware.cors import CORSMiddleware
@@ -54,6 +55,7 @@ def health():
 app.include_router(router, prefix="/api")
 app.include_router(auth_router, prefix="/api/auth")
 app.include_router(campaign_router, prefix="/api/campaigns")
+app.include_router(dev_router, prefix="/api/dev")
 
 # Раздаём webapp (папка рядом с backend/)
 app.mount("/webapp", StaticFiles(directory="../webapp", html=True), name="webapp")

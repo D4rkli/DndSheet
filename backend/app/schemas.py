@@ -212,3 +212,13 @@ class BattleStart(BaseModel):
     character_ids: list[int]
     reveal_resources: bool = True
 
+
+class DevLoginAs(BaseModel):
+    tg_id: int
+    first_name: Optional[str] = None
+
+
+class FeedbackCreate(BaseModel):
+    kind: str
+    text: str
+

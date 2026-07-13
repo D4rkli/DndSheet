@@ -22,6 +22,7 @@ from .models import (
     CampaignMessage,
     CampaignBattle,
     CampaignBattleParticipant,
+    FeedbackReport,
 )
 
 # =========================
@@ -549,6 +550,14 @@ async def end_campaign_battle(db: AsyncSession, campaign_id: int, dm_user_id: in
     await db.delete(battle)
     await db.commit()
     return True
+
+
+async def create_feedback_report(db: AsyncSession, user_id: int, kind: str, text: str) -> FeedbackReport:
+    report = FeedbackReport(user_id=user_id, kind=kind, text=text)
+    db.add(report)
+    await db.commit()
+    await db.refresh(report)
+    return report
 
 
 # =========================

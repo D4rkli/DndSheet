@@ -308,3 +308,15 @@ class Summon(Base):
     count: Mapped[int] = mapped_column(Integer, default=1)
 
     character: Mapped["Character"] = relationship(back_populates="summons")
+
+
+class FeedbackReport(Base):
+    __tablename__ = "feedback_reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    kind: Mapped[str] = mapped_column(String(20))  # "bug" | "suggestion"
+    text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped["User"] = relationship()

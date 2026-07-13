@@ -78,3 +78,9 @@ async def get_owned_or_dm_character(
         raise HTTPException(403, "No access")
 
     return ch
+
+
+async def require_dev(u: User = Depends(get_current_user)) -> User:
+    if u.tg_id not in settings.dev_ids():
+        raise HTTPException(403, "Dev access required")
+    return u

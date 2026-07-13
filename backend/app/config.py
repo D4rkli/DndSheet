@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     WEBAPP_URL: str = "https://d4rkli.ru/webapp/"
     SQLITE_PATH: str = "sqlite+aiosqlite:////var/lib/dndsheet/dnd_v2.sqlite3"
     DM_USER_IDS: str = ""
+    DEV_USER_IDS: str = ""
 
     SESSION_SECRET: str
     COOKIE_SECURE: bool = True
@@ -26,6 +27,11 @@ class Settings(BaseSettings):
         if not self.DM_USER_IDS:
             return set()
         return {int(x.strip()) for x in self.DM_USER_IDS.split(",")}
+
+    def dev_ids(self) -> set[int]:
+        if not self.DEV_USER_IDS:
+            return set()
+        return {int(x.strip()) for x in self.DEV_USER_IDS.split(",")}
 
 
 settings = Settings()
