@@ -133,6 +133,12 @@ body {
   color: #ffffff;
 }
 
+/* Bootstrap sets .form-check-label color via --bs-body-color, which our
+   theme never overrides, so checkbox labels stayed dark on dark cards. */
+.form-check-label {
+  color: var(--text);
+}
+
 .modal-header,
 .modal-footer {
   border-color: rgba(255, 255, 255, 0.10);
