@@ -71,7 +71,8 @@ body {
 /* native <option> popups ignore .form-select's translucent background and
    default to the OS's white dropdown — without this, dark theme's near-white
    text is invisible against it */
-.form-select option {
+.form-select option,
+.form-select optgroup {
   background: var(--card);
   color: var(--text);
 }
