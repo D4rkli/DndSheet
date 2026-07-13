@@ -1134,14 +1134,25 @@ body{
 }
 
 #combatModeChevron{
-  font-size: 20px;
-  opacity: .7;
-  transition: transform .2s ease, opacity .2s ease, color .2s ease;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: linear-gradient(165deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+  box-shadow: 0 1px 2px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.07);
+  font-size: 14px;
+  opacity: .8;
+  transition: transform .2s ease, opacity .2s ease, color .2s ease, background .2s ease, border-color .2s ease;
 }
 
 .combat-mode-card.is-open #combatModeChevron{
   opacity: 1;
   color: #6ea8fe;
+  background: linear-gradient(165deg, rgba(110,168,254,.22), rgba(110,168,254,.05));
+  border-color: rgba(110,168,254,.42);
   transform: rotate(180deg);
 }
 
@@ -2169,12 +2180,19 @@ body{
   padding: 0;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.05);
+  background: linear-gradient(165deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
+  box-shadow: 0 1px 2px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
   color: rgba(255,255,255,.88);
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: transform .12s ease, filter .15s ease;
+}
+
+.combat-chip-toggle:active{
+  transform: scale(.90);
+  filter: brightness(1.15);
 }
 
 .combat-chip-toggle i{
@@ -2410,23 +2428,33 @@ header.topbar .btn{
   min-width: 34px;
   padding: 0;
   border-radius: 999px;
-  font-size: 18px;
+  font-size: 17px;
+  font-weight: 700;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(165deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
+  box-shadow: 0 1px 2px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
+  transition: transform .12s ease, filter .15s ease, box-shadow .15s ease;
+}
+
+.combat-chip .step-btn:active{
+  transform: scale(.90);
+  filter: brightness(1.15);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.35);
 }
 
 .combat-chip.hp .step-btn{
-  border-color: rgba(255, 110, 110, .28);
+  border-color: rgba(255, 110, 110, .35);
 }
 
 .combat-chip.mana .step-btn{
-  border-color: rgba(90, 170, 255, .28);
+  border-color: rgba(90, 170, 255, .35);
 }
 
 .combat-chip.energy .step-btn{
-  border-color: rgba(255, 210, 90, .28);
+  border-color: rgba(255, 210, 90, .35);
 }
 
 /* DMG/Armor компактнее */
