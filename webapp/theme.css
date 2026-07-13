@@ -92,7 +92,8 @@
   color: var(--text) !important;
 }
 
-[data-theme="light"] .form-select option {
+[data-theme="light"] .form-select option,
+[data-theme="light"] .form-select optgroup {
   background: var(--card);
   color: var(--text);
 }
