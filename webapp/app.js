@@ -2585,6 +2585,7 @@ async function loadSheet(showStatus = true) {
   const id = currentChId();
   if (!id) {
     setStatus("Создай персонажа 👆");
+    setConnectionState("ok"); // приложение загрузилось, персонажей просто пока нет
     return;
   }
 
