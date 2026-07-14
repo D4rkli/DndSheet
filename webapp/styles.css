@@ -3764,10 +3764,12 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
 
 /* The Telegram widget renders its own iframe with square corners and a
    fixed (often dark) background — clip it to the rounded button shape so
-   no dark corner peeks out against a light card. Force it to fill the
-   shared-width column so it matches the VK button below it. */
+   no dark corner peeks out against a light card. Its width is NOT forced:
+   the button graphic inside is drawn by Telegram at a fixed size, so
+   stretching the iframe just leaves blank dark iframe background showing
+   through. Matching width is instead applied to the VK button via JS once
+   the widget has actually rendered (see the script at the bottom of the page). */
 .login-card #widgetHolder iframe{
-  width: 100% !important;
   border-radius: 8px;
   overflow: hidden;
 }
