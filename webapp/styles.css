@@ -3800,7 +3800,7 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
   gap: 10px;
   width: 100%;
   margin: 0 auto;
-  min-height: 46px;
+  min-height: 40px;
   border-radius: 14px;
   background: #0077ff;
   border: 1px solid #0077ff;
