@@ -1592,10 +1592,26 @@ el("fbKindSuggestion")?.addEventListener("click", () => {
 el("btnSendFeedback")?.addEventListener("click", async () => {
   const text = el("fbText").value.trim();
   if (!text) return alert("Введи текст");
-  await api("/feedback", { method: "POST", body: JSON.stringify({ kind: feedbackKind, text }) });
+  const res = await api("/feedback", { method: "POST", body: JSON.stringify({ kind: feedbackKind, text }) });
   el("fbText").value = "";
   feedbackModal?.hide();
   setStatus("Спасибо, отправлено ✅");
+
+  // сразу видно, почему уведомление в Telegram не пришло, без необходимости
+  // лезть в серверные логи — не гейтим на is_dev, т.к. если проблема именно в
+  // том, что DEV_USER_IDS не настроен, то is_dev тоже будет false
+  const results = res?.notify_results || [];
+  if (results.length === 0) {
+    alert("Диагностика: DEV_USER_IDS не настроен на сервере — уведомление никому не отправлялось.");
+  } else {
+    const failed = results.filter((r) => !r.ok);
+    if (failed.length > 0) {
+      alert(
+        "Диагностика: не удалось отправить уведомление в Telegram:\n" +
+        failed.map((r) => `tg_id ${r.tg_id}: ${r.error}`).join("\n")
+      );
+    }
+  }
 });
 
 // ===== Dev panel

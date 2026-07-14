@@ -51,21 +51,29 @@ async def send_feedback(
     label = "Баг" if kind == "bug" else "Предложение"
     message = f"{emoji} {label} от {display_name}: {text[:1000]}"
 
-    async def _notify(dev_tg_id: int) -> None:
+    async def _notify(dev_tg_id: int) -> dict:
         try:
             async with httpx.AsyncClient(timeout=5) as client:
-                await client.post(
+                resp = await client.post(
                     f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage",
                     json={"chat_id": dev_tg_id, "text": message},
                 )
+                if resp.status_code != 200:
+                    return {"tg_id": dev_tg_id, "ok": False, "error": resp.text[:300]}
+                return {"tg_id": dev_tg_id, "ok": True}
         except Exception as e:
             print("FEEDBACK NOTIFY ERROR:", repr(e))
+            return {"tg_id": dev_tg_id, "ok": False, "error": repr(e)}
 
+    dev_ids = list(settings.dev_ids())
     # best-effort, in parallel — a slow/unreachable Telegram API shouldn't make
-    # the whole request wait on each dev sequentially (the report is already saved)
-    await asyncio.gather(*(_notify(dev_tg_id) for dev_tg_id in settings.dev_ids()))
+    # the whole request wait on each dev sequentially (the report is already saved).
+    # Surface per-recipient results back to the caller so a broken DEV_USER_IDS /
+    # BOT_TOKEN / "user never started the bot" setup is diagnosable from the app
+    # itself, without needing server access.
+    notify_results = await asyncio.gather(*(_notify(dev_tg_id) for dev_tg_id in dev_ids))
 
-    return {"status": "ok"}
+    return {"status": "ok", "notify_results": notify_results}
 
 
 @router.get("/characters")
