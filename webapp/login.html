@@ -72,15 +72,36 @@
   (function () {
     var holder = document.getElementById("widgetHolder");
     var vkBtn = document.querySelector(".login-vk-btn");
-    if (!holder || !vkBtn || !window.ResizeObserver) return;
+    if (!holder || !vkBtn) return;
 
-    var ro = new ResizeObserver(function () {
-      var iframe = holder.querySelector("iframe");
-      if (iframe && iframe.offsetWidth > 0) {
+    function applyWidth(iframe) {
+      if (iframe.offsetWidth > 0) {
         vkBtn.style.width = iframe.offsetWidth + "px";
       }
-    });
-    ro.observe(holder);
+    }
+
+    function watchIframe(iframe) {
+      applyWidth(iframe);
+      if (window.ResizeObserver) {
+        new ResizeObserver(function () { applyWidth(iframe); }).observe(iframe);
+      }
+    }
+
+    // Telegram injects the iframe asynchronously — wait for it to actually
+    // show up in the DOM before we can measure it.
+    var existing = holder.querySelector("iframe");
+    if (existing) {
+      watchIframe(existing);
+    } else {
+      var mo = new MutationObserver(function () {
+        var iframe = holder.querySelector("iframe");
+        if (iframe) {
+          mo.disconnect();
+          watchIframe(iframe);
+        }
+      });
+      mo.observe(holder, { childList: true, subtree: true });
+    }
   })();
 
   (function () {
