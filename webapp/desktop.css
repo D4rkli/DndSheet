@@ -251,6 +251,10 @@ main.content {
   gap: 16px;
   max-width: 420px;
   flex-shrink: 0;
+  /* matches .login-card .card-body's 40px top padding so the hero icon/title
+     and the card icon/title start at the same visual height, even though
+     the two columns are only aligned by their (padding-less) outer edges */
+  padding-top: 40px;
 }
 
 .login-hero-icon {
