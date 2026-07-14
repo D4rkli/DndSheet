@@ -1592,7 +1592,44 @@ function renderSubscriptionModal() {
       statusEl.textContent = "Подписки нет — совместный бой (для ДМ) и конструктор кастомных полей недоступны.";
     }
   }
-  el("subDevSection")?.classList.toggle("d-none", !me?.is_dev);
+
+  const isDev = !!me?.is_dev;
+  el("subDevSection")?.classList.toggle("d-none", !isDev);
+  if (isDev) renderAccessCodesList();
+}
+
+async function renderAccessCodesList() {
+  const root = el("subCodesList");
+  if (!root) return;
+
+  root.innerHTML = `<div class="muted">Загрузка…</div>`;
+  let codes;
+  try {
+    codes = await api("/dev/access-codes");
+  } catch (e) {
+    root.innerHTML = `<div class="muted">Не удалось загрузить список.</div>`;
+    return;
+  }
+
+  if (!codes.length) {
+    root.innerHTML = `<div class="muted">Кодов пока не выдавали.</div>`;
+    return;
+  }
+
+  root.innerHTML = codes
+    .map((c) => {
+      const created = new Date(c.created_at).toLocaleDateString("ru-RU");
+      const status = c.redeemed_by_name
+        ? `Погашен: ${escapeHtml(c.redeemed_by_name)} · ${new Date(c.redeemed_at).toLocaleDateString("ru-RU")}`
+        : "Свободен";
+      return `
+        <div class="item">
+          <div class="item-title">${escapeHtml(c.code)}</div>
+          <div class="item-sub">${c.duration_days} дн. · выдан ${created} · ${status}</div>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 el("btnRedeemCode")?.addEventListener("click", async () => {
@@ -1620,6 +1657,8 @@ el("btnGenerateCode")?.addEventListener("click", async () => {
   if (resultEl) {
     resultEl.innerHTML = `<div class="item-title">Код: <span style="user-select:all">${escapeHtml(entry.code)}</span></div><div class="item-sub">на ${entry.duration_days} дн.</div>`;
   }
+
+  await renderAccessCodesList();
 });
 
 // ===== Feedback (bugs/suggestions)

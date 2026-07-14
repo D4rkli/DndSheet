@@ -979,7 +979,7 @@
 
 <!-- MODAL: Подписка -->
 <div class="modal fade" id="subscriptionModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Подписка</h5>
@@ -1005,6 +1005,9 @@
             <button type="button" class="btn btn-outline-light" id="btnGenerateCode">Сгенерировать</button>
           </div>
           <div id="subGenResult" class="mt-2"></div>
+
+          <div class="section-title mt-3 mb-2">Выданные коды</div>
+          <div id="subCodesList" class="list"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -1187,7 +1190,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="app.js?v=220"></script>
+<script src="app.js?v=221"></script>
 
 <div class="modal fade" id="resourceAdjustModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">

@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy import select, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from .db import get_db
 from .deps import require_dev
@@ -89,12 +90,23 @@ async def create_access_code(
     return {"code": entry.code, "duration_days": entry.duration_days}
 
 
+def _user_label(u: User | None) -> str | None:
+    if not u:
+        return None
+    return u.first_name or (f"@{u.username}" if u.username else f"Пользователь #{u.id}")
+
+
 @router.get("/access-codes")
 async def list_access_codes(
     db: AsyncSession = Depends(get_db),
     _dev: User = Depends(require_dev),
 ):
-    q = await db.execute(select(AccessCode).order_by(AccessCode.created_at.desc()).limit(50))
+    q = await db.execute(
+        select(AccessCode)
+        .order_by(AccessCode.created_at.desc())
+        .limit(50)
+        .options(selectinload(AccessCode.redeemed_by))
+    )
     codes = q.scalars().all()
     return [
         {
@@ -102,6 +114,7 @@ async def list_access_codes(
             "duration_days": c.duration_days,
             "created_at": c.created_at.isoformat(),
             "redeemed_by_user_id": c.redeemed_by_user_id,
+            "redeemed_by_name": _user_label(c.redeemed_by),
             "redeemed_at": c.redeemed_at.isoformat() if c.redeemed_at else None,
         }
         for c in codes
