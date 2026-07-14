@@ -227,13 +227,12 @@ async def update_character(
             continue
         setattr(ch, key, value)
 
-    # Clamp current resources
+    # Floor current resources at 0. No upper clamp: overheal (restoring HP/mana/
+    # energy above max) is an intentional feature — the server must not silently
+    # revert it back down to *_max on the next autosave.
     for res in ("hp", "mana", "energy"):
         cur = getattr(ch, res, 0) or 0
         cur = max(0, int(cur))
-        max_value = getattr(ch, f"{res}_max", 0) or 0
-        if max_value > 0:
-            cur = min(cur, int(max_value))
         setattr(ch, res, cur)
 
     await db.commit()
