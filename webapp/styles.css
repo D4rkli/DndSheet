@@ -3720,6 +3720,10 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
   box-shadow: 0 30px 80px rgba(0,0,0,.40);
   position: relative;
   overflow: visible;
+  /* soft glow behind the icon, layered over card-soft's base fill color */
+  background:
+    radial-gradient(60% 45% at 50% 0%, rgba(110,168,254,.18), rgba(110,168,254,0) 72%),
+    rgba(18, 26, 51, 0.72);
 }
 
 .login-card::before{
@@ -3817,6 +3821,22 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
 
 .login-vk-btn i{
   font-size: 18px;
+}
+
+.login-trust-note{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+  color: rgba(255,255,255,.42);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.login-trust-note i{
+  font-size: 13px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 575px){

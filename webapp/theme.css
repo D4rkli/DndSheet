@@ -378,6 +378,12 @@
   color: rgba(15, 23, 42, .82);
 }
 
+[data-theme="light"] .login-card {
+  background:
+    radial-gradient(60% 45% at 50% 0%, rgba(74, 122, 230, .12), rgba(74, 122, 230, 0) 72%),
+    var(--card);
+}
+
 [data-theme="light"] .login-card::before {
   background: linear-gradient(135deg, rgba(74, 122, 230, .45), rgba(74, 122, 230, 0) 40%, rgba(74, 122, 230, .18));
 }
@@ -389,4 +395,8 @@
 [data-theme="light"] .login-divider::before,
 [data-theme="light"] .login-divider::after {
   background: rgba(15, 23, 42, .14);
+}
+
+[data-theme="light"] .login-trust-note {
+  color: rgba(15, 23, 42, .45);
 }
