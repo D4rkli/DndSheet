@@ -239,11 +239,12 @@ main.content {
 .login-row {
   display: flex;
   /* Hero (icon+big title+tagline+feature list) and the card (icon+small
-     title+short blurb+buttons) have very different total heights, so
-     top-aligning them makes the shorter one's later lines drift away from
-     the taller one's. Centering the two columns on their shared midpoint
-     reads as balanced regardless of how much content either side has. */
-  align-items: center;
+     title+short blurb+buttons) have very different content heights.
+     Neither top- nor center-aligning them lines up both edges at once —
+     one end always drifts. Stretching both columns to the same height
+     (the tallest one's) and centering the card's own content inside that
+     taller box is the only way both top and bottom line up. */
+  align-items: stretch;
   justify-content: center;
   gap: 72px;
   max-width: 1100px;
@@ -311,4 +312,14 @@ main.content {
 
 .login-card {
   flex-shrink: 0;
+  /* stretched to the hero column's height by .login-row; center our own
+     (much shorter) content inside that taller box instead of leaving it
+     pinned to the top with empty space below */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-card .card-body {
+  flex: 0 1 auto;
 }
