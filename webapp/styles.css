@@ -3799,6 +3799,7 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
   justify-content: center;
   gap: 10px;
   width: 100%;
+  margin: 0 auto;
   min-height: 46px;
   border-radius: 14px;
   background: #0077ff;
