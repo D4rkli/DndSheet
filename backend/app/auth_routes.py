@@ -16,7 +16,7 @@ from .security import (
     read_vk_state_cookie,
     verify_telegram_login_widget,
 )
-from .vk_oauth import build_vk_authorize_url, exchange_vk_code
+from .vk_oauth import build_vk_authorize_url, exchange_vk_code, generate_pkce_pair
 
 router = APIRouter()
 
@@ -61,10 +61,13 @@ async def telegram_login(body: TelegramLoginIn, response: Response):
 @router.get("/vk/login")
 async def vk_login():
     state = secrets.token_urlsafe(24)
-    response = RedirectResponse(url=build_vk_authorize_url(state))
+    device_id = secrets.token_urlsafe(16)
+    code_verifier, code_challenge = generate_pkce_pair()
+
+    response = RedirectResponse(url=build_vk_authorize_url(state, code_challenge))
     response.set_cookie(
         key=VK_STATE_COOKIE_NAME,
-        value=create_vk_state_cookie(state),
+        value=create_vk_state_cookie(state, code_verifier, device_id),
         httponly=True,
         secure=settings.COOKIE_SECURE,
         samesite="lax",
@@ -79,21 +82,28 @@ async def vk_callback(
     request: Request,
     code: str | None = None,
     state: str | None = None,
+    device_id: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
     if not code or not state:
         raise HTTPException(400, "Missing code or state")
 
-    expected_state = read_vk_state_cookie(request.cookies.get(VK_STATE_COOKIE_NAME))
-    if not expected_state or not secrets.compare_digest(expected_state, state):
+    saved = read_vk_state_cookie(request.cookies.get(VK_STATE_COOKIE_NAME))
+    if not saved or not secrets.compare_digest(saved["state"], state):
         raise HTTPException(401, "Bad VK OAuth state")
 
+    # VK's redirect callback doesn't always echo device_id back — fall back to
+    # the one we generated and stashed in the state cookie before redirecting
+    effective_device_id = device_id or saved["device_id"]
+
     try:
-        profile = await exchange_vk_code(code)
+        profile = await exchange_vk_code(code, state, saved["code_verifier"], effective_device_id)
     except ValueError:
         raise HTTPException(401, "VK login failed")
 
-    await crud.get_or_create_user_by_vk(db, vk_id=profile["vk_id"])
+    await crud.get_or_create_user_by_vk(
+        db, vk_id=profile["vk_id"], first_name=profile["first_name"], username=profile["username"]
+    )
 
     token = create_session_cookie(
         "vk",

@@ -122,15 +122,18 @@ def read_session_cookie(token: str) -> dict | None:
 VK_STATE_COOKIE_NAME = "dnd_vk_state"
 
 
-def create_vk_state_cookie(state: str) -> str:
-    return _serializer.dumps({"state": state})
+def create_vk_state_cookie(state: str, code_verifier: str, device_id: str) -> str:
+    return _serializer.dumps({"state": state, "code_verifier": code_verifier, "device_id": device_id})
 
 
-def read_vk_state_cookie(token: str) -> str | None:
+def read_vk_state_cookie(token: str) -> dict | None:
+    """Returns {"state", "code_verifier", "device_id"} or None if missing/expired/tampered."""
     if not token:
         return None
     try:
         data = _serializer.loads(token, max_age=600)  # 10 minutes to complete the VK redirect
     except (BadSignature, SignatureExpired):
         return None
-    return data.get("state")
+    if "state" not in data or "code_verifier" not in data:
+        return None
+    return data
