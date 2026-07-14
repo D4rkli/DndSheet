@@ -505,6 +505,32 @@ header.topbar .topbar-character-row::-webkit-scrollbar{
   color: rgba(255,255,255,.95);
 }
 
+.message-item.is-unread{
+  border-color: rgba(110,168,254,.45);
+  background: rgba(110,168,254,.08);
+}
+
+.message-unread-dot{
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  border-radius: 50%;
+  background: #6ea8fe;
+  box-shadow: 0 0 6px rgba(110,168,254,.7);
+}
+
+.message-delete-btn{
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
 .item-sub{
   margin-top: 4px;
   color: rgba(255,255,255,.66);

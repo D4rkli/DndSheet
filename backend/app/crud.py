@@ -41,6 +41,17 @@ def _safe_json_dict(raw: str | None) -> dict:
         return {}
 
 
+def _safe_json_list(raw: str | None) -> list:
+    """Parse JSON string into a list; return [] on any error or non-list."""
+    if not raw:
+        return []
+    try:
+        data = json.loads(raw)
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
 # Fields used across CRUD updates (avoid copy-paste)
 SPELL_FIELDS = ["name", "level", "description", "range", "duration", "cost", "ap_cost"]
 ABILITY_FIELDS = ["name", "level", "description", "range", "duration", "cost", "ap_cost"]
@@ -401,7 +412,11 @@ async def send_campaign_message(
     return msg
 
 
-async def list_campaign_messages(db: AsyncSession, campaign_id: int, viewer_user_id: int) -> list[CampaignMessage] | None:
+async def list_campaign_messages(
+    db: AsyncSession, campaign_id: int, viewer_user_id: int
+) -> list[tuple[CampaignMessage, bool]] | None:
+    """Returns (message, is_unread) pairs, newest first, with the viewer's
+    personally-hidden messages filtered out."""
     campaign = await get_campaign_by_id(db, campaign_id)
     if not campaign:
         return None
@@ -409,6 +424,16 @@ async def list_campaign_messages(db: AsyncSession, campaign_id: int, viewer_user
     is_dm = campaign.dm_user_id == viewer_user_id
     if not is_dm and not any(m.user_id == viewer_user_id for m in campaign.members):
         return None
+
+    q = await db.execute(
+        select(CampaignMember).where(
+            CampaignMember.campaign_id == campaign_id,
+            CampaignMember.user_id == viewer_user_id,
+        )
+    )
+    member = q.scalar_one_or_none()
+    last_read_at = member.last_read_at if member else None
+    hidden_ids = set(_safe_json_list(member.hidden_message_ids if member else None))
 
     q = select(CampaignMessage).where(CampaignMessage.campaign_id == campaign_id)
     if not is_dm:
@@ -420,7 +445,30 @@ async def list_campaign_messages(db: AsyncSession, campaign_id: int, viewer_user
         selectinload(CampaignMessage.sender), selectinload(CampaignMessage.target)
     )
     result = await db.execute(q)
-    return list(result.scalars().all())
+    messages = [m for m in result.scalars().all() if m.id not in hidden_ids]
+
+    return [(m, last_read_at is None or m.created_at > last_read_at) for m in messages]
+
+
+async def hide_campaign_message(db: AsyncSession, campaign_id: int, user_id: int, message_id: int) -> bool:
+    """Personal, per-viewer dismiss — hides the message from this user's own
+    inbox without deleting it or affecting other members."""
+    q = await db.execute(
+        select(CampaignMember).where(
+            CampaignMember.campaign_id == campaign_id,
+            CampaignMember.user_id == user_id,
+        )
+    )
+    member = q.scalar_one_or_none()
+    if not member:
+        return False
+
+    hidden = _safe_json_list(member.hidden_message_ids)
+    if message_id not in hidden:
+        hidden.append(message_id)
+    member.hidden_message_ids = json.dumps(hidden)
+    await db.commit()
+    return True
 
 
 async def mark_campaign_messages_read(db: AsyncSession, campaign_id: int, user_id: int) -> bool:

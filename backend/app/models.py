@@ -49,6 +49,9 @@ class CampaignMember(Base):
     campaign_id: Mapped[int] = mapped_column(ForeignKey("campaigns.id"), index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     last_read_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # JSON array of campaign_messages.id this member has personally hidden
+    # from their own inbox (doesn't affect other members' view of the message)
+    hidden_message_ids: Mapped[str] = mapped_column(Text, default="")
 
     campaign: Mapped["Campaign"] = relationship(back_populates="members")
     user: Mapped["User"] = relationship()

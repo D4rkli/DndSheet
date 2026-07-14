@@ -147,8 +147,8 @@ async def list_messages(
     db: AsyncSession = Depends(get_db),
     u: User = Depends(get_current_user),
 ):
-    messages = await crud.list_campaign_messages(db, campaign_id, u.id)
-    if messages is None:
+    rows = await crud.list_campaign_messages(db, campaign_id, u.id)
+    if rows is None:
         raise HTTPException(403, "No access")
     return [
         {
@@ -158,9 +158,23 @@ async def list_messages(
             "target_name": _member_label(m.target) if m.target else None,
             "text": m.text,
             "created_at": m.created_at.isoformat(),
+            "is_unread": is_unread,
         }
-        for m in messages
+        for m, is_unread in rows
     ]
+
+
+@router.delete("/{campaign_id}/messages/{message_id}")
+async def hide_message(
+    campaign_id: int,
+    message_id: int,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+):
+    ok = await crud.hide_campaign_message(db, campaign_id, u.id, message_id)
+    if not ok:
+        raise HTTPException(404, "Not a member of this campaign")
+    return {"status": "ok"}
 
 
 @router.post("/{campaign_id}/messages/read")

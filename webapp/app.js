@@ -217,10 +217,31 @@ async function renderCampaignsModal() {
   });
 }
 
+let lastKnownUnreadTotal = 0;
+
+function totalUnreadMessages() {
+  return (state.campaigns || []).reduce((sum, c) => sum + (c.unread_count || 0), 0);
+}
+
+function syncKnownUnreadTotal() {
+  lastKnownUnreadTotal = totalUnreadMessages();
+}
+
 function wireMessagesPolling() {
-  setInterval(() => {
+  syncKnownUnreadTotal();
+
+  setInterval(async () => {
     if (document.hidden) return;
-    loadCampaigns().catch((e) => console.error("Messages poll failed:", e));
+    try {
+      await loadCampaigns();
+      const nextUnread = totalUnreadMessages();
+      if (nextUnread > lastKnownUnreadTotal) {
+        showBattleToast("📨 Новое сообщение от ДМ", "success");
+      }
+      lastKnownUnreadTotal = nextUnread;
+    } catch (e) {
+      console.error("Messages poll failed:", e);
+    }
   }, 15000);
 }
 
@@ -273,7 +294,7 @@ async function renderMessagesModal() {
   const perCampaign = await Promise.all(
     myCampaigns.map(async (c) => {
       const messages = await api(`/campaigns/${c.id}/messages`);
-      return messages.map((m) => ({ ...m, campaignName: c.name }));
+      return messages.map((m) => ({ ...m, campaignId: c.id, campaignName: c.name }));
     })
   );
   const all = perCampaign.flat().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -284,13 +305,23 @@ async function renderMessagesModal() {
   } else {
     all.forEach((m) => {
       const row = document.createElement("div");
-      row.className = "item";
+      row.className = `item message-item${m.is_unread ? " is-unread" : ""}`;
       const who = m.target_name ? `лично ${escapeHtml(m.target_name)}` : "всей компании";
       const time = new Date(m.created_at).toLocaleString();
       row.innerHTML = `
-        <div class="item-title">${escapeHtml(m.campaignName)}</div>
-        <div class="item-sub">${escapeHtml(m.sender_name)} → ${who} · ${escapeHtml(time)}</div>
-        <div class="item-sub">${escapeHtml(m.text)}</div>
+        <div class="item-head">
+          <div class="min-w-0">
+            <div class="item-title">
+              ${m.is_unread ? `<span class="message-unread-dot" title="Непрочитано"></span>` : ""}
+              <span>${escapeHtml(m.campaignName)}</span>
+            </div>
+            <div class="item-sub">${escapeHtml(m.sender_name)} → ${who} · ${escapeHtml(time)}</div>
+            <div class="item-sub">${escapeHtml(m.text)}</div>
+          </div>
+          <button class="btn btn-sm btn-outline-light message-delete-btn" type="button" data-msg-campaign="${m.campaignId}" data-msg-id="${m.id}" title="Удалить у себя" aria-label="Удалить сообщение у себя">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
       `;
       root.appendChild(row);
     });
@@ -299,7 +330,20 @@ async function renderMessagesModal() {
   // отмечаем прочитанным всё, что видели в этой сессии просмотра
   await Promise.all(myCampaigns.map((c) => api(`/campaigns/${c.id}/messages/read`, { method: "POST" })));
   await loadCampaigns();
+  syncKnownUnreadTotal();
 }
+
+el("messagesList")?.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".message-delete-btn");
+  if (!btn) return;
+
+  const campaignId = btn.getAttribute("data-msg-campaign");
+  const msgId = btn.getAttribute("data-msg-id");
+  if (!campaignId || !msgId) return;
+
+  await api(`/campaigns/${campaignId}/messages/${msgId}`, { method: "DELETE" });
+  btn.closest(".message-item")?.remove();
+});
 
 // ===== Group battle (shared combat within a campaign)
 
@@ -704,7 +748,8 @@ el("btnAddSummon")?.addEventListener("click", () => openSummonModal());
 
 function evalCostExpr(res, expr, character, level) {
   const maxBase = Number(character?.[`${res}_max`] ?? 0) || 0;
-  const s = String(expr || "").toLowerCase().replaceAll(" ", "");
+  // запятая как десятичный разделитель (0,3) — приводим к точке до разбора
+  const s = String(expr || "").toLowerCase().replaceAll(" ", "").replaceAll(",", ".");
   if (!s) return 0;
 
   const tokens = s.match(/[+-]?[^+-]+/g) || [];
@@ -731,7 +776,11 @@ function evalCostExpr(res, expr, character, level) {
       val = Math.round(Number(t.replace("x", "")) * level);
     } else if (t === "x") {
       val = level;
-    } else if (t.match(/^\d+(?:\.\d+)?$/)) {
+    } else if (t.match(/^\d+\.\d+$/)) {
+      // дробное число без % и без x — доля от максимума (0.3 = 30% от max)
+      val = Math.round(maxBase * Number(t));
+    } else if (t.match(/^\d+$/)) {
+      // целое число — как и раньше, буквальное количество (мана: 5 = 5 маны)
       val = Math.round(Number(t));
     }
 
@@ -3698,9 +3747,7 @@ function updateCombatHudFromSheet() {
 }
 
 async function applyRest() {
-  const hpPercent = Number(el("rest_hp")?.value || 0);
-  const manaPercent = Number(el("rest_mana")?.value || 0);
-  const energyPercent = Number(el("rest_energy")?.value || 0);
+  const level = Number(state.sheet?.character?.level || 1);
 
   const hpMax = Number(el("f_hp_max")?.value || 0);
   const manaMax = Number(el("f_mana_max")?.value || 0);
@@ -3710,13 +3757,15 @@ async function applyRest() {
   const mana = Number(el("f_mana")?.value || 0);
   const energy = Number(el("f_energy")?.value || 0);
 
-  const addHp = Math.floor(hpMax * hpPercent / 100);
-  const addMana = Math.floor(manaMax * manaPercent / 100);
-  const addEnergy = Math.floor(energyMax * energyPercent / 100);
+  // формулы: 50%, 1/2, 0.3 (=30% от max), 3x (x = уровень), +-
+  const maxes = { hp_max: hpMax, mana_max: manaMax, energy_max: energyMax };
+  const addHp = evalCostExpr("hp", el("rest_hp")?.value, maxes, level);
+  const addMana = evalCostExpr("mana", el("rest_mana")?.value, maxes, level);
+  const addEnergy = evalCostExpr("energy", el("rest_energy")?.value, maxes, level);
 
-  const newHp = Math.min(hpMax, hp + addHp);
-  const newMana = Math.min(manaMax, mana + addMana);
-  const newEnergy = Math.min(energyMax, energy + addEnergy);
+  const newHp = Math.max(0, Math.min(hpMax, hp + addHp));
+  const newMana = Math.max(0, Math.min(manaMax, mana + addMana));
+  const newEnergy = Math.max(0, Math.min(energyMax, energy + addEnergy));
 
   el("f_hp").value = String(newHp);
   el("f_mana").value = String(newMana);
