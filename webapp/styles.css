@@ -3750,14 +3750,24 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
   font-weight: 800;
 }
 
+/* Shared fixed-width column so the Telegram widget and the VK button line
+   up as a matched pair instead of each sizing itself independently. */
+.login-auth-buttons{
+  max-width: 260px;
+  margin: 0 auto;
+}
+
 .login-card #widgetHolder{
   margin-top: 6px;
+  width: 100%;
 }
 
 /* The Telegram widget renders its own iframe with square corners and a
    fixed (often dark) background — clip it to the rounded button shape so
-   no dark corner peeks out against a light card. */
+   no dark corner peeks out against a light card. Force it to fill the
+   shared-width column so it matches the VK button below it. */
 .login-card #widgetHolder iframe{
+  width: 100% !important;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -3786,6 +3796,7 @@ header.topbar .topbar-menu-wrap + .d-flex.gap-2{
   align-items: center;
   justify-content: center;
   gap: 10px;
+  width: 100%;
   min-height: 46px;
   border-radius: 14px;
   background: #0077ff;
