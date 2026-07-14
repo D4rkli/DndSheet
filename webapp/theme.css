@@ -392,6 +392,10 @@
   color: rgba(15, 23, 42, .40);
 }
 
+[data-theme="light"] .app-watermark {
+  color: rgba(15, 23, 42, .28);
+}
+
 [data-theme="light"] .login-divider::before,
 [data-theme="light"] .login-divider::after {
   background: rgba(15, 23, 42, .14);

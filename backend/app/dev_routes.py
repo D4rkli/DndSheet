@@ -15,6 +15,7 @@ from .models import (
     CampaignMessage,
     CampaignBattle,
     FeedbackReport,
+    AccessCode,
 )
 from . import crud, schemas
 
@@ -27,6 +28,7 @@ _COUNT_TABLES = {
     "campaign_messages": CampaignMessage,
     "campaign_battles": CampaignBattle,
     "feedback_reports": FeedbackReport,
+    "access_codes": AccessCode,
 }
 
 
@@ -75,3 +77,32 @@ async def login_as(
         path="/",
     )
     return {"status": "ok", "tg_id": user.tg_id}
+
+
+@router.post("/access-codes")
+async def create_access_code(
+    body: schemas.GenerateAccessCode,
+    db: AsyncSession = Depends(get_db),
+    dev: User = Depends(require_dev),
+):
+    entry = await crud.generate_access_code(db, dev.id, body.duration_days)
+    return {"code": entry.code, "duration_days": entry.duration_days}
+
+
+@router.get("/access-codes")
+async def list_access_codes(
+    db: AsyncSession = Depends(get_db),
+    _dev: User = Depends(require_dev),
+):
+    q = await db.execute(select(AccessCode).order_by(AccessCode.created_at.desc()).limit(50))
+    codes = q.scalars().all()
+    return [
+        {
+            "code": c.code,
+            "duration_days": c.duration_days,
+            "created_at": c.created_at.isoformat(),
+            "redeemed_by_user_id": c.redeemed_by_user_id,
+            "redeemed_at": c.redeemed_at.isoformat() if c.redeemed_at else None,
+        }
+        for c in codes
+    ]

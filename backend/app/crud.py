@@ -1,6 +1,6 @@
 import json
 import secrets
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +24,7 @@ from .models import (
     CampaignBattleParticipant,
     FeedbackReport,
     ActionLogEntry,
+    AccessCode,
 )
 
 # =========================
@@ -624,6 +625,52 @@ async def create_feedback_report(db: AsyncSession, user_id: int, kind: str, text
     await db.commit()
     await db.refresh(report)
     return report
+
+
+# =========================
+# SUBSCRIPTION / ACCESS CODES
+# =========================
+
+def is_subscription_active(user: User) -> bool:
+    return user.subscription_expires_at is not None and user.subscription_expires_at > datetime.utcnow()
+
+
+async def generate_access_code(db: AsyncSession, creator_user_id: int, duration_days: int) -> AccessCode:
+    # short, human-typeable code — collisions are astronomically unlikely
+    # but retry once just in case
+    for _ in range(3):
+        code = secrets.token_hex(4).upper()
+        q = await db.execute(select(AccessCode).where(AccessCode.code == code))
+        if not q.scalar_one_or_none():
+            break
+
+    entry = AccessCode(code=code, duration_days=duration_days, created_by_user_id=creator_user_id)
+    db.add(entry)
+    await db.commit()
+    await db.refresh(entry)
+    return entry
+
+
+async def redeem_access_code(db: AsyncSession, user_id: int, code: str) -> tuple[bool, str]:
+    q = await db.execute(select(AccessCode).where(AccessCode.code == code.strip().upper()))
+    entry = q.scalar_one_or_none()
+    if not entry:
+        return False, "Код не найден"
+    if entry.redeemed_by_user_id is not None:
+        return False, "Код уже использован"
+
+    user = await db.get(User, user_id)
+    if not user:
+        return False, "Пользователь не найден"
+
+    base = user.subscription_expires_at if is_subscription_active(user) else datetime.utcnow()
+    user.subscription_expires_at = base + timedelta(days=entry.duration_days)
+
+    entry.redeemed_by_user_id = user_id
+    entry.redeemed_at = datetime.utcnow()
+
+    await db.commit()
+    return True, user.subscription_expires_at.isoformat()
 
 
 # =========================

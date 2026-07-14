@@ -72,7 +72,10 @@ async def get_owned_or_dm_character(
     if ch.owner_user_id == u.id:
         return ch
 
-    is_global_dm = u.tg_id in settings.dm_ids()
+    # DEV_USER_IDS/DM_USER_IDS are lists of trusted external ids — checked
+    # against whichever provider id the user actually logged in with (VK
+    # users have tg_id=None and vice versa), so either match grants access.
+    is_global_dm = u.tg_id in settings.dm_ids() or u.vk_id in settings.dm_ids()
     is_campaign_dm = ch.campaign is not None and ch.campaign.dm_user_id == u.id
     if not is_global_dm and not is_campaign_dm:
         raise HTTPException(403, "No access")
@@ -81,6 +84,15 @@ async def get_owned_or_dm_character(
 
 
 async def require_dev(u: User = Depends(get_current_user)) -> User:
-    if u.tg_id not in settings.dev_ids():
+    if u.tg_id not in settings.dev_ids() and u.vk_id not in settings.dev_ids():
         raise HTTPException(403, "Dev access required")
     return u
+
+
+async def require_subscription(u: User = Depends(get_current_user)) -> User:
+    """Gate for premium features (group battle, custom field constructor).
+    Devs always pass — they need to be able to test/build the gated features."""
+    is_dev = u.tg_id in settings.dev_ids() or u.vk_id in settings.dev_ids()
+    if is_dev or crud.is_subscription_active(u):
+        return u
+    raise HTTPException(402, "Subscription required")

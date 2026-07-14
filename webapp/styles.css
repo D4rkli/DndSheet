@@ -19,6 +19,15 @@ body {
   padding: 10px 12px 18px;
 }
 
+.app-watermark{
+  text-align: center;
+  margin-top: 28px;
+  padding: 10px 0 4px;
+  font-size: 11px;
+  letter-spacing: .4px;
+  color: rgba(255,255,255,.22);
+}
+
 .card-soft {
   background: rgba(18, 26, 51, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.08);

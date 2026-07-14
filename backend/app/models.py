@@ -17,6 +17,8 @@ class User(Base):
     first_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
     username: Mapped[str | None] = mapped_column(String(120), nullable=True)
 
+    subscription_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
     characters: Mapped[list["Character"]] = relationship(back_populates="owner")
 
     templates: Mapped[list["SheetTemplate"]] = relationship(
@@ -338,3 +340,21 @@ class FeedbackReport(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user: Mapped["User"] = relationship()
+
+
+class AccessCode(Base):
+    """A manually-issued redeem code that grants N days of subscription —
+    handed out by hand (bank transfer, Boosty, whatever) outside any
+    payment gateway; see project memory for the reasoning."""
+    __tablename__ = "access_codes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    duration_days: Mapped[int] = mapped_column(Integer)
+    created_by_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    redeemed_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    redeemed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    created_by: Mapped["User"] = relationship(foreign_keys=[created_by_user_id])
+    redeemed_by: Mapped["User | None"] = relationship(foreign_keys=[redeemed_by_user_id])

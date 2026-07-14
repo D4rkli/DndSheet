@@ -4,7 +4,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from .db import get_db
-from .deps import get_current_user, get_owned_or_dm_character, resolve_auth_profile
+from .deps import get_current_user, get_owned_or_dm_character, resolve_auth_profile, require_subscription
 from .models import Character, User
 from .config import settings
 from . import crud, schemas
@@ -27,9 +27,23 @@ async def me(
         "photo_url": profile.get("photo_url"),
         "display_name": profile.get("first_name") or profile.get("username") or "Аккаунт",
         "user_id": u.id,
-        "is_dm": u.tg_id in settings.dm_ids(),
-        "is_dev": u.tg_id in settings.dev_ids(),
+        "is_dm": u.tg_id in settings.dm_ids() or u.vk_id in settings.dm_ids(),
+        "is_dev": u.tg_id in settings.dev_ids() or u.vk_id in settings.dev_ids(),
+        "subscription_active": crud.is_subscription_active(u),
+        "subscription_expires_at": u.subscription_expires_at.isoformat() if u.subscription_expires_at else None,
     }
+
+
+@router.post("/subscription/redeem")
+async def redeem_subscription_code(
+    body: schemas.RedeemAccessCode,
+    db: AsyncSession = Depends(get_db),
+    u: User = Depends(get_current_user),
+):
+    ok, result = await crud.redeem_access_code(db, u.id, body.code)
+    if not ok:
+        raise HTTPException(400, result)
+    return {"status": "ok", "subscription_expires_at": result}
 
 
 @router.post("/feedback")
@@ -780,7 +794,7 @@ async def list_templates(
 async def create_template(
     body: schemas.SheetTemplateCreate,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    u: User = Depends(require_subscription),
 ):
 
     t = await crud.create_template(db, u.id, body.name, body.config)

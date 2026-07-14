@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .db import get_db
-from .deps import get_current_user
+from .deps import get_current_user, require_subscription
 from .models import User
 from . import crud, schemas
 
@@ -222,7 +222,7 @@ async def start_battle(
     campaign_id: int,
     body: schemas.BattleStart,
     db: AsyncSession = Depends(get_db),
-    u: User = Depends(get_current_user),
+    u: User = Depends(require_subscription),
 ):
     battle = await crud.start_campaign_battle(db, campaign_id, u.id, body.character_ids, body.reveal_resources)
     if not battle:

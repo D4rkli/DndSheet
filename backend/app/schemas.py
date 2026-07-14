@@ -228,3 +228,11 @@ class FeedbackCreate(BaseModel):
 class ActionLogCreate(BaseModel):
     text: str
 
+
+class GenerateAccessCode(BaseModel):
+    duration_days: int = 30
+
+
+class RedeemAccessCode(BaseModel):
+    code: str
+

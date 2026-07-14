@@ -27,6 +27,10 @@ async function api(path, options = {}) {
     location.href = "login.html";
     return new Promise(() => {}); // navigating away; stop the caller silently
   }
+  if (res.status === 402) {
+    subscriptionModal?.show();
+    throw new Error("Эта функция доступна по подписке");
+  }
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`API ${res.status}: ${txt}`);
@@ -1564,6 +1568,58 @@ el("btnClearHistoryLog")?.addEventListener("click", async () => {
 
   await api(`/characters/${id}/log`, { method: "DELETE" });
   await renderHistoryModal();
+});
+
+// ===== Подписка (доступ по коду, выдаётся вручную)
+
+const subscriptionModalEl = el("subscriptionModal");
+const subscriptionModal = subscriptionModalEl ? new bootstrap.Modal(subscriptionModalEl) : null;
+
+el("btnSubscription")?.addEventListener("click", () => {
+  if (!subscriptionModal) return;
+  renderSubscriptionModal();
+  subscriptionModal.show();
+});
+
+function renderSubscriptionModal() {
+  const me = state.me;
+  const statusEl = el("subStatus");
+  if (statusEl) {
+    if (me?.subscription_active) {
+      const until = new Date(me.subscription_expires_at).toLocaleDateString("ru-RU");
+      statusEl.textContent = `✅ Подписка активна до ${until}`;
+    } else {
+      statusEl.textContent = "Подписки нет — совместный бой (для ДМ) и конструктор кастомных полей недоступны.";
+    }
+  }
+  el("subDevSection")?.classList.toggle("d-none", !me?.is_dev);
+}
+
+el("btnRedeemCode")?.addEventListener("click", async () => {
+  const input = el("subCodeInput");
+  const code = (input?.value || "").trim();
+  if (!code) return alert("Введи код");
+
+  try {
+    await api("/subscription/redeem", { method: "POST", body: JSON.stringify({ code }) });
+  } catch (e) {
+    return alert("Не удалось активировать код: " + e.message);
+  }
+
+  input.value = "";
+  await loadMe();
+  renderSubscriptionModal();
+  setStatus("Подписка активирована ✅");
+});
+
+el("btnGenerateCode")?.addEventListener("click", async () => {
+  const days = Number(el("subGenDays")?.value || 30);
+  const entry = await api("/dev/access-codes", { method: "POST", body: JSON.stringify({ duration_days: days }) });
+
+  const resultEl = el("subGenResult");
+  if (resultEl) {
+    resultEl.innerHTML = `<div class="item-title">Код: <span style="user-select:all">${escapeHtml(entry.code)}</span></div><div class="item-sub">на ${entry.duration_days} дн.</div>`;
+  }
 });
 
 // ===== Feedback (bugs/suggestions)
