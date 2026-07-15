@@ -17,6 +17,12 @@ body {
 
 .content {
   padding: 10px 12px 18px;
+  /* let the browser handle vertical scrolling natively but leave horizontal
+     gestures to wireTabSwipe()'s pointer handlers — without this, mobile
+     browsers grab the touch sequence for their own scroll before our JS
+     ever sees a clean pointerdown/move/up run, so the swipe silently does
+     nothing */
+  touch-action: pan-y;
 }
 
 .app-watermark{
