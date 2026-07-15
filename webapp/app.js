@@ -5183,15 +5183,16 @@ function wireTabSwipe() {
 
   let startX = 0;
   let startY = 0;
-  let deltaX = 0;
-  let deltaY = 0;
-  let tracking = false;
+  let tracking = false;    // gesture in progress, direction not decided yet
+  let horizontal = false;  // locked in as our horizontal swipe — browser's
+                            // native scroll is actively blocked for the rest
+                            // of this gesture via preventDefault()
 
   const SWIPE_THRESHOLD = 60;
+  const DECIDE_THRESHOLD = 12; // px of movement before we commit to a direction
   // ratio, not an absolute px cap — a real thumb swipe rarely stays under a
   // fixed vertical tolerance the whole way, it just needs to stay clearly
-  // more horizontal than vertical. Checked once at release, not continuously
-  // during the move (an early wobble no longer kills the whole gesture).
+  // more horizontal than vertical.
   const DIRECTION_RATIO = 1.4;
 
   function getVisibleTabs() {
@@ -5243,39 +5244,69 @@ function wireTabSwipe() {
     );
   }
 
-  content.addEventListener("pointerdown", (e) => {
-    if (shouldIgnoreSwipe(e.target)) return;
+  // Raw touch events instead of Pointer Events: touch-action alone leaves
+  // the browser to guess (based on the first couple of pixels) whether a
+  // gesture is a scroll or ours, and it sometimes guesses wrong and hijacks
+  // the touch — that's the "works every other time" symptom. This instead
+  // waits for real movement, explicitly decides direction ourselves, and
+  // once decided horizontal, calls preventDefault() to actively hold the
+  // gesture so the browser can no longer take it away mid-swipe.
+  content.addEventListener(
+    "touchstart",
+    (e) => {
+      if (e.touches.length !== 1 || shouldIgnoreSwipe(e.target)) {
+        tracking = false;
+        return;
+      }
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      tracking = true;
+      horizontal = false;
+    },
+    { passive: true }
+  );
 
-    startX = e.clientX;
-    startY = e.clientY;
-    deltaX = 0;
-    deltaY = 0;
-    tracking = true;
-  });
+  content.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!tracking) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
 
-  content.addEventListener("pointermove", (e) => {
-    if (!tracking) return;
+      if (!horizontal) {
+        if (Math.abs(dx) < DECIDE_THRESHOLD && Math.abs(dy) < DECIDE_THRESHOLD) return;
 
-    deltaX = e.clientX - startX;
-    deltaY = e.clientY - startY;
-  });
+        if (Math.abs(dx) > Math.abs(dy) * DIRECTION_RATIO) {
+          horizontal = true;
+        } else {
+          tracking = false; // vertical scroll — leave it to the browser, untouched
+          return;
+        }
+      }
 
-  content.addEventListener("pointerup", () => {
+      e.preventDefault();
+    },
+    { passive: false }
+  );
+
+  content.addEventListener("touchend", (e) => {
     if (!tracking) return;
     tracking = false;
+    if (!horizontal) return;
 
-    if (Math.abs(deltaX) < SWIPE_THRESHOLD) return;
-    if (Math.abs(deltaX) < Math.abs(deltaY) * DIRECTION_RATIO) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) < SWIPE_THRESHOLD) return;
 
-    if (deltaX < 0) {
+    if (dx < 0) {
       switchTabByOffset(1);
     } else {
       switchTabByOffset(-1);
     }
   });
 
-  content.addEventListener("pointercancel", () => {
+  content.addEventListener("touchcancel", () => {
     tracking = false;
+    horizontal = false;
   });
 }
 
