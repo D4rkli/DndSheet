@@ -25,6 +25,38 @@ body {
   touch-action: pan-y;
 }
 
+/* Tab switch transition — plays whenever a section.tab goes from d-none to
+   visible (CSS animations auto-restart on that display:none -> block
+   transition, no JS re-triggering needed). Swipes get a directional slide
+   matching the gesture; tapping a tab in the bar falls back to the plain
+   fade since there's no meaningful direction for that. */
+section.tab{
+  animation: tabFadeIn .18s ease;
+}
+
+section.tab.tab-anim-next{
+  animation: tabSlideInRight .22s ease;
+}
+
+section.tab.tab-anim-prev{
+  animation: tabSlideInLeft .22s ease;
+}
+
+@keyframes tabFadeIn{
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tabSlideInRight{
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes tabSlideInLeft{
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .app-watermark{
   text-align: center;
   margin-top: 28px;

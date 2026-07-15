@@ -971,7 +971,7 @@ function fillInput(id, value) {
   node.value = value ?? "";
 }
 
-function tabSwitch(name) {
+function tabSwitch(name, direction = 0) {
   console.log("tabSwitch ->", name);
 
   document.querySelectorAll("#tabs .nav-link").forEach((b) => {
@@ -980,6 +980,7 @@ function tabSwitch(name) {
 
   document.querySelectorAll("section.tab").forEach((section) => {
     section.classList.add("d-none");
+    section.classList.remove("tab-anim-next", "tab-anim-prev");
   });
 
   const activeSection = el(`tab-${name}`);
@@ -988,6 +989,8 @@ function tabSwitch(name) {
     return;
   }
 
+  if (direction > 0) activeSection.classList.add("tab-anim-next");
+  else if (direction < 0) activeSection.classList.add("tab-anim-prev");
   activeSection.classList.remove("d-none");
   updateFab();
 }
@@ -5185,7 +5188,11 @@ function wireTabSwipe() {
   let tracking = false;
 
   const SWIPE_THRESHOLD = 60;
-  const VERTICAL_LIMIT = 35;
+  // ratio, not an absolute px cap — a real thumb swipe rarely stays under a
+  // fixed vertical tolerance the whole way, it just needs to stay clearly
+  // more horizontal than vertical. Checked once at release, not continuously
+  // during the move (an early wobble no longer kills the whole gesture).
+  const DIRECTION_RATIO = 1.4;
 
   function getVisibleTabs() {
     return Array.from(document.querySelectorAll("#tabs .nav-link"))
@@ -5205,7 +5212,7 @@ function wireTabSwipe() {
     const nextIndex = currentIndex + offset;
     if (nextIndex < 0 || nextIndex >= visibleTabs.length) return;
 
-    tabSwitch(visibleTabs[nextIndex]);
+    tabSwitch(visibleTabs[nextIndex], offset);
 
     if (navigator.vibrate) {
       navigator.vibrate(20);
@@ -5251,18 +5258,14 @@ function wireTabSwipe() {
 
     deltaX = e.clientX - startX;
     deltaY = e.clientY - startY;
-
-    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > VERTICAL_LIMIT) {
-      tracking = false;
-    }
   });
 
   content.addEventListener("pointerup", () => {
     if (!tracking) return;
     tracking = false;
 
-    if (Math.abs(deltaY) > VERTICAL_LIMIT) return;
     if (Math.abs(deltaX) < SWIPE_THRESHOLD) return;
+    if (Math.abs(deltaX) < Math.abs(deltaY) * DIRECTION_RATIO) return;
 
     if (deltaX < 0) {
       switchTabByOffset(1);
