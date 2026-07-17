@@ -577,7 +577,13 @@ function parseRatio(raw) {
     if (Number.isFinite(a) && Number.isFinite(b) && b !== 0) return a / b;
   }
 
-  // 0.25
+  // x2, 2x, ×2
+  if (s.includes("x") || s.includes("×")) {
+    const n = Number(s.replace(/[x×]/g, "").trim().replace(",", "."));
+    if (Number.isFinite(n)) return n;
+  }
+
+  // 0.25 / целое число
   const n = Number(s.replace(",", "."));
   return Number.isFinite(n) ? n : 0;
 }
