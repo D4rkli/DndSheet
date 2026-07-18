@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     SESSION_SECRET: str
     COOKIE_SECURE: bool = True
     SESSION_MAX_AGE_DAYS: int = 30
+    TELEGRAM_AUTH_MAX_AGE_SECONDS: int = 86400
 
     VK_APP_ID: str = ""
     VK_APP_SECRET: str = ""

@@ -10,6 +10,7 @@ from .config import settings
 SESSION_COOKIE_NAME = "dnd_session"
 
 _serializer = URLSafeTimedSerializer(settings.SESSION_SECRET, salt="dnd-session")
+_vk_state_serializer = URLSafeTimedSerializer(settings.SESSION_SECRET, salt="dnd-vk-state")
 
 
 def verify_telegram_init_data(init_data: str) -> dict:
@@ -43,6 +44,10 @@ def verify_telegram_init_data(init_data: str) -> dict:
     if not hmac.compare_digest(hmac_hash, hash_from_telegram):
         raise ValueError("Bad Telegram initData")
 
+    auth_date = int(data.get("auth_date", 0))
+    if auth_date <= 0 or time.time() - auth_date > settings.TELEGRAM_AUTH_MAX_AGE_SECONDS:
+        raise ValueError("Telegram initData expired")
+
     return data
 
 
@@ -75,8 +80,7 @@ def verify_telegram_login_widget(data: dict) -> dict:
         raise ValueError("Bad Telegram login widget data")
 
     auth_date = int(data.get("auth_date", 0))
-    max_age = settings.SESSION_MAX_AGE_DAYS * 86400
-    if auth_date <= 0 or time.time() - auth_date > max_age:
+    if auth_date <= 0 or time.time() - auth_date > settings.TELEGRAM_AUTH_MAX_AGE_SECONDS:
         raise ValueError("Telegram login data expired")
 
     return {
@@ -123,7 +127,7 @@ VK_STATE_COOKIE_NAME = "dnd_vk_state"
 
 
 def create_vk_state_cookie(state: str, code_verifier: str, device_id: str) -> str:
-    return _serializer.dumps({"state": state, "code_verifier": code_verifier, "device_id": device_id})
+    return _vk_state_serializer.dumps({"state": state, "code_verifier": code_verifier, "device_id": device_id})
 
 
 def read_vk_state_cookie(token: str) -> dict | None:
@@ -131,7 +135,7 @@ def read_vk_state_cookie(token: str) -> dict | None:
     if not token:
         return None
     try:
-        data = _serializer.loads(token, max_age=600)  # 10 minutes to complete the VK redirect
+        data = _vk_state_serializer.loads(token, max_age=600)  # 10 minutes to complete the VK redirect
     except (BadSignature, SignatureExpired):
         return None
     if "state" not in data or "code_verifier" not in data:

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .config import settings
 from .db import get_db
 from . import crud
+from .rate_limit import rate_limit
 from .security import (
     SESSION_COOKIE_NAME,
     VK_STATE_COOKIE_NAME,
@@ -31,7 +32,7 @@ class TelegramLoginIn(BaseModel):
     hash: str
 
 
-@router.post("/telegram-login")
+@router.post("/telegram-login", dependencies=[Depends(rate_limit("telegram-login", 20, 60))])
 async def telegram_login(body: TelegramLoginIn, response: Response):
     try:
         profile = verify_telegram_login_widget(body.model_dump())
@@ -58,7 +59,7 @@ async def telegram_login(body: TelegramLoginIn, response: Response):
     return {"status": "ok", "tg_id": profile["tg_id"]}
 
 
-@router.get("/vk/login")
+@router.get("/vk/login", dependencies=[Depends(rate_limit("vk-login", 20, 60))])
 async def vk_login():
     state = secrets.token_urlsafe(24)
     device_id = secrets.token_urlsafe(16)
@@ -77,7 +78,7 @@ async def vk_login():
     return response
 
 
-@router.get("/vk/callback")
+@router.get("/vk/callback", dependencies=[Depends(rate_limit("vk-callback", 20, 60))])
 async def vk_callback(
     request: Request,
     code: str | None = None,

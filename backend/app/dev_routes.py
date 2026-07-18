@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Response
@@ -7,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from .db import get_db
 from .deps import require_dev
+from .rate_limit import rate_limit
 from .security import SESSION_COOKIE_NAME, create_session_cookie
 from .config import settings
 from .models import (
@@ -21,6 +23,8 @@ from .models import (
 from . import crud, schemas
 
 router = APIRouter()
+
+audit_log = logging.getLogger("dnd.audit")
 
 _COUNT_TABLES = {
     "users": User,
@@ -58,14 +62,20 @@ async def dev_info(db: AsyncSession = Depends(get_db)):
     }
 
 
-@router.post("/login-as")
+@router.post("/login-as", dependencies=[Depends(rate_limit("login-as", 20, 60))])
 async def login_as(
     body: schemas.DevLoginAs,
     response: Response,
     db: AsyncSession = Depends(get_db),
-    _dev: User = Depends(require_dev),
+    dev: User = Depends(require_dev),
 ):
     user = await crud.get_or_create_user(db, tg_id=body.tg_id, first_name=body.first_name)
+
+    audit_log.warning(
+        "login-as: dev tg_id=%s vk_id=%s (user #%s) impersonated tg_id=%s (user #%s) at %s",
+        dev.tg_id, dev.vk_id, dev.id, user.tg_id, user.id,
+        datetime.utcnow().isoformat() + "Z",
+    )
 
     token = create_session_cookie("telegram", user.tg_id, first_name=body.first_name)
     response.set_cookie(

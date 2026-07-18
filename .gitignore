@@ -16,3 +16,6 @@ __pycache__/
 # venv
 .venv/
 venv/
+
+# accidental shell-redirect artifacts
+backend/-la
